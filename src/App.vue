@@ -1,0 +1,2791 @@
+<script setup lang="ts">
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import LifecycleList from './components/LifecycleList.vue';
+import RecordList from './components/RecordList.vue';
+import MedicalDetail from './components/MedicalDetail.vue';
+import DicomViewer from './components/DicomViewer.vue';
+import BodyAnnotation from './components/BodyAnnotation.vue';
+import { patientList, allRecords } from './data';
+import type { ConfigProviderProps } from 'ant-design-vue';
+import { 
+  UserCircle, 
+  Activity, 
+  CreditCard, 
+  Info, 
+  Stethoscope, 
+  Hospital, 
+  ClipboardCheck, 
+  Microscope, 
+  Pill,
+  Plane,
+  UserCheck,
+  ChevronRight,
+  Search,
+  Filter,
+  FileText,
+  Image as ImageIcon,
+  ExternalLink,
+  X,
+  UserPlus,
+  Trash2,
+  Settings,
+  ShieldCheck,
+  CreditCard as CreditCardIcon,
+  Plus,
+  ChevronLeft,
+  CircleDot,
+  Menu,
+  Calendar,
+  RefreshCw,
+  Radar,
+  ZoomIn,
+  Hand,
+  Contrast,
+  Briefcase,
+  HeartPulse,
+  ChevronDown,
+  ChevronUp,
+  Target,
+  Users,
+  Maximize2,
+  Scan,
+  Database,
+  Cpu,
+  Zap,
+  Move,
+  Droplets,
+  FlaskConical,
+  AlertTriangle
+} from 'lucide-vue-next';
+
+type RecordType = (typeof allRecords)[number];
+type ModalState =
+  | { type: 'outpatient'; item: RecordType }
+  | { type: 'inpatient'; item: RecordType }
+  | { type: 'exam'; item: RecordType }
+  | { type: 'lab'; item: RecordType }
+  | { type: 'medicine'; item: RecordType }
+  | null;
+
+const antdTheme = computed<ConfigProviderProps['theme']>(() => ({
+  token: {
+    colorPrimary: '#2563eb',
+    borderRadius: 12,
+    colorBgLayout: '#f8fafc',
+    colorBgContainer: '#ffffff',
+    colorText: '#0f172a',
+    colorTextSecondary: '#475569',
+    colorBorder: '#e2e8f0',
+  },
+}));
+
+const isPatientPanelCollapsed = ref(false);
+const searchQuery = ref('');
+const showOutpatientDetail = ref(false);
+const selectedRecordForDetail = ref<any>(null);
+const showInsuranceClaimModal = ref(false);
+const showExpiredInsuranceModal = ref(false);
+const showMetricDetailModal = ref(false);
+const selectedMetric = ref<string>('血压');
+const selectedMetricRange = ref('近三月');
+
+// --- New State from doctorDashboard ---
+const recordTab = ref<'outpatient' | 'inpatient' | 'exam' | 'lab' | 'medicine'>('outpatient');
+const recordTabOptions = [
+  { id: 'outpatient', label: '门诊' },
+  { id: 'inpatient', label: '住院' },
+  { id: 'exam', label: '检查' },
+  { id: 'lab', label: '检验' },
+  { id: 'medicine', label: '药耗' },
+] as const;
+const activeModal = ref<ModalState>(null);
+const showDicom = ref(false);
+const isVizExpanded = ref(false);
+const isRecordsExpanded = ref(false);
+const showFullProfile = ref(false);
+const currentTime = ref(new Date());
+let timer: number | undefined;
+
+const timeText = computed(() => currentTime.value.toLocaleTimeString([], { hour12: false }));
+
+const tabLabelMap: Record<string, string> = {
+  outpatient: '门诊',
+  inpatient: '住院',
+  exam: '检查',
+  lab: '检验',
+  medicine: '药耗'
+};
+
+const recordTabLabel = computed(() => tabLabelMap[recordTab.value] || recordTab.value);
+
+const insuranceTabs = [
+  { id: 'status', label: '参保状态', icon: ShieldCheck },
+  { id: 'commercial', label: '商业保险', icon: Briefcase },
+  { id: 'longterm', label: '长护险', icon: HeartPulse },
+] as const;
+type InsuranceTab = (typeof insuranceTabs)[number]['id'];
+const insuranceTab = ref<InsuranceTab>('status');
+
+const expandedLabIds = ref<Set<string>>(new Set());
+const expandedMedicineIds = ref<Set<string>>(new Set());
+
+function toggleSet(setRef: any, id: string) {
+  const next = new Set(setRef.value);
+  if (next.has(id)) next.delete(id);
+  else next.add(id);
+  setRef.value = next;
+}
+
+function openModal(type: any, item: RecordType) {
+  activeModal.value = { type, item } as any;
+}
+
+onMounted(() => {
+  timer = window.setInterval(() => {
+    currentTime.value = new Date();
+  }, 1000);
+});
+
+onBeforeUnmount(() => {
+  if (timer) window.clearInterval(timer);
+});
+
+const filteredRecords = computed(() => {
+  const map: Record<string, string> = {
+    outpatient: "门诊",
+    inpatient: "住院",
+    lab: "检验",
+    exam: "检查",
+    medicine: "药耗"
+  };
+  const targetTag = map[recordTab.value];
+  
+  // Define record types for clinical records
+  const typeMap: Record<string, string> = {
+    outpatient: "op",
+    inpatient: "ip",
+    lab: "lab",
+    exam: "exam",
+    medicine: "med"
+  };
+  const currentType = typeMap[recordTab.value];
+
+  // Map LifecycleList records to Clinical Center format
+  const lifecycleRecords = [
+    { id: "1", date: "2024-05-15", hosp: "上海市第一人民医院", dept: "心内科", type: "op", diag: "冠心病常规复诊", cost: "¥386", reimb: "¥268", tags: ["门诊"], desc: "1. 冠状动脉粥样硬化性心脏病 2. 高血压病3级（极高危）" },
+    { id: "2", date: "2024-03-22", hosp: "上海市第一人民医院", dept: "骨科", type: "op", diag: "腰椎间盘突出治疗", cost: "¥50", reimb: "¥45", tags: ["门诊"], desc: "腰椎间盘突出症 (L4/L5)" },
+    
+    { id: "6", date: "2024-03-10", dateEnd: "2024-03-20", hosp: "复旦大学附属中山医院", dept: "心内科", type: "ip", diag: "急性心肌梗死住院记录", cost: "¥12,450", reimb: "¥9,800", tags: ["住院"], desc: "主要诊断：入院后急诊PCI术，于前降支植入支架一枚。术后予以抗血小板、调脂、改善心肌重构等治疗。", status: "已出院" },
+    { id: "7", date: "2021-08-05", dateEnd: "2021-08-12", hosp: "上海市中医医院", dept: "内分泌科", type: "ip", diag: "血糖平衡调节", cost: "¥8,420", reimb: "¥6,230", tags: ["住院"], desc: "主要诊断：II型糖尿病，血糖控制不佳", status: "已出院" },
+    
+    { id: "11", date: "2024-05-16", hosp: "上海市第一人民医院", dept: "检验科", type: "lab", diag: "生化常规检查", cost: "¥120", reimb: "¥100", tags: ["检验"], metrics: [{label: "谷丙转氨酶 (ALT)", value: "45", unit: "U/L", flag: "high"}, {label: "总胆固醇 (TC)", value: "6.2", unit: "mmol/L", flag: "high"}], moreCount: 3 },
+    { id: "12", date: "2024-04-12", hosp: "上海市第二人民医院", dept: "检验科", type: "lab", diag: "糖化血红蛋白", cost: "¥80", reimb: "¥60", tags: ["检验"], metrics: [{label: "糖化血红蛋白", value: "5.8", unit: "%", flag: ""}] },
+    
+    { id: "16", date: "2024-05-16", hosp: "上海市第一人民医院", dept: "放射科", type: "exam", diag: "胸部CT平扫", cost: "¥240", reimb: "¥180", tags: ["放射科"], desc: "诊断结论：双肺纹理增多；建议结合临床，必要时随访。" },
+    { id: "17", date: "2024-03-12", hosp: "复旦大学附属中山医院", dept: "超声科", type: "exam", diag: "心脏彩超", cost: "¥60", reimb: "¥40", tags: ["超声科"], desc: "诊断结论：左房稍大，左室壁节段性运动异常，EF 52%。" },
+    { id: "18", date: "2024-04-12", hosp: "上海市第二人民医院", dept: "超声科", type: "exam", diag: "彩色多普勒超声", cost: "¥180", reimb: "¥140", tags: ["超声科"], desc: "结论：颈动脉内膜毛糙，未见明显斑块。建议定期复查。" },
+    
+    { id: "21", date: "2024-05-17", hosp: "上海市第一人民医院", dept: "心内科", type: "med", diag: "长期用药处方", cost: "¥158", reimb: "¥120", tags: ["药耗"], items: [{name: "阿司匹林肠溶片", count: "1盒"}, {name: "阿托伐他汀钙片", count: "2盒"}], moreCount: 1 },
+    { id: "22", date: "2024-04-15", hosp: "上海市第一人民医院", dept: "门诊部", type: "med", diag: "门诊处方详单", cost: "¥85", reimb: "¥65", tags: ["药耗"], items: [{name: "一次性使用无菌注射器 5ml", count: "1具"}] },
+  ];
+
+  return lifecycleRecords.filter(r => r.type === currentType);
+});
+// -------------------------------------
+
+const familyMembers = ref([
+  { name: "李 **", rel: "配偶", id: "3204**********1234", status: "已激活", balance: true, av: "👩", color: "#FEE2E2" },
+  { name: "陈 **", rel: "子女", id: "3204**********5678", status: "已激活", balance: true, av: "👦", color: "var(--blue-l)" },
+  { name: "陈 ** 华", rel: "父亲", id: "3204**********9012", status: "待确认", balance: false, av: "👴", color: "var(--purple-l)" },
+]);
+
+const authorizedMeMembers = ref([
+  { name: "陈 ** 强", rel: "兄弟", id: "3204**********4321", status: "已激活", av: "👨", color: "var(--cyan-l)" },
+]);
+
+const expiredInsurancePolicies = ref([
+  {
+    name: '平安e生保·长期医疗',
+    id: '保单号：PASH20230312001',
+    status: '已到期',
+    amount: '¥400.00万',
+    deductible: '¥1.00万',
+    expiry: '2024-03-11',
+    logo: '🛡️'
+  },
+  {
+    name: '泰康在线·百万医疗险',
+    id: '保单号：TKZX20220512001',
+    status: '已到期',
+    amount: '¥300.00万',
+    deductible: '¥1.00万',
+    expiry: '2023-05-11',
+    logo: '🏥'
+  }
+]);
+
+const metricData = computed(() => {
+  const data = [];
+  let count = 7;
+  if (selectedMetricRange.value === '近一周') count = 7;
+  else if (selectedMetricRange.value === '近一月') count = 15;
+  else if (selectedMetricRange.value === '近三月') count = 30;
+  else if (selectedMetricRange.value === '近一年') count = 50;
+
+  for (let i = 1; i <= count; i++) {
+    const row: any = { date: `2022-06-${28 - i}` };
+    if (selectedMetric.value === '血压') {
+      row.v1 = 120 + Math.floor(Math.random() * 20);
+      row.v2 = 70 + Math.floor(Math.random() * 15);
+    } else if (selectedMetric.value === '血糖') {
+      row.v1 = parseFloat((5 + Math.random() * 2).toFixed(1));
+      row.v2 = parseFloat((8 + Math.random() * 3).toFixed(1));
+    } else if (selectedMetric.value === '心率') {
+      row.v1 = 70 + Math.floor(Math.random() * 20);
+    } else if (selectedMetric.value === '体重') {
+      row.v1 = parseFloat((50 + Math.random() * 5).toFixed(1));
+    } else if (selectedMetric.value === '身高') {
+      row.v1 = 168;
+    } else if (selectedMetric.value === 'BMI') {
+      row.v1 = parseFloat((20 + Math.random() * 2).toFixed(1));
+    }
+    row.source = getRandomSource();
+    data.push(row);
+  }
+  return data.reverse(); 
+});
+
+const chartPaths = computed(() => {
+  const data = metricData.value;
+  if (!data.length) return { p1: '', p2: '' };
+  
+  const width = 800;
+  const height = 250;
+  const padX = 50;
+  const padY = 30;
+  
+  // Find min/max to scale
+  let min = Infinity, max = -Infinity;
+  data.forEach(d => {
+    if (d.v1 !== undefined) { min = Math.min(min, d.v1); max = Math.max(max, d.v1); }
+    if (d.v2 !== undefined) { min = Math.min(min, d.v2); max = Math.max(max, d.v2); }
+  });
+  
+  if (max === min) { max += 10; min -= 10; }
+  const range = max - min;
+  
+  const getX = (i: number) => padX + (i / (data.length - 1)) * (width - 2 * padX);
+  const getY = (val: number) => height - padY - ((val - min) / range) * (height - 2 * padY);
+  
+  let p1 = '', p2 = '';
+  data.forEach((d, i) => {
+    const x = getX(i);
+    if (d.v1 !== undefined) {
+      const y = getY(d.v1);
+      p1 += (i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
+    }
+    if (d.v2 !== undefined) {
+      const y = getY(d.v2);
+      p2 += (i === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
+    }
+  });
+  
+  return { p1, p2 };
+});
+const metricConfig = computed(() => {
+  const m = selectedMetric.value;
+  const data = metricData.value;
+  const v1s = data.map(d => d.v1).filter(v => v !== undefined);
+  const v2s = data.map(d => d.v2).filter(v => v !== undefined);
+
+  const getStats = (vals: number[], prefix: string) => {
+    if (!vals.length) return [];
+    const max = Math.max(...vals);
+    const min = Math.min(...vals);
+    const avg = (vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1);
+    return [
+      { label: `${prefix}最大值`, val: max.toString() },
+      { label: `${prefix}最小值`, val: min.toString() },
+      { label: `${prefix}平均值`, val: avg.toString() },
+    ];
+  };
+
+  switch (m) {
+    case '血压':
+      return {
+        unit: 'mmHg',
+        stats: [...getStats(v1s, '收缩压'), ...getStats(v2s, '舒张压')],
+        columns: ['时间', '收缩压 (mmHg)', '舒张压 (mmHg)', '来源'],
+        legend: [
+          { label: '收缩压 (mmHg)', color: 'var(--blue)' },
+          { label: '舒张压 (mmHg)', color: 'var(--green)' },
+        ],
+        hasDoubleLine: true,
+        sourceInfo: '以诊室血压测量结果为主要诊断依据：首诊发现收缩压 ≥ 140 mmHg和/或舒张压 ≥ 90 mmHg，建议在4周内复查2次，非同日3次测量均达到上述诊断界值，即可确诊。\n数据来源：国家心血管病中心 国家基层高血压管理办公室发布的《国家基层高血压防治管理指南2020版》'
+      };
+    case '血糖':
+      return {
+        unit: 'mmol/L',
+        stats: [...getStats(v1s, '空腹血糖'), ...getStats(v2s, '餐后2h血糖')],
+        columns: ['时间', '空腹血糖 (mmol/L)', '餐后2h血糖 (mmol/L)', '来源'],
+        legend: [
+          { label: '空腹血糖 (mmol/L)', color: 'var(--blue)' },
+          { label: '餐后2h血糖 (mmol/L)', color: 'var(--green)' },
+        ],
+        hasDoubleLine: true,
+        sourceInfo: '糖尿病诊断标准：典型糖尿病症状加上空腹血糖≥7.0 mmol/L或加上餐后2h血糖≥11.1 mmol/L。无糖尿病典型症状者，需改日复查确认。\n中华医学会糖尿病学分会《中国2型糖尿病防治指南2020版》'
+      };
+    case '心率':
+      return {
+        unit: '次/分',
+        stats: getStats(v1s, '心率'),
+        columns: ['时间', '心率 (次/分)', '来源'],
+        legend: [
+          { label: '心率 (次/分)', color: 'var(--blue)' },
+        ],
+        hasDoubleLine: false,
+        sourceInfo: '正常成年人安静时的心率有显著的个体差异，平均在75次/分左右(60—100次/分之间)。\n数据来源：健康档案/数据来源与治理的系统'
+      };
+    case '体重':
+      return {
+        unit: 'kg',
+        stats: getStats(v1s, '体重'),
+        columns: ['时间', '体重 (kg)', '来源'],
+        legend: [
+          { label: '体重 (kg)', color: 'var(--blue)' },
+        ],
+        hasDoubleLine: false,
+        sourceInfo: '体重是反映和衡量一个人健康状况的重要标志之一。过胖和过瘦都不利于健康。\n数据来源：健康档案/数据来源与治理的系统'
+      };
+    case '身高':
+      return {
+        unit: 'cm',
+        stats: [
+          { label: '身高最大值', val: Math.max(...v1s).toString() },
+          { label: '身高最小值', val: Math.min(...v1s).toString() },
+          { label: '身高变化值', val: (Math.max(...v1s) - Math.min(...v1s)).toString() },
+        ],
+        columns: ['时间', '身高 (cm)', '来源'],
+        legend: [
+          { label: '身高 (cm)', color: 'var(--blue)' },
+        ],
+        hasDoubleLine: false,
+        sourceInfo: '身高受遗传、环境、营养、运动等多种因素影响。\n数据来源：健康档案/数据来源与治理的系统'
+      };
+    case 'BMI':
+      return {
+        unit: 'kg/m²',
+        stats: getStats(v1s, '体质指数'),
+        columns: ['时间', '体质指数(BMI)(kg/m²)', '来源'],
+        legend: [
+          { label: '体质指数(BMI)(kg/m²)', color: 'var(--blue)' },
+        ],
+        hasDoubleLine: false,
+        sourceInfo: 'BMI≥28.0为肥胖，24.0≤BMI＜28.0为超重，18.5≤BMI＜24为体重正常，BMI＜18.5为体重过低。\n中华人民共和国国家卫生和计划生育委员会发布的WS/T 428-2013 成人体重判定。本标准适用于成人超重和肥胖的判定，不适用某些特殊人群，如运动员、孕产妇等。'
+      };
+    default:
+      return { stats: [], columns: [], legend: [] };
+  }
+});
+
+const getRandomSource = () => {
+  const sources = ['LIS', 'PACS', 'HIS', '医保', '健康档案'];
+  return sources[Math.floor(Math.random() * sources.length)];
+};
+const claimStep = ref(1);
+const claimForm = ref({
+  type: '住院医疗',
+  amount: '42840.00',
+  bank: '中国工商银行',
+  account: '6222 **** **** 8832'
+});
+
+type ViewType = "overview" | "health" | "finance" | "info" | "logout" | "medintercept" | "rulesadapt";
+type RecordTab = "op" | "ip" | "lab" | "exam" | "med";
+type LifecycleTab = "all" | "op" | "ip" | "lab" | "exam" | "med";
+
+const activeView = ref<ViewType>("overview");
+const showMedInterceptPopup = ref(true);
+const showRulesAdaptPopup = ref(true);
+const selectedPatientId = ref(1);
+const selectedPatient = computed(() => {
+  return patients.find(p => p.id === selectedPatientId.value) || patients[0];
+});
+const activeRecordTab = ref<RecordTab>("op");
+const activeLifecycleTab = ref<LifecycleTab>("op");
+const showDetail = ref<{ type: string; title: string } | null>(null);
+const showRefillModal = ref(false);
+const showHealthRefillModal = ref(false);
+const showReimbursementModal = ref(false);
+const showFamilyManagementModal = ref(false);
+const showDicomViewer = ref(false);
+const selectedCity = ref("changzhou");
+const selectedYear = ref("2026");
+const selectedRecordType = ref("门诊");
+const currentPage = ref(1);
+const itemsPerPage = 5;
+
+const cbCurrentPage = ref(1);
+const cbItemsPerPage = 5;
+
+const cbReimbursementData = [
+  { date: "2026-01-15", name: "平安e生保·长期医疗", hosp: "市第一人民医院", type: "住院理赔", typeTag: "t-red", amount: "1,250.00", status: "已打款", statusTag: "t-green" },
+  { date: "2025-06-20", name: "泰康在线·百万医疗险", hosp: "常州市中医院", type: "门诊理赔", typeTag: "t-blue", amount: "450.00", status: "已打款", statusTag: "t-green" }
+];
+
+const paginatedCbReimbursementData = computed(() => {
+  const start = (cbCurrentPage.value - 1) * cbItemsPerPage;
+  const end = start + cbItemsPerPage;
+  return cbReimbursementData.slice(start, end);
+});
+
+const cbTotalPages = computed(() => Math.ceil(cbReimbursementData.length / cbItemsPerPage));
+
+const changeCbPage = (page: number) => {
+  if (page >= 1 && page <= cbTotalPages.value) {
+    cbCurrentPage.value = page;
+  }
+};
+
+const reimbursementData = [
+  { date: "2026-03-05 14:20:31", hosp: "市第一人民医院", type: "门诊", total: "386.00", cash: "38.00", fund: "268.00", account: "80.00", deduct: "0.00", other: "0.00", ratio: "69.4%" },
+  { date: "2026-02-18 09:12:05", hosp: "天宁区社区卫生中心", type: "门诊", total: "50.00", cash: "0.00", fund: "45.00", account: "5.00", deduct: "0.00", other: "0.00", ratio: "90.0%" },
+  { date: "2025-08-05 11:07:05", hosp: "常州市第一人民医院", type: "住院", total: "6101.50", cash: "3310.86", fund: "2790.64", account: "0.00", deduct: "0.00", other: "0.00", ratio: "45.7%" },
+  { date: "2025-07-20 09:30:12", hosp: "常州市第二人民医院", type: "门诊", total: "420.00", cash: "120.00", fund: "300.00", account: "0.00", deduct: "0.00", other: "0.00", ratio: "71.4%" },
+  { date: "2025-06-15 14:22:45", hosp: "常州市中医院", type: "药店", total: "158.50", cash: "0.00", fund: "0.00", account: "158.50", deduct: "0.00", other: "0.00", ratio: "0.0%" },
+  { date: "2025-05-10 10:15:30", hosp: "常州市第一人民医院", type: "门诊", total: "850.00", cash: "250.00", fund: "600.00", account: "0.00", deduct: "0.00", other: "0.00", ratio: "70.6%" },
+  { date: "2025-04-02 08:45:00", hosp: "常州市妇幼保健院", type: "住院", total: "12500.00", cash: "3500.00", fund: "9000.00", account: "0.00", deduct: "0.00", other: "0.00", ratio: "72.0%" },
+];
+
+const filteredReimbursementData = computed(() => {
+  return reimbursementData.filter(item => item.type === selectedRecordType.value);
+});
+
+const paginatedReimbursementData = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+  return filteredReimbursementData.value.slice(start, end);
+});
+
+const totalPages = computed(() => Math.ceil(filteredReimbursementData.value.length / itemsPerPage));
+
+const changePage = (page: number) => {
+  if (page >= 1 && page <= totalPages.value) {
+    currentPage.value = page;
+  }
+};
+
+const updateFinancialData = () => {
+  // Logic to update financial data based on selectedCity and selectedYear
+  console.log("Updating data for", selectedCity.value, selectedYear.value);
+  // In a real app, this would fetch new data. Here we could randomize or filter.
+};
+
+const activeFamilyTab = ref(0);
+const activeInsuranceType = ref<"职工" | "居民">("职工");
+
+const recordTabs = [
+  { id: "op", label: "门诊", icon: Stethoscope },
+  { id: "ip", label: "住院", icon: Hospital },
+  { id: "exam", label: "检查", icon: ClipboardCheck },
+  { id: "lab", label: "检验", icon: Microscope },
+  { id: "med", label: "药耗", icon: Pill },
+];
+
+const lifecycleTabs = [
+  { id: "op", label: "门诊" },
+  { id: "ip", label: "住院" },
+  { id: "lab", label: "检验" },
+  { id: "exam", label: "检查" },
+  { id: "med", label: "药耗" },
+];
+
+const patients = [
+  { id: 1, name: "陈 ** 明", age: 42, gender: "男", status: "就诊中", tags: ["高血压", "门诊"], av: "👨", avBg: "#EFF6FF", tagColors: ["t-amber", "t-blue"] },
+  { id: 2, name: "王 ** 芳", age: 35, gender: "女", status: "待诊", tags: ["糖尿病", "复查"], av: "👩", avBg: "#ECFDF5", tagColors: ["t-purple", "t-blue"] },
+  { id: 3, name: "张 ** 国", age: 68, gender: "男", status: "已诊", tags: ["心衰", "随访"], av: "👴", avBg: "#FFF7E6", tagColors: ["t-red", "t-amber"] },
+  { id: 4, name: "赵 ** 敏", age: 28, gender: "女", status: "待诊", tags: ["孕32周", "产检"], av: "👧", avBg: "#F5F3FF", tagColors: ["t-green", "t-cyan"] },
+  { id: 5, name: "刘 ** 阳", age: 55, gender: "男", status: "待诊", tags: ["冠心病", "门诊"], av: "👦", avBg: "#FEF2F2", tagColors: ["t-red", "t-blue"] },
+];
+
+const viewTitle = computed(() => {
+  switch (activeView.value) {
+    case "overview": return "参保人画像";
+    case "health": return "医保健康档案";
+    case "finance": return "医保财务档案";
+    case "info": return "医保信息档案";
+    case "logout": return "退出登录";
+    case "medintercept": return "用药实时拦截";
+    case "rulesadapt": return "医保规则智能适配";
+    default: return "";
+  }
+});
+
+const filteredPatients = computed(() => {
+  if (!searchQuery.value) return patients;
+  const q = searchQuery.value.toLowerCase();
+  return patients.filter(p => 
+    p.name.toLowerCase().includes(q) || 
+    p.id.toString().includes(q)
+  );
+});
+
+const showToast = ref(false);
+const toastMessage = ref('');
+
+const handleAction = (type: string, title: string, record?: any) => {
+  if (type === 'toast') {
+    toastMessage.value = title;
+    showToast.value = true;
+    setTimeout(() => {
+      showToast.value = false;
+    }, 2000);
+    return;
+  }
+  
+  if (type === 'op' || type === 'ip_detail' || type === 'lab_detail' || type === 'exam_detail') {
+    selectedRecordForDetail.value = record;
+    showOutpatientDetail.value = true;
+  } else if (type === 'dicom') {
+    selectedRecordForDetail.value = record;
+    showDicomViewer.value = true;
+  } else {
+    showDetail.value = { type, title };
+  }
+};
+
+</script>
+
+<template>
+  <a-config-provider :theme="antdTheme">
+  <div v-if="activeView === 'medintercept'" style="position: relative; width: 100vw; height: 100vh; background: url('/his.png') center / cover no-repeat;">
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end space-y-4 pointer-events-none">
+      <transition enter-active-class="animate__animated animate__fadeInRight" leave-active-class="animate__animated animate__fadeOutRight">
+        <div v-if="showMedInterceptPopup" class="pointer-events-auto glass-card w-96 rounded-xl overflow-hidden border-red-200 alert-pulse">
+          <div class="bg-red-500 p-3 text-white flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+              <span class="font-bold">用药安全实时拦截</span>
+            </div>
+            <button @click="showMedInterceptPopup = false" class="text-white hover:text-gray-200">✕</button>
+          </div>
+          <div class="p-4">
+            <h3 class="text-red-700 font-bold mb-3 flex items-center text-sm">
+              检测到 2 项高危用药风险：
+            </h3>
+
+            <div class="mb-3 bg-red-50 p-3 rounded-lg border border-red-100">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[10px] font-bold text-red-600 bg-red-100 px-2 py-0.5 rounded">风险 1：严重过敏</span>
+              </div>
+              <p class="text-sm text-red-800">拟开具：<span class="font-bold">注射用阿莫西林钠</span></p>
+              <p class="text-xs text-red-600 mt-1 font-medium italic">风险：患者对青霉素类药物极度敏感</p>
+            </div>
+
+            <div class="mb-4 bg-orange-50 p-3 rounded-lg border border-orange-100">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-[10px] font-bold text-orange-600 bg-orange-100 px-2 py-0.5 rounded">风险 2：重复用药</span>
+              </div>
+              <p class="text-sm text-orange-800">拟开具：<span class="font-bold">阿司匹林肠溶片</span></p>
+              <p class="text-xs text-orange-600 mt-1 font-medium italic">风险：与正在服用的抗凝类药物存在配伍禁忌</p>
+            </div>
+
+            <div class="bg-blue-50 p-3 rounded border border-blue-100 shadow-inner">
+              <div class="flex items-center text-blue-700 text-xs font-bold mb-2">
+                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z"></path><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.064 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd"></path></svg>
+                个人医保云实时分析
+              </div>
+              <ul class="text-[11px] text-blue-800 space-y-1.5 leading-tight">
+                <li class="flex items-start">
+                  <span class="mr-1">•</span>
+                  <span>检索画像发现：患者 2022-05 在 <span class="font-bold">省中医院</span> 有明确青霉素休克史。</span>
+                </li>
+                <li class="flex items-start">
+                  <span class="mr-1">•</span>
+                  <span>处方同步显示：患者 3 天前在 <span class="font-bold">市一院</span> 已开具【氯吡格雷】，本次开药将导致双抗风险。</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="mt-4 flex space-x-2">
+              <button @click="showMedInterceptPopup = false" class="flex-1 py-2 bg-red-600 text-white rounded-lg text-sm font-bold hover:bg-red-700 transition shadow-md">删除医嘱</button>
+              <button class="flex-1 py-2 border border-gray-300 text-gray-600 rounded-lg text-sm hover:bg-gray-50 transition">坚持开具(需理由)</button>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </div>
+  </div>
+  <div v-else-if="activeView === 'rulesadapt'" style="position: relative; width: 100vw; height: 100vh; background: url('/his.png') center / cover no-repeat;">
+    <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end space-y-4 pointer-events-none">
+      <transition enter-active-class="animate__animated animate__fadeInRight" leave-active-class="animate__animated animate__fadeOutRight">
+        <div v-if="showRulesAdaptPopup" class="pointer-events-auto glass-card w-96 rounded-xl overflow-hidden border-blue-200">
+          <div class="bg-blue-600 p-3 text-white flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+              <span class="font-bold">医保规则智能适配</span>
+            </div>
+            <button @click="showRulesAdaptPopup = false" class="text-white">✕</button>
+          </div>
+          <div class="p-4">
+            <div class="flex justify-between items-start mb-2">
+              <p class="text-gray-800 font-bold text-sm">【头部MRI平扫】报销限制</p>
+              <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-0.5 rounded">预警</span>
+            </div>
+            <p class="text-xs text-gray-600 mb-3 leading-relaxed">该项目在当前医保待遇【门诊统筹】下需满足“偏头痛史”或“外伤史”方可报销。</p>
+            
+            <div class="bg-green-50 p-3 rounded border border-green-100 mb-3">
+              <div class="flex items-center text-green-700 text-xs font-bold mb-1">
+                个人医保云实时分析
+              </div>
+              <p class="text-xs text-green-800 font-medium">系统调取个人医保云显示：患者历史病历中包含“慢性偏头痛”诊断（2023-11），符合报销规则。建议补充临床诊断以通过机审。</p>
+            </div>
+
+            <div class="flex justify-between items-center text-xs text-gray-500 py-2 border-t border-dashed">
+              <span>预估报销：85%</span>
+              <span>预计个人负担：<span class="text-blue-600 font-bold">¥42.50</span></span>
+            </div>
+            <button @click="showRulesAdaptPopup = false" class="w-full mt-3 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-bold border border-blue-200 hover:bg-blue-100 transition">补充诊断并开具</button>
+          </div>
+        </div>
+      </transition>
+    </div>
+  </div>
+  <div v-else-if="activeView === 'logout'" style="width: 100vw; height: 100vh; background: url('/his.png') center / cover no-repeat;"></div>
+  <div v-else class="layout">
+    <!-- ════ Top Navigation ════ -->
+    <header class="topnav">
+      <div class="s-brand">
+        <div class="s-logo">
+          <div class="brand-logo">
+            <Radar :size="18" />
+          </div>
+        </div>
+        <div class="s-title-group">
+          <div class="s-name">健康数据共享中心</div>
+          <div class="s-sep-v"></div>
+          <div class="s-sub">参保人全息视图</div>
+        </div>
+      </div>
+
+      <nav class="t-nav">
+        <div :class="['si', activeView === 'overview' ? 'on' : '']" @click="activeView = 'overview'">
+          <span class="si-ico"><UserCircle :size="18" /></span>参保人画像
+        </div>
+        <div :class="['si', activeView === 'health' ? 'on' : '']" @click="activeView = 'health'">
+          <span class="si-ico"><Activity :size="18" /></span>医保健康档案
+        </div>
+        <div :class="['si', activeView === 'finance' ? 'on' : '']" @click="activeView = 'finance'">
+          <span class="si-ico"><CreditCard :size="18" /></span>医保财务档案
+        </div>
+        <div :class="['si', activeView === 'info' ? 'on' : '']" @click="activeView = 'info'">
+          <span class="si-ico"><Info :size="18" /></span>医保信息档案
+        </div>
+      </nav>
+
+      <a-dropdown trigger="click">
+        <div class="s-doctor" style="background: transparent; border: none; padding: 0; cursor: pointer;">
+          <div class="sd-av">李</div>
+          <div class="sd-info">
+            <div class="sd-name" style="color: var(--ink); display: flex; align-items: center; gap: 6px;">
+              李主任
+              <ChevronDown :size="14" style="opacity: 0.65;" />
+            </div>
+            <div class="sd-dept" style="color: var(--ink3);">心内科 · 主任医师</div>
+          </div>
+        </div>
+        <template #overlay>
+          <a-menu @click="({ key }) => { if (key === 'medintercept') { activeView = 'medintercept'; showMedInterceptPopup = true; showRulesAdaptPopup = false } else if (key === 'rulesadapt') { activeView = 'rulesadapt'; showRulesAdaptPopup = true; showMedInterceptPopup = false } }">
+            <a-menu-item key="medintercept">用药实时拦截</a-menu-item>
+            <a-menu-item key="rulesadapt">医保规则智能适配</a-menu-item>
+          </a-menu>
+        </template>
+      </a-dropdown>
+    </header>
+
+    <!-- ════ Main ════ -->
+    <main class="main">
+      <div class="main-container">
+        <!-- ── 患者选择器 ── -->
+        <div :class="['pt-panel', isPatientPanelCollapsed ? 'collapsed' : '']">
+          <div class="pt-hd">
+            <div class="pt-hd-l">
+              <UserCircle v-if="!isPatientPanelCollapsed" :size="20" class="pt-hd-ico" /> 
+              <span v-if="!isPatientPanelCollapsed">今日待诊患者</span>
+            </div>
+            <div class="pt-hd-r-toggle" @click="isPatientPanelCollapsed = !isPatientPanelCollapsed">
+              <Menu :size="18" />
+            </div>
+          </div>
+          <div v-if="!isPatientPanelCollapsed" class="pt-search">
+            <div class="pt-search-box">
+              <Search :size="14" class="pt-search-ico" />
+              <input type="text" v-model="searchQuery" placeholder="搜索患者姓名/身份证号" />
+            </div>
+          </div>
+          <div v-if="!isPatientPanelCollapsed" class="pt-stats-bar">
+            共 12 位 · 已诊 4 位
+          </div>
+          <div class="pt-list">
+            <div
+              v-for="pt in filteredPatients"
+              :key="pt.id"
+              :class="['pt-card', selectedPatientId === pt.id ? 'on' : '']"
+              @click="selectedPatientId = pt.id"
+            >
+              <template v-if="!isPatientPanelCollapsed">
+                <div class="pt-av" :style="{ background: pt.avBg }">{{ pt.av }}</div>
+                <div class="pt-info">
+                  <div class="pt-name">{{ pt.name }}</div>
+                  <div class="pt-meta">{{ pt.gender }} · {{ pt.age }}岁</div>
+                </div>
+                <div v-if="pt.status" :class="['pt-status', pt.status === '就诊中' ? 'active' : '']">
+                  {{ pt.status }}
+                </div>
+              </template>
+              <template v-else>
+                <div class="pt-name-collapsed">{{ pt.name }}</div>
+              </template>
+            </div>
+          </div>
+        </div>
+
+        <!-- Content -->
+        <div :class="['content', activeView === 'overview' ? 'overflow-hidden flex flex-col' : '']" style="height: calc(100vh - 64px);">
+          <!-- ── Page Header ── -->
+          <div class="page-header">
+            <div class="ph-breadcrumb">
+              首页 / {{ viewTitle }}
+            </div>
+          </div>
+
+          <div :class="['content-inner', activeView === 'overview' ? 'flex-1 overflow-hidden' : '']">
+            <!-- Overview View (New 3-Column Layout) -->
+            <div v-if="activeView === 'overview'" class="v on flex-layout flex-1 flex gap-4 overflow-hidden">
+              <!-- Left Column: Profile + Insurance -->
+              <aside class="w-[320px] flex flex-col shrink-0 h-full overflow-hidden">
+                <div class="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
+                  <!-- Profile Card -->
+                  <div class="standard-card p-5 relative overflow-hidden flex-shrink-0">
+                    <p class="absolute top-5 right-5 text-[10px] font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                      P88001235
+                    </p>
+                    
+                    <div class="flex gap-4 mb-5">
+                      <div class="relative w-14 h-14 rounded-full bg-blue-50 border border-blue-100 p-1 flex items-center justify-center text-blue-600 shrink-0 shadow-sm">
+                        <UserCircle :size="32" :stroke-width="1.5" />
+                      </div>
+                      <div class="flex flex-col justify-center h-14">
+                        <h2 class="text-xl font-bold text-slate-900 tracking-tight">{{ selectedPatient.name }}</h2>
+                        <span class="text-xs text-slate-500 font-medium">{{ selectedPatient.gender }} · {{ selectedPatient.age }}岁</span>
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-4 gap-2 mb-6">
+                      <div class="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-gradient-to-b from-red-50 to-white border border-red-100 shadow-sm group hover:shadow-md transition-all cursor-default">
+                        <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform shadow-inner">
+                          <HeartPulse :size="16" />
+                        </div>
+                        <span class="text-[9px] font-bold text-slate-700 mt-1">高血压 II级</span>
+                        <span class="text-[8px] text-slate-400 scale-[0.85] origin-top">慢病档案：建档</span>
+                      </div>
+                      <div class="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-gradient-to-b from-emerald-50 to-white border border-emerald-100 shadow-sm group hover:shadow-md transition-all cursor-default">
+                        <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform shadow-inner">
+                          <ShieldCheck :size="16" />
+                        </div>
+                        <span class="text-[9px] font-bold text-slate-700 mt-1">信用就医</span>
+                        <span class="text-[8px] text-emerald-600 scale-[0.8] origin-top font-medium line-clamp-1 text-center" title="信用就医白名单 (可免押金入院)">信用就医白名单...</span>
+                      </div>
+                      <div class="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-gradient-to-b from-blue-50 to-white border border-blue-100 shadow-sm group hover:shadow-md transition-all cursor-default">
+                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform shadow-inner">
+                          <Plane :size="16" />
+                        </div>
+                        <span class="text-[9px] font-bold text-slate-700 mt-1">异地就医</span>
+                        <span class="text-[8px] text-slate-400 scale-[0.85] origin-top">备案地：上海</span>
+                      </div>
+                      <div class="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-gradient-to-b from-purple-50 to-white border border-purple-100 shadow-sm group hover:shadow-md transition-all cursor-default">
+                        <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform shadow-inner">
+                          <UserCheck :size="16" />
+                        </div>
+                        <span class="text-[9px] font-bold text-slate-700 mt-1">签约医生</span>
+                        <span class="text-[8px] text-slate-400 scale-[0.85] origin-top">李华 (家医)</span>
+                      </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 mb-5">
+                      <div class="relative bg-gradient-to-br from-blue-500 to-blue-600 border border-blue-400 rounded-2xl p-4 shadow-md group hover:scale-[1.02] transition-all overflow-hidden">
+                        <div class="absolute -right-2 -top-2 opacity-10 group-hover:scale-110 transition-transform">
+                          <CreditCardIcon :size="64" />
+                        </div>
+                        <p class="text-[10px] text-blue-100 uppercase tracking-wider mb-2 font-bold flex items-center gap-1.5">
+                          <CircleDot :size="10" />
+                          个人账户余额
+                        </p>
+                        <p class="flex items-baseline gap-0.5 font-bold font-mono leading-none text-white">
+                          <span class="text-2xl">5,240</span>
+                          <span class="text-blue-100/80 text-xs">.50</span>
+                        </p>
+                      </div>
+                      <div class="relative bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600 rounded-2xl p-4 shadow-md group hover:scale-[1.02] transition-all overflow-hidden">
+                        <div class="absolute -right-2 -top-2 opacity-10 group-hover:scale-110 transition-transform">
+                          <Briefcase :size="64" />
+                        </div>
+                        <p class="text-[10px] text-slate-300 uppercase tracking-wider mb-2 font-bold flex items-center gap-1.5">
+                          <Target :size="10" />
+                          本年统筹支付
+                        </p>
+                        <p class="flex items-baseline gap-0.5 font-bold font-mono leading-none text-white">
+                          <span class="text-2xl">1,850</span>
+                          <span class="text-slate-400 text-xs">.00</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <!-- Family Mutual Aid Account -->
+                    <div class="pt-4 border-t border-slate-100 mb-5">
+                      <div class="flex items-center gap-2 mb-4 text-blue-600">
+                        <Users :size="14" />
+                        <span class="text-[11px] font-bold tracking-widest uppercase">家庭共济账户</span>
+                      </div>
+                      <div class="flex items-center justify-between px-1">
+                        <div class="flex -space-x-2">
+                          <div class="w-8 h-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-blue-600 shadow-sm relative z-30">本</div>
+                          <div class="w-8 h-8 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-500 shadow-sm relative z-20">妻</div>
+                          <div class="w-8 h-8 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-500 shadow-sm relative z-10">子</div>
+                        </div>
+                        <div class="text-right">
+                          <p class="text-[9px] text-slate-400 font-bold mb-1">家庭账户余额</p>
+                          <p class="text-lg font-bold font-mono text-slate-900 leading-none">
+                            <span class="text-xs mr-0.5 text-slate-500 font-normal">¥</span>12,450<span class="text-xs text-slate-400">.00</span>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-100">
+                      <div class="flex items-center gap-2 mb-4 text-slate-700">
+                        <HeartPulse :size="14" />
+                        <span class="text-[11px] font-bold tracking-widest uppercase">健康摘要</span>
+                      </div>
+                      <div class="px-1">
+                        <div class="space-y-2.5 text-[11px]">
+                          <div class="flex items-center">
+                            <span class="text-slate-500 mr-2 w-10 shrink-0">家族史</span>
+                            <span class="text-slate-700 font-medium">高血压家族史</span>
+                          </div>
+                          <div class="flex items-center">
+                            <span class="text-slate-500 mr-2 w-10 shrink-0">过敏史</span>
+                            <span class="text-red-600 font-bold">青霉素过敏</span>
+                          </div>
+                          <div class="flex items-center">
+                            <span class="text-slate-500 mr-2 w-10 shrink-0">手术史</span>
+                            <span class="text-slate-700 font-medium">2023 结肠息肉切除术</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="mt-6">
+                      <a-button type="primary" block class="rounded-xl h-10 text-xs font-bold shadow-sm" @click="activeView = 'finance'">
+                        <span class="inline-flex items-center justify-center gap-2">
+                          查看报销记录
+                          <ChevronRight :size="14" />
+                        </span>
+                      </a-button>
+                    </div>
+                  </div>
+
+                  <!-- Insurance Archive Center -->
+                  <div class="standard-card p-5 relative flex-shrink-0">
+                    <div class="flex items-center justify-between mb-4">
+                      <h3 class="text-[13px] font-bold text-[#2563eb] uppercase tracking-widest flex items-center gap-2">
+                        <ShieldCheck class="w-4 h-4" />
+                        医保信息档案
+                      </h3>
+                      <button class="text-[13px] font-normal text-[#2563EB] flex items-center gap-1 transition-colors hover:opacity-80" style="color: #2563EB !important; font-size: 13px; font-weight: 400;" @click="activeView = 'info'">
+                        查看更多
+                        <ChevronRight :size="12" />
+                      </button>
+                    </div>
+
+                    <div class="flex p-1 bg-slate-100 rounded-xl mb-4 border border-slate-200/50 shadow-inner">
+                      <button 
+                        v-for="t in insuranceTabs" 
+                        :key="t.id"
+                        class="flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all duration-300"
+                        :class="insuranceTab === t.id ? 'bg-white text-blue-600 shadow-sm transform scale-[1.02]' : 'text-slate-500 hover:text-slate-700'"
+                        @click="insuranceTab = t.id"
+                      >
+                        {{ t.label }}
+                      </button>
+                    </div>
+
+                    <div class="flex-1 overflow-hidden">
+                      <div v-if="insuranceTab === 'status'">
+                        <div class="flex items-center justify-between mb-4 mt-1">
+                          <span class="text-slate-700 font-semibold tracking-widest text-xs uppercase">参保状态</span>
+                          <div class="flex items-center gap-1.5">
+                            <div class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(74,222,128,0.8)]"></div>
+                            <span class="text-[9px] font-bold text-green-700 tracking-wider">正常参保(在缴)</span>
+                          </div>
+                        </div>
+                        <div class="space-y-5">
+                          <div>
+                            <div class="mb-3">
+                              <p class="text-[9px] text-slate-500 uppercase mb-1 font-bold tracking-widest">参保类型</p>
+                              <h3 class="text-lg font-bold text-slate-900 tracking-tight">职工基本医疗保险</h3>
+                            </div>
+                            <div>
+                              <p class="text-[9px] text-slate-500 uppercase mb-1 font-bold tracking-widest">统筹区</p>
+                              <p class="text-lg font-bold text-slate-900 tracking-tight">常州市 (3204)</p>
+                            </div>
+                          </div>
+                          <div class="pt-2">
+                            <p class="text-[11px] text-slate-500 uppercase mb-4 font-bold tracking-widest">医保年度累计</p>
+                            <div class="space-y-4 pb-2">
+                              <div>
+                                <div class="flex justify-between text-[11px] mb-1.5 font-mono">
+                                  <span class="text-slate-600">门诊统筹额度</span>
+                                  <span class="text-blue-600">1,900 / 10,000</span>
+                                </div>
+                                <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                                  <div class="h-full bg-gradient-to-r from-blue-600 to-blue-400 w-[19%]"></div>
+                                </div>
+                              </div>
+                              <div>
+                                <div class="flex justify-between text-[11px] mb-1.5 font-mono">
+                                  <span class="text-slate-600">住院统筹额度</span>
+                                  <span class="text-green-600">14,800 / 400,000</span>
+                                </div>
+                                <div class="h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
+                                  <div class="h-full bg-gradient-to-r from-green-600 to-green-400 w-[3.7%]"></div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <!-- Family Mutual Aid Account -->
+                            <div class="pt-4 border-t border-slate-100">
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div v-else-if="insuranceTab === 'commercial'">
+                        <div class="mb-4 mt-1"><span class="text-slate-700 font-semibold tracking-widest text-xs uppercase">商业保险管理</span></div>
+                        <div class="space-y-4">
+                          <!-- 江苏医惠保1号 -->
+                          <div class="relative rounded-xl overflow-hidden bg-gradient-to-br from-orange-50 to-white border border-orange-200 p-4 shadow-sm">
+                            <div class="flex justify-between items-start mb-4">
+                              <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center border border-orange-100 shadow-sm text-xl">
+                                  🛡️
+                                </div>
+                                <div>
+                                  <h4 class="text-sm font-bold text-slate-900">江苏医惠保1号</h4>
+                                  <p class="text-[10px] text-slate-500">保单号：PASH20240312001</p>
+                                </div>
+                              </div>
+                              <a-button type="primary" danger size="small" class="rounded-full px-4 text-[10px]" @click="showInsuranceClaimModal = true">一键直赔</a-button>
+                            </div>
+                            <div class="grid grid-cols-4 gap-2 border-t border-orange-100 pt-3">
+                              <div>
+                                <p class="text-[8px] text-slate-400 uppercase font-bold mb-0.5">保障状态</p>
+                                <p class="text-[10px] font-bold text-green-600">保障中</p>
+                              </div>
+                              <div>
+                                <p class="text-[8px] text-slate-400 uppercase font-bold mb-0.5">年度保额</p>
+                                <p class="text-[10px] font-bold text-slate-900">400万</p>
+                              </div>
+                              <div>
+                                <p class="text-[8px] text-slate-400 uppercase font-bold mb-0.5">免赔额</p>
+                                <p class="text-[10px] font-bold text-slate-900">1.0万</p>
+                              </div>
+                              <div>
+                                <p class="text-[8px] text-slate-400 uppercase font-bold mb-0.5">到期日期</p>
+                                <p class="text-[10px] font-bold text-slate-900">25-03-11</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- 乐享健康重疾险 -->
+                          <div class="relative rounded-xl overflow-hidden bg-gradient-to-br from-blue-50 to-white border border-blue-200 p-4 shadow-sm">
+                            <div class="flex justify-between items-start mb-4">
+                              <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center border border-blue-100 shadow-sm text-xl">
+                                  🛡️
+                                </div>
+                                <div>
+                                  <h4 class="text-sm font-bold text-slate-900">乐享健康重疾险</h4>
+                                  <p class="text-[10px] text-slate-500">保单号：LXJK20240520008</p>
+                                </div>
+                              </div>
+                              <a-button type="primary" danger size="small" class="rounded-full px-4 text-[10px]" @click="showInsuranceClaimModal = true">一键直赔</a-button>
+                            </div>
+                            <div class="grid grid-cols-4 gap-2 border-t border-blue-100 pt-3">
+                              <div>
+                                <p class="text-[8px] text-slate-400 uppercase font-bold mb-0.5">保障状态</p>
+                                <p class="text-[10px] font-bold text-green-600">保障中</p>
+                              </div>
+                              <div>
+                                <p class="text-[8px] text-slate-400 uppercase font-bold mb-0.5">年度保额</p>
+                                <p class="text-[10px] font-bold text-slate-900">50万</p>
+                              </div>
+                              <div>
+                                <p class="text-[8px] text-slate-400 uppercase font-bold mb-0.5">免赔额</p>
+                                <p class="text-[10px] font-bold text-slate-900">0</p>
+                              </div>
+                              <div>
+                                <p class="text-[8px] text-slate-400 uppercase font-bold mb-0.5">到期日期</p>
+                                <p class="text-[10px] font-bold text-slate-900">25-05-19</p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- AI 建议 -->
+                          <div class="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4 mb-2">
+                            <div class="flex items-center gap-2 mb-3">
+                              <div class="bg-blue-600 text-white rounded-lg p-1">
+                                <Zap :size="12" />
+                              </div>
+                              <span class="text-[11px] font-bold text-slate-900">AI 医保条款分析建议</span>
+                            </div>
+                            <div class="space-y-3">
+                              <div class="flex gap-2">
+                                <span class="text-[10px] font-bold text-slate-600 shrink-0 mt-0.5">推荐用药范围：</span>
+                                <p class="text-[10px] text-slate-700 leading-relaxed">
+                                  持<span class="text-orange-600 font-bold">江苏医惠保1号</span>，目录外可报销但有2万免赔。建议优先目录内药品。
+                                </p>
+                              </div>
+                              <div class="flex gap-2">
+                                <span class="text-[10px] font-bold text-slate-600 shrink-0 mt-0.5">重疾保障提示：</span>
+                                <p class="text-[10px] text-slate-700 leading-relaxed">
+                                  <span class="text-green-600 font-bold">乐享健康重疾险</span>覆120种重疾。注意肺结节随访，恶性肿瘤将触发全赔。
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div v-else>
+                        <div class="mb-4 mt-1"><span class="text-slate-700 font-semibold tracking-widest text-xs uppercase">长期护理保险</span></div>
+                        <div class="bg-white border border-green-200 rounded-xl p-4 shadow-sm mb-2 bg-gradient-to-br from-green-50/50 to-white">
+                          <div class="flex items-center gap-3 mb-4">
+                            <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center border border-green-100 shadow-sm text-xl">🦽</div>
+                            <div>
+                              <h4 class="text-sm font-bold text-slate-900">常州市长期护理保险</h4>
+                              <p class="text-[10px] text-slate-500">评定等级：重度失能 II 级</p>
+                            </div>
+                          </div>
+                          <div class="grid grid-cols-4 gap-2 border-t border-green-100 pt-3">
+                            <div>
+                              <p class="text-[8px] text-slate-400 uppercase font-bold mb-0.5">待遇状态</p>
+                              <p class="text-[10px] font-bold text-green-600">享受中</p>
+                            </div>
+                            <div>
+                              <p class="text-[8px] text-slate-400 uppercase font-bold mb-0.5">服务方式</p>
+                              <p class="text-[10px] font-bold text-slate-900">居家护理</p>
+                            </div>
+                            <div>
+                              <p class="text-[8px] text-slate-400 uppercase font-bold mb-0.5">服务频次</p>
+                              <p class="text-[10px] font-bold text-slate-900">3次/周</p>
+                            </div>
+                            <div>
+                              <p class="text-[8px] text-slate-400 uppercase font-bold mb-0.5">定点机构</p>
+                              <p class="text-[10px] font-bold text-slate-900 truncate" title="常州安心养老服务中心">常州安心...</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </aside>
+
+              <!-- Center Column: Visualization + AI -->
+              <section class="flex-1 flex flex-col gap-4 overflow-hidden relative">
+                  <div class="flex-1 min-h-0 relative standard-card !bg-white/80 overflow-hidden group">
+                    <div class="w-full h-full flex items-center justify-center">
+                      <div class="relative w-full h-full flex items-center justify-center p-3">
+                        <BodyAnnotation body-image-src="/body.png" />
+                      </div>
+                    </div>
+
+                    <div class="absolute top-4 left-4 z-10 flex flex-col gap-3">
+                      <!-- Real-time Metrics -->
+                      <div class="bg-white/80 backdrop-blur-md border border-slate-200 rounded-lg p-3 w-48 shadow-sm">
+                        <h3 class="text-[10px] font-bold text-blue-700 uppercase tracking-widest mb-3">实时体征监测</h3>
+                        <div class="space-y-3">
+                          <div class="flex items-center gap-2">
+                            <HeartPulse :size="14" class="text-red-400/70 shrink-0" />
+                            <div class="text-xs text-slate-800 leading-tight">
+                              <span class="text-slate-500 text-[9px]">血压</span><br />
+                              <span class="font-mono font-bold">128/82</span> <span class="text-blue-600/50">mmHg</span>
+                            </div>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <Droplets :size="14" class="text-green-400/70 shrink-0" />
+                            <div class="text-xs text-slate-800 leading-tight">
+                              <span class="text-slate-500 text-[9px]">血糖</span><br />
+                              <span class="font-mono font-bold">5.8</span> <span class="text-blue-600/50">mmol/L</span>
+                            </div>
+                          </div>
+                          <div class="flex items-center gap-2">
+                            <FlaskConical :size="14" class="text-yellow-400/70 shrink-0" />
+                            <div class="text-xs text-slate-800 leading-tight">
+                              <span class="text-slate-500 text-[9px]">血脂</span><br />
+                              <span class="font-mono font-bold">4.2</span> <span class="text-blue-600/50">mmol/L</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Health Alert Section -->
+                      <div class="bg-amber-50/90 backdrop-blur-md border border-amber-200/60 rounded-lg p-3 w-48 shadow-sm">
+                        <div class="flex items-center gap-2 mb-2 text-amber-600">
+                          <AlertTriangle :size="14" />
+                          <h4 class="text-[10px] font-bold uppercase tracking-widest">患者健康预警</h4>
+                        </div>
+                        <p class="text-[10px] text-amber-800 leading-tight mb-3">
+                          血压近3次均超标 (148/92); 氨氯地平片余3天
+                        </p>
+                        <button 
+                          class="w-full py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold rounded-md transition-colors shadow-sm"
+                          style="color: #ffffff !important; font-size: 10px;"
+                          @click="showHealthRefillModal = true"
+                        >
+                          开具续药处方
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="absolute bottom-4 right-4 z-10">
+                      <button type="button" class="p-2 bg-white/80 hover:bg-slate-50 border border-slate-200 rounded-lg text-blue-600 transition-all shadow-sm" @click="isVizExpanded = !isVizExpanded">
+                        <Move class="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                <div class="h-[210px] standard-card p-4 flex flex-col gap-2 relative overflow-hidden shrink-0 bg-gradient-to-b from-blue-50/50 to-white">
+                  <h3 class="text-[13px] font-bold text-[#2563eb] uppercase tracking-widest flex items-center gap-2">
+                    <Cpu class="w-4 h-4" />
+                    DRG/DIP智能反馈
+                  </h3>
+
+                  <div class="flex-1 grid grid-cols-2 gap-3 min-h-0">
+                    <div class="flex flex-col gap-2 min-h-0">
+                      <div class="grid grid-cols-2 gap-2">
+                        <div class="p-2 bg-white/70 backdrop-blur-sm border border-white/80 rounded-xl">
+                          <div class="text-[10px] text-slate-500 font-bold">本次入院天数</div>
+                          <div class="mt-1 text-[13px] font-bold text-slate-900">5天</div>
+                        </div>
+                        <div class="p-2 bg-white/70 backdrop-blur-sm border border-white/80 rounded-xl">
+                          <div class="text-[10px] text-slate-500 font-bold">预估DRG分组</div>
+                          <div class="mt-1 text-[13px] font-bold text-blue-600">[BR21]</div>
+                        </div>
+                        <div class="p-2 bg-white/70 backdrop-blur-sm border border-white/80 rounded-xl">
+                          <div class="text-[10px] text-slate-500 font-bold">标杆支付额</div>
+                          <div class="mt-1 text-[13px] font-bold text-slate-900">¥ 12,500</div>
+                        </div>
+                        <div class="p-2 bg-white/70 backdrop-blur-sm border border-white/80 rounded-xl">
+                          <div class="text-[10px] text-slate-500 font-bold">当前已发生</div>
+                          <div class="mt-1 text-[13px] font-bold text-red-600">¥ 14,280</div>
+                        </div>
+                      </div>
+
+                      <div class="p-2 bg-white/70 backdrop-blur-sm border border-white/80 rounded-xl min-h-[72px]">
+                        <div class="flex items-center justify-between mb-1.5">
+                          <div class="text-[10px] font-bold text-slate-700">
+                            费用消耗进度 <span class="text-slate-400 font-normal">(对比平均标杆)</span>
+                          </div>
+                          <span class="text-[10px] font-bold text-red-600 bg-red-50 border border-red-100 px-2 py-0.5 rounded-full">已超支 14.2%</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                          <div class="h-1.5 flex-1 bg-slate-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-red-400 to-red-500 w-[85%]"></div>
+                          </div>
+                          <span class="text-[9px] text-slate-400 font-mono whitespace-nowrap">120% <span class="text-slate-300">(标杆线100%)</span></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="flex flex-col gap-2 min-h-0">
+                      <div class="p-2 bg-amber-50/70 border border-amber-200/60 rounded-xl flex-1 min-h-0 overflow-hidden">
+                        <div class="flex items-center gap-2 text-amber-700 font-bold text-[11px] mb-1">
+                          <span class="w-2 h-2 rounded-full bg-amber-500"></span>
+                          路径优化建议（AI 分析）
+                        </div>
+                        <div class="text-[10px] text-amber-900 leading-relaxed" style="-webkit-line-clamp: 4; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;">
+                          检测到高值耗材支出占比异常（+23%），建议核对是否使用了非集采止血粉。建议切换为集采品种以控制费用。
+                        </div>
+                      </div>
+
+                      <div class="flex justify-end">
+                        <button type="button" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-[10px] font-bold hover:bg-blue-700 transition-colors" style="color: #ffffff !important;">
+                          优化路径并重新计算
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <!-- Right Column: Clinical Records -->
+              <aside class="w-[450px] flex flex-col gap-4 shrink-0 transition-all duration-500 ease-in-out" :class="isRecordsExpanded ? 'flex-1' : 'w-[450px]'">
+                <div class="flex-1 standard-card flex flex-col overflow-hidden relative">
+                  <div class="flex items-center justify-between p-4 pb-0 mb-4">
+                    <h3 class="text-[13px] font-bold text-[#2563eb] uppercase tracking-widest flex items-center gap-2">
+                      <Database class="w-4 h-4" />
+                      医保健康档案
+                    </h3>
+                    <button type="button" class="text-[13px] font-normal text-[#2563EB] flex items-center gap-1 transition-colors hover:opacity-80" style="color: #2563EB !important; font-size: 13px; font-weight: 400;" @click="activeView = 'health'">
+                      查看更多
+                      <ChevronRight :size="12" />
+                    </button>
+                  </div>
+
+                  <div class="flex p-1 bg-slate-100 rounded-xl mx-4 mb-4 border border-slate-200/50 shadow-inner">
+                    <button 
+                      v-for="t in recordTabOptions" 
+                      :key="t.id"
+                      class="flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all duration-300"
+                      :class="recordTab === t.id ? 'bg-white text-blue-600 shadow-sm transform scale-[1.02]' : 'text-slate-500 hover:text-slate-700'"
+                      @click="recordTab = t.id"
+                    >
+                      {{ t.label }}
+                    </button>
+                  </div>
+
+                  <div class="flex items-center justify-between px-4 mb-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2">
+                    <span>近三月 {{ recordTabLabel }} 记录</span>
+                    <span class="bg-slate-100 px-2 py-0.5 rounded text-slate-600">数量: {{ filteredRecords.length }}</span>
+                  </div>
+
+                  <div class="flex-1 overflow-y-auto px-4 pb-3 custom-scrollbar">
+                    <div v-if="filteredRecords.length === 0" class="h-full flex flex-col items-center justify-center opacity-40 py-10">
+                      <Database class="w-8 h-8 mb-2" />
+                      <span class="text-[10px] font-bold uppercase tracking-widest">暂无记录</span>
+                    </div>
+
+                    <div v-else class="relative pl-4 ml-2 border-l-2 border-slate-100 space-y-6 pt-2 pb-4">
+                      <div
+                        v-for="record in filteredRecords"
+                        :key="record.id"
+                        class="relative"
+                      >
+                        <!-- Timeline Dot -->
+                        <div class="absolute -left-[25px] top-1.5 w-4 h-4 rounded-full border-2 border-white shadow-sm z-10"
+                             :class="{
+                               'bg-blue-500': record.type === 'op',
+                               'bg-purple-500': record.type === 'ip',
+                               'bg-emerald-500': record.type === 'exam',
+                               'bg-orange-500': record.type === 'lab',
+                               'bg-rose-500': record.type === 'med'
+                             }">
+                        </div>
+
+                        <!-- Date & Hospital Header -->
+                        <div class="flex items-center gap-2 mb-2">
+                          <span class="text-[10px] font-bold font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                            <span v-if="record.dateEnd">{{ record.date }} ~ {{ record.dateEnd }}</span>
+                            <span v-else>{{ record.date }}</span>
+                          </span>
+                          <span class="text-[10px] font-bold text-slate-400 truncate">{{ record.hosp }}</span>
+                        </div>
+
+                        <!-- Record Card -->
+                        <div 
+                          class="bg-white border border-slate-200 rounded-xl p-3 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group relative overflow-hidden"
+                          @click="handleAction(record.type === 'med' ? 'op' : (record.type === 'lab' ? 'lab_detail' : (record.type === 'exam' ? 'exam_detail' : (record.type === 'ip' ? 'ip_detail' : 'op'))), record.diag, record)"
+                        >
+                          <div class="flex items-start justify-between gap-3 mb-2">
+                            <div class="flex items-center gap-2">
+                              <div class="w-6 h-6 rounded-lg flex items-center justify-center"
+                                   :class="{
+                                     'bg-blue-50 text-blue-500': record.type === 'op',
+                                     'bg-purple-50 text-purple-500': record.type === 'ip',
+                                     'bg-emerald-50 text-emerald-500': record.type === 'exam',
+                                     'bg-orange-50 text-orange-500': record.type === 'lab',
+                                     'bg-rose-50 text-rose-500': record.type === 'med'
+                                   }">
+                                <Stethoscope v-if="record.type === 'op'" :size="14" />
+                                <Hospital v-else-if="record.type === 'ip'" :size="14" />
+                                <Scan v-else-if="record.type === 'exam'" :size="14" />
+                                <Microscope v-else-if="record.type === 'lab'" :size="14" />
+                                <Pill v-else :size="14" />
+                              </div>
+                              <div class="text-sm font-bold text-slate-900 truncate">{{ record.diag }}</div>
+                            </div>
+                            <span v-if="record.type === 'ip'" class="text-[9px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100 font-bold">{{ record.status || '住院' }}</span>
+                            <span v-else-if="record.type === 'exam'" class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 font-bold">{{ record.tags[0] }}</span>
+                          </div>
+
+                          <div class="border-t border-slate-100 pt-2 text-xs text-slate-700">
+                            <div v-if="record.type === 'op'" class="space-y-1">
+                              <div class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">诊断：{{ record.desc }}</div>
+                            </div>
+                            <div v-else-if="record.type === 'ip'" class="space-y-2">
+                              <div class="text-[11px] text-slate-600 leading-relaxed">{{ record.desc }}</div>
+                              <div class="flex items-center gap-2 pt-1">
+                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('ip_detail', '入院记录', record)">入院记录</button>
+                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('ip_detail', '首次病程', record)">首次病程</button>
+                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('ip_detail', '出院小结', record)">出院小结</button>
+                              </div>
+                            </div>
+                            <div v-else-if="record.type === 'exam'" class="space-y-2">
+                              <div class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">{{ record.desc }}</div>
+                              <div class="flex items-center gap-2 pt-1">
+                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('exam_detail', '查看报告', record)">查看报告</button>
+                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('dicom', '调阅影像', record)">调阅影像</button>
+                              </div>
+                            </div>
+                            <div v-else-if="record.type === 'lab'" class="space-y-1">
+                              <div class="flex flex-col gap-1 mt-1">
+                                <div v-for="(m, i) in record.metrics" :key="i" class="flex justify-between items-center p-1.5 rounded-lg text-[11px] bg-slate-50 group-hover:bg-blue-50/30 transition-colors">
+                                  <span class="text-slate-600">{{ m.label }}</span>
+                                  <span class="font-mono font-bold" :class="m.flag === 'high' ? 'text-red-600' : m.flag === 'low' ? 'text-yellow-600' : 'text-slate-700'">
+                                    {{ m.value }} {{ m.unit }} {{ m.flag === 'high' ? '↑' : m.flag === 'low' ? '↓' : '' }}
+                                  </span>
+                                </div>
+                              </div>
+                              <div v-if="record.moreCount" class="text-center pt-1.5 text-[10px] text-slate-400 font-bold group-hover:text-blue-500 transition-colors flex items-center justify-center gap-1">
+                                展开剩余 {{ record.moreCount }} 项指标 <ChevronDown :size="10" />
+                              </div>
+                            </div>
+                            <div v-else class="space-y-1">
+                              <div class="flex flex-col gap-1 mt-1">
+                                <div v-for="(it, i) in record.items" :key="i" class="flex justify-between items-center p-1.5 rounded-lg text-[11px] bg-slate-50 group-hover:bg-blue-50/30 transition-colors">
+                                  <span class="text-slate-600">{{ it.name }}</span>
+                                  <span class="font-mono font-bold text-slate-700">x{{ it.count }}</span>
+                                </div>
+                              </div>
+                              <div v-if="record.moreCount" class="text-center pt-1.5 text-[10px] text-slate-400 font-bold group-hover:text-blue-500 transition-colors flex items-center justify-center gap-1">
+                                展开剩余 {{ record.moreCount }} 项 <ChevronDown :size="10" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </aside>
+            </div>
+
+        <!-- Health View -->
+        <div v-if="activeView === 'health'" class="v on">
+          <div class="card g-full">
+            <div class="ch">
+              <div class="ch-l">
+                <div class="ch-stripe" style="background: var(--blue)"></div>
+                <div class="ch-title">全生命周期诊疗记录</div>
+              </div>
+            </div>
+            <div class="filter-header" style="display: flex; justify-content: flex-start; gap: 16px; padding: 12px 16px; border-bottom: 1px solid var(--line); align-items: center; background: #fff;">
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 13px; color: var(--ink3); font-weight: 500;">机构：</span>
+                <select class="ch-sel" style="width: 140px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; background: #f8fafc; outline: none; cursor: pointer;">
+                  <option>市第一人民医院</option>
+                  <option>市第二人民医院</option>
+                </select>
+              </div>
+              <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 13px; color: var(--ink3); font-weight: 500;">时间：</span>
+                <select class="ch-sel" style="width: 110px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; background: #f8fafc; outline: none; cursor: pointer;">
+                  <option>近1年</option>
+                  <option>近3年</option>
+                  <option>全部</option>
+                </select>
+              </div>
+              <button class="btn-p" style="padding: 6px 16px; font-size: 13px; margin-left: 8px;">导出记录</button>
+            </div>
+            <div class="lifecycle-tabs-container">
+              <div class="lifecycle-tabs">
+                <div
+                  v-for="tab in lifecycleTabs"
+                  :key="tab.id"
+                  :class="['lt-item', activeLifecycleTab === tab.id ? 'on' : '']"
+                  @click="activeLifecycleTab = tab.id as LifecycleTab"
+                >
+                  {{ tab.label }}
+                </div>
+              </div>
+            </div>
+            <div class="cb scroll-x" style="padding: 0">
+              <LifecycleList :filter="activeLifecycleTab" @action="handleAction" />
+            </div>
+          </div>
+          <div class="g2">
+            <div class="card">
+              <div class="ch">
+                <div class="ch-l">
+                  <div class="ch-stripe" style="background: var(--purple)"></div>
+                  <div class="ch-title">当前用药清单</div>
+                </div>
+                <span class="ch-r" style="color: #2563EB !important; font-size: 12px;" @click="showHealthRefillModal = true">开具续药处方 →</span>
+              </div>
+              <div class="cb">
+                <div class="di">
+                  <div class="di-ico">💊</div>
+                  <div class="di-info">
+                    <div class="di-name">苯磺酸氨氯地平片</div>
+                    <div class="di-spec">5mg × 30片 · 每日1次</div>
+                  </div>
+                  <div class="di-days">
+                    <div class="di-dn" style="color: var(--red)">3天</div>
+                    <div class="di-dl">剩余</div>
+                  </div>
+                </div>
+                <div class="di">
+                  <div class="di-ico">💊</div>
+                  <div class="di-info">
+                    <div class="di-name">缬沙坦胶囊</div>
+                    <div class="di-spec">80mg × 7粒 · 每日1次</div>
+                  </div>
+                  <div class="di-days">
+                    <div class="di-dn" style="color: var(--amber)">8天</div>
+                    <div class="di-dl">剩余</div>
+                  </div>
+                </div>
+                <div class="di">
+                  <div class="di-ico">💊</div>
+                  <div class="di-info">
+                    <div class="di-name">阿司匹林肠溶片</div>
+                    <div class="di-spec">100mg × 30片 · 每日1次</div>
+                  </div>
+                  <div class="di-days">
+                    <div class="di-dn" style="color: var(--green)">22天</div>
+                    <div class="di-dl">剩余</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="ch">
+                <div class="ch-l">
+                  <div class="ch-stripe" style="background: var(--green)"></div>
+                  <div class="ch-title">关键健康指标</div>
+                </div>
+                <span class="ch-r" style="color: #2563EB !important; font-size: 12px;" @click="showMetricDetailModal = true">查看更多 →</span>
+              </div>
+              <div class="cb">
+                <div class="hi-grid">
+                  <div class="hi" @click="showMetricDetailModal = true; selectedMetric = '血压'">
+                    <div class="hi-top">
+                      <span class="hi-ico">❤️</span>
+                      <span class="hi-s hi-warn">偏高</span>
+                    </div>
+                    <div class="hi-val" style="color: var(--red)">148/92</div>
+                    <div class="hi-lbl">血压 mmHg</div>
+                  </div>
+                  <div class="hi" @click="showMetricDetailModal = true; selectedMetric = '血糖'">
+                    <div class="hi-top">
+                      <span class="hi-ico">🩸</span>
+                      <span class="hi-s hi-ok">正常</span>
+                    </div>
+                    <div class="hi-val" style="color: var(--green)">5.2</div>
+                    <div class="hi-lbl">血糖 mmol/L</div>
+                  </div>
+                  <div class="hi" @click="showMetricDetailModal = true; selectedMetric = '体重'">
+                    <div class="hi-top">
+                      <span class="hi-ico">⚖️</span>
+                      <span class="hi-s hi-warn">超重</span>
+                    </div>
+                    <div class="hi-val" style="color: var(--amber)">27.4</div>
+                    <div class="hi-lbl">BMI</div>
+                  </div>
+                  <div class="hi" @click="showMetricDetailModal = true; selectedMetric = '心率'">
+                    <div class="hi-top">
+                      <span class="hi-ico">🫀</span>
+                      <span class="hi-s hi-ok">正常</span>
+                    </div>
+                    <div class="hi-val" style="color: var(--green)">72</div>
+                    <div class="hi-lbl">心率 bpm</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Finance View -->
+        <div v-if="activeView === 'finance'" class="v on">
+          <div class="filter-header" style="display: flex; justify-content: flex-start; gap: 16px; margin-bottom: 20px; padding: 12px; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 13px; color: var(--ink3); font-weight: 500;">年度：</span>
+              <select class="ch-sel" style="width: 110px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; background: #f8fafc; outline: none; cursor: pointer;" v-model="selectedYear" @change="updateFinancialData">
+                <option value="2026">2026年度</option>
+                <option value="2025">2025年度</option>
+                <option value="2024">2024年度</option>
+              </select>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 13px; color: var(--ink3); font-weight: 500;">地区：</span>
+              <select class="ch-sel" style="width: 110px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; background: #f8fafc; outline: none; cursor: pointer;" v-model="selectedCity" @change="updateFinancialData">
+                <option value="changzhou">常州市</option>
+                <option value="nanjing">南京市</option>
+                <option value="wuxi">无锡市</option>
+              </select>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 13px; color: var(--ink3); font-weight: 500;">类型：</span>
+              <select class="ch-sel" style="width: 110px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; background: #f8fafc; outline: none; cursor: pointer;" v-model="selectedRecordType">
+                <option value="门诊">门诊</option>
+                <option value="住院">住院</option>
+                <option value="药店">药店</option>
+              </select>
+            </div>
+          </div>
+          <div class="g4" style="margin-bottom: 14px">
+            <div class="mc">
+              <div class="mc-lbl">💰 年度费用总额</div>
+              <div class="mc-val" style="color: var(--blue)">{{ selectedYear === '2026' ? '¥10,250.00' : '¥8,540.00' }}</div>
+              <div class="mc-sub">包含所有就医费用</div>
+              <div class="mc-trend tr-flat">→ 较去年增长 15%</div>
+            </div>
+            <div class="mc">
+              <div class="mc-lbl">🏥 医保支付总额</div>
+              <div class="mc-val" style="color: var(--green)">{{ selectedYear === '2026' ? '¥6,320.00' : '¥5,100.00' }}</div>
+              <div class="mc-sub">报销额度比例 38%</div>
+              <div class="mc-trend tr-up">↑ 统筹+个账支付</div>
+            </div>
+            <div class="mc">
+              <div class="mc-lbl">👤 个人支付金额</div>
+              <div class="mc-val" style="color: var(--amber)">{{ selectedYear === '2026' ? '¥3,930.00' : '¥3,440.00' }}</div>
+              <div class="mc-sub">自费+自付部分</div>
+              <div class="mc-trend tr-down">↓ 门槛费已过线</div>
+            </div>
+            <div class="mc">
+              <div class="mc-lbl">📈 医保报销总额</div>
+              <div class="mc-val" style="color: var(--blue)">{{ selectedYear === '2026' ? '¥6,320' : '¥5,100' }}</div>
+              <div class="mc-sub">统筹年度封顶线</div>
+              <div class="mc-trend tr-up">↑ 已用 {{ selectedYear === '2026' ? '¥6,320' : '¥5,100' }} / ¥200,000</div>
+            </div>
+          </div>
+          <div class="g-full">
+            <div class="card">
+              <div class="ch">
+                <div class="ch-l">
+                  <div class="ch-stripe" style="background: var(--blue)"></div>
+                  <div class="ch-title">使用记录</div>
+                </div>
+              </div>
+              <div class="cb">
+                <!-- Ring Charts Row -->
+                <div style="display: flex; justify-content: space-around; align-items: center; padding: 20px 0; border-bottom: 1px dashed var(--line); margin-bottom: 20px">
+                  <!-- Inpatient Ring -->
+                  <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+                    <div style="position: relative; width: 100px; height: 100px">
+                      <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg)">
+                        <circle cx="18" cy="18" r="16" fill="none" stroke="var(--blue-l)" stroke-width="3"></circle>
+                        <circle cx="18" cy="18" r="16" fill="none" stroke="var(--blue)" stroke-width="3" stroke-dasharray="98.7, 100" stroke-linecap="round"></circle>
+                      </svg>
+                      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--blue)">
+                        住院 98.7%
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Outpatient Ring -->
+                  <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+                    <div style="position: relative; width: 100px; height: 100px">
+                      <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg)">
+                        <circle cx="18" cy="18" r="16" fill="none" stroke="var(--green-l)" stroke-width="3"></circle>
+                        <circle cx="18" cy="18" r="16" fill="none" stroke="var(--green)" stroke-width="3" stroke-dasharray="1.3, 100" stroke-linecap="round"></circle>
+                      </svg>
+                      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--green)">
+                        门诊 1.3%
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Pharmacy Ring -->
+                  <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+                    <div style="position: relative; width: 100px; height: 100px">
+                      <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg)">
+                        <circle cx="18" cy="18" r="16" fill="none" stroke="var(--cyan-l)" stroke-width="3"></circle>
+                        <circle cx="18" cy="18" r="16" fill="none" stroke="var(--cyan)" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round"></circle>
+                      </svg>
+                      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--cyan)">
+                        药店 0%
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Table Row -->
+                <div class="scroll-x" style="margin: 0 -18px">
+                  <table class="tbl">
+                    <thead>
+                      <tr>
+                        <th>日期</th>
+                        <th>机构</th>
+                        <th>类型</th>
+                        <th>总费用(元)</th>
+                        <th>现金支付(元)</th>
+                        <th>基金支付(元)</th>
+                        <th>个账支付(元)</th>
+                        <th>账户抵扣金额(元)</th>
+                        <th>其他支付金额(元)</th>
+                        <th>报销比例</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(item, i) in paginatedReimbursementData" :key="i">
+                        <td style="font-size: 11px; color: var(--ink4)">{{ item.date }}</td>
+                        <td>{{ item.hosp }}</td>
+                        <td><span :class="['tag', item.type === '门诊' ? 't-blue' : (item.type === '住院' ? 't-red' : 't-cyan')]">{{ item.type }}</span></td>
+                        <td style="font-weight: 700; color: var(--ink)">{{ item.total }}</td>
+                        <td style="color: var(--ink); font-weight: 600">{{ item.cash }}</td>
+                        <td style="color: var(--blue); font-weight: 600">{{ item.fund }}</td>
+                        <td style="color: var(--blue); font-weight: 600">{{ item.account }}</td>
+                        <td style="color: var(--ink); font-weight: 600">{{ item.deduct }}</td>
+                        <td style="color: var(--ink); font-weight: 600">{{ item.other }}</td>
+                        <td>
+                          <div style="display: flex; align-items: center; gap: 4px">
+                            <div style="position: relative; width: 24px; height: 24px;">
+                              <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg)">
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="var(--line)" stroke-width="4"></circle>
+                                <circle cx="18" cy="18" r="16" fill="none" stroke="var(--blue)" stroke-width="4" :stroke-dasharray="parseFloat(item.ratio) + ', 100'" stroke-linecap="round"></circle>
+                              </svg>
+                            </div>
+                            <span style="font-size: 11px; color: var(--ink4); font-weight: 600">{{ item.ratio }}</span>
+                          </div>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                
+                <!-- Pagination -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; font-size: 13px; color: var(--ink3);">
+                  <div>共 {{ filteredReimbursementData.length }} 条数据</div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <button style="border: 1px solid var(--line); background: #fff; padding: 2px 8px; border-radius: 4px; cursor: pointer;" @click="changePage(currentPage - 1)" :disabled="currentPage === 1">&lt;</button>
+                    <span v-for="page in totalPages" :key="page" 
+                          :style="{ background: currentPage === page ? 'var(--blue)' : 'transparent', color: currentPage === page ? '#fff' : 'var(--ink)', padding: '2px 8px', borderRadius: '4px', cursor: 'pointer' }"
+                          @click="changePage(page)">
+                      {{ page }}
+                    </span>
+                    <button style="border: 1px solid var(--line); background: #fff; padding: 2px 8px; border-radius: 4px; cursor: pointer;" @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages">&gt;</button>
+                    <span style="margin-left: 8px;">跳至</span>
+                    <input type="number" min="1" :max="totalPages" v-model.number="currentPage" @change="changePage(currentPage)" style="width: 40px; border: 1px solid var(--line); border-radius: 4px; text-align: center; padding: 2px;" />
+                    <span>页</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 商保报销记录 -->
+            <div class="card" style="margin-top: 14px">
+              <div class="ch">
+                <div class="ch-l">
+                  <div class="ch-stripe" style="background: var(--purple)"></div>
+                  <div class="ch-title">商保报销记录</div>
+                </div>
+              </div>
+              <div class="cb">
+                <div class="scroll-x" style="margin: 0 -18px">
+                  <table class="tbl">
+                    <thead>
+                      <tr>
+                        <th>报销日期</th>
+                        <th>保险名称</th>
+                        <th>就诊机构</th>
+                        <th>理赔类型</th>
+                        <th>理赔金额(元)</th>
+                        <th>状态</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr v-for="(rec, idx) in paginatedCbReimbursementData" :key="idx">
+                        <td style="font-size: 11px; color: var(--ink4)">{{ rec.date }}</td>
+                        <td>{{ rec.name }}</td>
+                        <td>{{ rec.hosp }}</td>
+                        <td><span :class="['tag', rec.typeTag]">{{ rec.type }}</span></td>
+                        <td style="font-weight: 700; color: var(--blue)">{{ rec.amount }}</td>
+                        <td><span :class="['tag', rec.statusTag]">{{ rec.status }}</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+                <!-- Pagination for Commercial Insurance -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; font-size: 13px; color: var(--ink3);">
+                  <div>共 {{ cbReimbursementData.length }} 条数据</div>
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <button style="border: 1px solid var(--line); background: #fff; padding: 2px 8px; border-radius: 4px; cursor: pointer;" @click="changeCbPage(cbCurrentPage - 1)" :disabled="cbCurrentPage === 1">&lt;</button>
+                    <span v-for="page in cbTotalPages" :key="page" 
+                          :style="{ background: cbCurrentPage === page ? 'var(--blue)' : 'transparent', color: cbCurrentPage === page ? '#fff' : 'var(--ink)', padding: '2px 8px', borderRadius: '4px', cursor: 'pointer' }"
+                          @click="changeCbPage(page)">
+                      {{ page }}
+                    </span>
+                    <button style="border: 1px solid var(--line); background: #fff; padding: 2px 8px; border-radius: 4px; cursor: pointer;" @click="changeCbPage(cbCurrentPage + 1)" :disabled="cbCurrentPage === cbTotalPages">&gt;</button>
+                    <span style="margin-left: 8px;">跳至</span>
+                    <input type="number" min="1" :max="cbTotalPages" v-model.number="cbCurrentPage" @change="changeCbPage(cbCurrentPage)" style="width: 40px; border: 1px solid var(--line); border-radius: 4px; text-align: center; padding: 2px;" />
+                    <span>页</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info View -->
+        <div v-if="activeView === 'info'" class="v on">
+          <div class="g4" style="margin-bottom: 20px;">
+            <div class="mc">
+              <div class="mc-lbl">🏦 个人账户余额</div>
+              <div class="mc-val" style="color: var(--blue)">888.59</div>
+              <div class="mc-sub">最近一次划拨时间</div>
+              <div class="mc-trend tr-flat">→ 2026-03-01</div>
+            </div>
+            <div class="mc">
+              <div class="mc-lbl">👨‍👩‍👧‍👦 家庭共济账户余额</div>
+              <div class="mc-val" style="color: var(--blue)">2,350.00</div>
+              <div class="mc-sub">包含配偶及父母</div>
+              <div class="mc-trend tr-up">↑ 可用于门诊/药店</div>
+            </div>
+            <div class="mc">
+              <div class="mc-lbl">🌍 异地就医备案</div>
+              <div class="mc-val" style="color: var(--blue)">已备案</div>
+              <div class="mc-sub">上海市、南京市</div>
+              <div class="mc-trend" style="background: rgba(34, 197, 94, 0.1); color: var(--green); display: inline-block; padding: 2px 8px; border-radius: 10px;">→ 长期有效</div>
+            </div>
+            <div class="mc">
+              <div class="mc-lbl">💳 信用就医</div>
+              <div class="mc-val" style="color: var(--green)">已开通</div>
+              <div class="mc-sub">授信额度 ¥5,000</div>
+              <div class="mc-trend" style="background: rgba(34, 197, 94, 0.1); color: var(--green); display: inline-block; padding: 2px 8px; border-radius: 10px;">→ 当前可用 ¥5,000</div>
+            </div>
+          </div>
+          <div class="g2">
+            <div style="display: flex; flex-direction: column; gap: 20px">
+              <!-- 参保基本信息 -->
+              <div class="card">
+                <div class="ch">
+                  <div class="ch-l">
+                    <div class="ch-stripe" style="background: var(--blue)"></div>
+                    <div class="ch-title">参保基本信息</div>
+                  </div>
+                  <span 
+                    class="ch-r" 
+                    style="cursor: pointer; background: var(--amber); color: #fff; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px;"
+                    @click="activeInsuranceType = activeInsuranceType === '职工' ? '居民' : '职工'"
+                  >
+                    <RefreshCw :size="14" />
+                    {{ activeInsuranceType === '职工' ? '切换居民' : '切换职工' }}
+                  </span>
+                </div>
+                <div class="cb">
+                  <!-- 职工医保展示信息 -->
+                  <div v-if="activeInsuranceType === '职工'" style="display: flex; flex-direction: column; gap: 0">
+                    <div style="display: flex; justify-content: space-between; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px dashed var(--line2);">
+                      <div style="flex: 1; text-align: center; border-right: 1px solid var(--line2);">
+                        <div style="font-size: 16px; font-weight: 700; color: var(--blue); margin-bottom: 4px;">职工基本医疗保险</div>
+                        <div style="font-size: 12px; color: var(--ink4); padding-top: 8px;">参保类型</div>
+                      </div>
+                      <div style="flex: 1; text-align: center; border-right: 1px solid var(--line2);">
+                        <div style="font-size: 20px; font-weight: 700; color: var(--blue); margin-bottom: 4px;">888.59</div>
+                        <div style="font-size: 12px; color: var(--ink4);">个人账户余额 ℹ️</div>
+                      </div>
+                      <div style="flex: 1; text-align: center;">
+                        <div style="font-size: 20px; font-weight: 700; color: var(--blue); margin-bottom: 4px;">7378.00</div>
+                        <div style="font-size: 12px; color: var(--ink4); padding-top: 8px;">月缴费基数(元) ℹ️</div>
+                      </div>
+                    </div>
+                    
+                    <div style="font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                      <div style="width: 4px; height: 14px; background: var(--blue); border-radius: 2px;"></div>
+                      参保信息
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line2)">
+                      <span style="color: var(--ink4); font-size: 13px;">参保单位</span>
+                      <span style="font-size: 13px; font-weight: 600; text-align: right;">常州某科技有限公司</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line2)">
+                      <span style="color: var(--ink4); font-size: 13px;">参保时间</span>
+                      <span style="font-size: 13px; font-weight: 600; text-align: right;">201306</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed var(--line2)">
+                      <span style="color: var(--ink4); font-size: 13px;">参保状态</span>
+                      <span style="font-size: 13px; font-weight: 600; color: var(--ink); text-align: right;">正常参保</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line2); margin-top: 8px;">
+                      <span style="color: var(--ink4); font-size: 13px;">缴费总数</span>
+                      <span style="font-size: 13px; font-weight: 600; color: var(--blue); text-align: right;">774.69 元</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line2)">
+                      <span style="color: var(--ink4); font-size: 13px;">个人缴费</span>
+                      <span style="font-size: 13px; font-weight: 600; color: var(--blue); text-align: right;">147.56 元</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0;">
+                      <span style="color: var(--ink4); font-size: 13px;">单位缴费</span>
+                      <span style="font-size: 13px; font-weight: 600; color: var(--blue); text-align: right;">627.13 元</span>
+                    </div>
+                  </div>
+                  
+                  <!-- 居民医保展示信息 -->
+                  <div v-else style="display: flex; flex-direction: column; gap: 0">
+                    <div style="display: flex; justify-content: space-between; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px dashed var(--line2);">
+                      <div style="flex: 1; text-align: center; border-right: 1px solid var(--line2);">
+                        <div style="font-size: 16px; font-weight: 700; color: var(--amber); margin-bottom: 4px;">城乡居民基本医疗保险</div>
+                        <div style="font-size: 12px; color: var(--ink4); padding-top: 8px;">参保类型</div>
+                      </div>
+                      <div style="flex: 1; text-align: center; border-right: 1px solid var(--line2);">
+                        <div style="font-size: 16px; font-weight: 700; color: var(--amber); margin-bottom: 4px;">暂停参保</div>
+                        <div style="font-size: 12px; color: var(--ink4);">参保状态</div>
+                      </div>
+                      <div style="flex: 1; text-align: center;">
+                        <div style="font-size: 16px; font-weight: 700; color: var(--amber); margin-bottom: 4px;">暂无数据</div>
+                        <div style="font-size: 12px; color: var(--ink4);">参保身份</div>
+                      </div>
+                    </div>
+                    
+                    <div style="font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                      <div style="width: 4px; height: 14px; background: var(--amber); border-radius: 2px;"></div>
+                      参保信息
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line2)">
+                      <span style="color: var(--ink4); font-size: 13px;">单位名称</span>
+                      <span style="font-size: 13px; font-weight: 600; text-align: right;">常州市天宁区青龙街道</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line2)">
+                      <span style="color: var(--ink4); font-size: 13px;">参保时间</span>
+                      <span style="font-size: 13px; font-weight: 600; text-align: right;">201201</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line2)">
+                      <span style="color: var(--ink4); font-size: 13px;">应缴金额</span>
+                      <span style="font-size: 13px; font-weight: 600; text-align: right;">110.00 元</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; padding: 12px 0;">
+                      <span style="color: var(--ink4); font-size: 13px;">个人应缴</span>
+                      <span style="font-size: 13px; font-weight: 600; text-align: right;">110.00 元</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 家庭共济成员 -->
+              <div class="card">
+                <div class="ch">
+                  <div class="ch-l">
+                    <div class="ch-stripe" style="background: var(--amber)"></div>
+                    <div class="ch-title">家庭共济成员</div>
+                  </div>
+                  <span class="ch-r" @click="showFamilyManagementModal = true">管理 →</span>
+                </div>
+                <div class="cb">
+                  <div style="font-size: 12px; color: var(--ink4); margin-bottom: 12px; font-weight: 500">个账余额可供成员在定点机构使用</div>
+                  <div class="fam-row">
+                    <div class="fm" @click="showFamilyManagementModal = true">
+                      <div class="fm-av" style="background: #FEE2E2; border: 2px solid #FECACA">👩<div class="fm-badge" style="background: var(--green)">✓</div></div>
+                      <div><div class="fm-name">李 **</div><div class="fm-rel">配偶</div></div>
+                    </div>
+                    <div class="fm" @click="showFamilyManagementModal = true">
+                      <div class="fm-av" style="background: var(--blue-l); border: 2px solid #BFDBFE">👦<div class="fm-badge" style="background: var(--green)">✓</div></div>
+                      <div><div class="fm-name">陈 **</div><div class="fm-rel">子女</div></div>
+                    </div>
+                    <div class="fm" @click="showFamilyManagementModal = true">
+                      <div class="fm-av" style="background: var(--purple-l); border: 2px solid #E9D5FF">👴<div class="fm-badge" style="background: var(--amber)">!</div></div>
+                      <div><div class="fm-name">陈 ** 华</div><div class="fm-rel">父亲</div></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 20px">
+              <!-- 商业保险管理 -->
+              <div class="card">
+                <div class="ch">
+                  <div class="ch-l">
+                    <div class="ch-stripe" style="background: var(--red)"></div>
+                    <div class="ch-title">商业保险管理</div>
+                  </div>
+                  <span class="ch-r" @click="showExpiredInsuranceModal = true">到期保单管理 →</span>
+                </div>
+                <div class="cb">
+                  <div style="font-size: 12px; color: var(--ink4); margin-bottom: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="已关联商业保险，支持一键理赔直付">已关联商业保险，支持一键理赔直付</div>
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div class="ins-card-v2" style="background: #FFF7ED; border: 1px solid #FFEDD5; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+                      <div class="ins-v2-top" style="border-bottom: 1px dashed #FFEDD5; padding-bottom: 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                          <div class="ins-v2-logo" style="background: #fff; border: 1px solid #f1f5f9; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🛡️</div>
+                          <div class="ins-v2-info">
+                            <div class="ins-v2-name" style="font-size: 16px; font-weight: 700; color: #1e293b;" title="江苏医惠保1号">江苏医惠保1号</div>
+                            <div class="ins-v2-id" style="font-size: 12px; color: #94a3b8;" title="保单号：PASH20240312001">保单号：PASH20240312001</div>
+                          </div>
+                        </div>
+                        <button class="ins-v2-claim-btn" style="background: #dc2626; color: #fff; border: none; padding: 8px 24px; border-radius: 24px; font-size: 12px; font-weight: 700; cursor: pointer;" @click="showInsuranceClaimModal = true">一键直赔</button>
+                      </div>
+                      <div class="ins-v2-body" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+                        <div class="ins-v2-item">
+                          <div class="ins-v2-lbl" style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;" title="保障状态">保障状态</div>
+                          <div class="ins-v2-val" style="font-size: 13px; font-weight: 700; color: #10b981;" title="保障中">保障中</div>
+                        </div>
+                        <div class="ins-v2-item">
+                          <div class="ins-v2-lbl" style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;" title="年度保额">年度保额</div>
+                          <div class="ins-v2-val" style="font-size: 15px; font-weight: 700; color: #1e293b;" title="¥400.00万">¥400.00万</div>
+                        </div>
+                        <div class="ins-v2-item">
+                          <div class="ins-v2-lbl" style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;" title="免赔额">免赔额</div>
+                          <div class="ins-v2-val" style="font-size: 15px; font-weight: 700; color: #1e293b;" title="¥1.00万">¥1.00万</div>
+                        </div>
+                        <div class="ins-v2-item">
+                          <div class="ins-v2-lbl" style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;" title="到期日期">到期日期</div>
+                          <div class="ins-v2-val" style="font-size: 15px; font-weight: 700; color: #1e293b;" title="2025-03-11">2025-03-11</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="ins-card-v2" style="background: #EFF6FF; border: 1px solid #DBEAFE; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+                      <div class="ins-v2-top" style="border-bottom: 1px dashed #DBEAFE; padding-bottom: 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                          <div class="ins-v2-logo" style="background: #fff; border: 1px solid #f1f5f9; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🛡️</div>
+                          <div class="ins-v2-info">
+                            <div class="ins-v2-name" style="font-size: 16px; font-weight: 700; color: #1e293b;" title="乐享健康重疾险">乐享健康重疾险</div>
+                            <div class="ins-v2-id" style="font-size: 12px; color: #94a3b8;" title="保单号：LXJK20240520008">保单号：LXJK20240520008</div>
+                          </div>
+                        </div>
+                        <button class="ins-v2-claim-btn" style="background: #dc2626; color: #fff; border: none; padding: 8px 24px; border-radius: 24px; font-size: 12px; font-weight: 700; cursor: pointer;" @click="showInsuranceClaimModal = true">一键直赔</button>
+                      </div>
+                      <div class="ins-v2-body" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+                        <div class="ins-v2-item">
+                          <div class="ins-v2-lbl" style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;" title="保障状态">保障状态</div>
+                          <div class="ins-v2-val" style="font-size: 13px; font-weight: 700; color: #10b981;" title="保障中">保障中</div>
+                        </div>
+                        <div class="ins-v2-item">
+                          <div class="ins-v2-lbl" style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;" title="年度保额">年度保额</div>
+                          <div class="ins-v2-val" style="font-size: 15px; font-weight: 700; color: #1e293b;" title="¥50.00万">¥50.00万</div>
+                        </div>
+                        <div class="ins-v2-item">
+                          <div class="ins-v2-lbl" style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;" title="免赔额">免赔额</div>
+                          <div class="ins-v2-val" style="font-size: 15px; font-weight: 700; color: #1e293b;" title="¥0.00">¥0.00</div>
+                        </div>
+                        <div class="ins-v2-item">
+                          <div class="ins-v2-lbl" style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;" title="到期日期">到期日期</div>
+                          <div class="ins-v2-val" style="font-size: 15px; font-weight: 700; color: #1e293b;" title="2025-05-19">2025-05-19</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- AI 医保条款分析建议 -->
+                  <div style="margin-top: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                      <div style="background: var(--blue); color: white; border-radius: 12px; padding: 2px 8px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px;">
+                        <span style="font-size: 14px;">💡</span> AI 医保条款分析建议
+                      </div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                      <div style="display: flex; gap: 8px;">
+                        <div style="color: var(--ink); font-size: 13px; font-weight: 700; white-space: nowrap;">推荐用药范围：</div>
+                        <div style="color: var(--ink2); font-size: 13px; line-height: 1.5;">鉴于患者持有<span style="color: #e27329; font-weight: 700;">江苏医惠保1号</span>，医保目录外费用可报销，但有2万元免赔额。对于高额医疗费用，建议优先使用医保目录内药品以降低自付比例。</div>
+                      </div>
+                      <div style="display: flex; gap: 8px;">
+                        <div style="color: var(--ink); font-size: 13px; font-weight: 700; white-space: nowrap;">重疾保障提示：</div>
+                        <div style="color: var(--ink2); font-size: 13px; line-height: 1.5;"><span style="color: #23a074; font-weight: 700;">乐享健康重疾险</span>覆盖120种重疾。当前诊断（高血压、肺结节）暂未触发理赔，但需注意肺结节随访，若发展为恶性肿瘤将触发全额赔付。</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 增加长护险区域 -->
+              <div class="card">
+                <div class="ch">
+                  <div class="ch-l">
+                    <div class="ch-stripe" style="background: var(--cyan)"></div>
+                    <div class="ch-title">长期护理保险</div>
+                  </div>
+                </div>
+                <div class="cb">
+                  <div style="font-size: 12px; color: var(--ink4); margin-bottom: 12px; font-weight: 500">为重度失能人员提供基本生活照料和医疗护理服务</div>
+                  <div class="ins-card-v2" style="background: #F0FDF4; border: 1px solid #BBF7D0;">
+                    <div class="ins-v2-top">
+                      <div class="ins-v2-logo" style="background: #DCFCE7;">🦽</div>
+                      <div class="ins-v2-info">
+                        <div class="ins-v2-name">常州市长期护理保险</div>
+                        <div class="ins-v2-id">评定等级：重度失能 II 级</div>
+                      </div>
+                    </div>
+                    <div class="ins-v2-body">
+                      <div class="ins-v2-item">
+                        <div class="ins-v2-lbl">待遇状态</div>
+                        <div class="ins-v2-val" style="color: var(--green)">享受中</div>
+                      </div>
+                      <div class="ins-v2-item">
+                        <div class="ins-v2-lbl">服务方式</div>
+                        <div class="ins-v2-val">居家上门护理</div>
+                      </div>
+                      <div class="ins-v2-item">
+                        <div class="ins-v2-lbl">服务频次</div>
+                        <div class="ins-v2-val">3次/周</div>
+                      </div>
+                      <div class="ins-v2-item">
+                        <div class="ins-v2-lbl">定点机构</div>
+                        <div class="ins-v2-val" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px;" title="常州安心养老服务中心">常州安心养老...</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+  <!-- Detail Modal -->
+  <a-modal
+    v-model:open="showDetail"
+    :title="showDetail?.title"
+    :footer="null"
+    width="800px"
+    @cancel="showDetail = null"
+  >
+    <div class="modal-body" v-if="showDetail">
+        <div v-if="showDetail.type === 'op'" class="emr-mock">
+          <div class="emr-header">门诊电子病历</div>
+          <div class="emr-info-grid">
+            <div class="emr-row"><span>姓名：</span>陈 ** 明</div>
+            <div class="emr-row"><span>性别：</span>男</div>
+            <div class="emr-row"><span>年龄：</span>42岁</div>
+            <div class="emr-row"><span>科室：</span>心内科</div>
+            <div class="emr-row"><span>日期：</span>2024-05-15</div>
+            <div class="emr-row"><span>医生：</span>王建国</div>
+          </div>
+          <div class="emr-section"><div class="emr-sec-hd">主诉</div><div class="emr-sec-bd">发现血压升高10年，伴头晕1周。</div></div>
+          <div class="emr-section"><div class="emr-sec-hd">现病史</div><div class="emr-sec-bd">患者10年前体检发现血压升高，最高160/100mmHg，平时服用苯磺酸氨氯地平片，血压控制在140/90mmHg左右。1周前无明显诱因出现头晕，呈持续性胀痛，休息后稍缓解。</div></div>
+          <div class="emr-section"><div class="emr-sec-hd">体格检查</div><div class="emr-sec-bd">T: 36.5℃, P: 72次/分, R: 18次/分, BP: 148/92mmHg。神志清，双肺呼吸音清，未闻及干湿啰音。心界不大，心率72次/分，律齐，各瓣膜听诊区未闻及病理性杂音。</div></div>
+          <div class="emr-section"><div class="emr-sec-hd">初步诊断</div><div class="emr-sec-bd">1. 原发性高血压 3级（极高危）；2. 冠状动脉粥样硬化性心脏病。</div></div>
+          <div class="emr-section"><div class="emr-sec-hd">处理意见</div><div class="emr-sec-bd">1. 苯磺酸氨氯地平片 5mg qd；2. 缬沙坦 80mg qd；3. 建议低盐低脂饮食，监测血压。</div></div>
+        </div>
+        <div v-if="showDetail.type === 'ip'" class="emr-mock">
+          <div class="emr-header">病案首页</div>
+          <div class="emr-info-grid">
+            <div class="emr-row"><span>医疗机构：</span>复旦大学附属中山医院</div>
+            <div class="emr-row"><span>住院号：</span>IP20240310001</div>
+            <div class="emr-row"><span>入院日期：</span>2024-03-10</div>
+            <div class="emr-row"><span>出院日期：</span>2024-03-20</div>
+            <div class="emr-row"><span>入院科室：</span>心内科</div>
+            <div class="emr-row"><span>主治医生：</span>刘明远</div>
+          </div>
+          <div class="emr-section"><div class="emr-sec-hd">主要诊断</div><div class="emr-sec-bd">急性下壁心肌梗死；心功能II级（Killip分级）。</div></div>
+          <div class="emr-section"><div class="emr-sec-hd">其他诊断</div><div class="emr-sec-bd">原发性高血压 3级；2型糖尿病。</div></div>
+          <div class="emr-section"><div class="emr-sec-hd">手术操作</div><div class="emr-sec-bd">经皮冠状动脉支架植入术(PCI) - 2024-03-10。</div></div>
+          <div class="emr-section"><div class="emr-sec-hd">出院情况</div><div class="emr-sec-bd">患者神志清，精神可，无胸闷胸痛。切口愈合良好，生命体征平稳。</div></div>
+        </div>
+        <div v-if="showDetail.type === 'exam'" class="emr-mock">
+          <div class="emr-header">检查报告单</div>
+          <div class="emr-info-grid">
+            <div class="emr-row"><span>项目名称：</span>胸部CT平扫</div>
+            <div class="emr-row"><span>检查部位：</span>胸部</div>
+            <div class="emr-row"><span>检查日期：</span>2024-05-16</div>
+            <div class="emr-row"><span>报告日期：</span>2024-05-16</div>
+            <div class="emr-row"><span>检查号：</span>CT2024051608</div>
+            <div class="emr-row"><span>审核医生：</span>赵红</div>
+          </div>
+          <div class="emr-section"><div class="emr-sec-hd">影像表现</div><div class="emr-sec-bd">双肺纹理增多、增粗，走行尚自然。肺野内未见明显实质性浸润影。左肺下叶见一直径约3mm微小结节影，边界清晰。气管及主要支气管通畅。纵隔未见明显肿大淋巴结。心影增大。双侧胸膜无增厚，胸腔未见积液。</div></div>
+          <div class="emr-section"><div class="emr-sec-hd">诊断结论</div><div class="emr-sec-bd">1. 双肺纹理增多；2. 左肺下叶微小结节，建议随访；3. 心影增大，请结合临床。</div></div>
+        </div>
+        <div v-if="showDetail.type === 'dicom'" class="dicom-viewer">
+          <div class="dicom-tools">
+            <div class="dt-btn">🔍 缩放</div><div class="dt-btn">☀️ 亮度</div><div class="dt-btn">📏 测量</div><div class="dt-btn">🔄 旋转</div><div class="dt-btn">🎞️ 序列</div><div class="dt-btn">📤 导出</div>
+          </div>
+          <div class="dicom-main">
+            <div class="dicom-img">
+              <img src="https://picsum.photos/seed/ct-scan/800/600" alt="DICOM" referrerPolicy="no-referrer" />
+              <div class="dicom-overlay-tl">陈 ** 明 [M, 42Y]<br/>ID: 320404...<br/>2024-05-16</div>
+              <div class="dicom-overlay-tr">常州市第一人民医院<br/>CT Chest<br/>Se: 4 Im: 12/48</div>
+              <div class="dicom-overlay-bl">KV: 120<br/>mAs: 250<br/>Thick: 1.5mm</div>
+              <div class="dicom-overlay-br">W: 1500<br/>L: -500</div>
+            </div>
+          </div>
+          <div class="dicom-footer">阅片器：正在查看 胸部CT 序列 004 · 图像 12/48</div>
+        </div>
+        <div v-if="showDetail.type === 'lab'" class="emr-mock">
+          <div class="emr-header">检验明细报告</div>
+          <div class="emr-info-grid">
+            <div class="emr-row"><span>项目名称：</span>生化常规检查</div>
+            <div class="emr-row"><span>标本类型：</span>血清</div>
+            <div class="emr-row"><span>采样时间：</span>2024-05-16 08:30</div>
+            <div class="emr-row"><span>报告时间：</span>2024-05-16 11:20</div>
+            <div class="emr-row"><span>检验号：</span>LIS2024051601</div>
+            <div class="emr-row"><span>审核医生：</span>孙美玲</div>
+          </div>
+          <table class="tbl" style="margin-top: 14px">
+            <thead><tr><th>项目</th><th>结果</th><th>单位</th><th>参考值</th><th>状态</th></tr></thead>
+            <tbody>
+              <tr><td>谷丙转氨酶 (ALT)</td><td style="color:var(--red); font-weight: 700">45</td><td>U/L</td><td>0-40</td><td>↑</td></tr>
+              <tr><td>谷草转氨酶 (AST)</td><td>32</td><td>U/L</td><td>0-40</td><td>-</td></tr>
+              <tr><td>总胆固醇 (TC)</td><td style="color:var(--red); font-weight: 700">6.2</td><td>mmol/L</td><td>3.1-5.2</td><td>↑</td></tr>
+              <tr><td>甘油三酯 (TG)</td><td>1.8</td><td>mmol/L</td><td>0.5-1.7</td><td>↑</td></tr>
+              <tr><td>低密度脂蛋白 (LDL-C)</td><td style="color:var(--red); font-weight: 700">4.1</td><td>mmol/L</td><td>0-3.4</td><td>↑</td></tr>
+              <tr><td>高密度脂蛋白 (HDL-C)</td><td>1.1</td><td>mmol/L</td><td>1.0-1.6</td><td>-</td></tr>
+              <tr><td>空腹血糖 (FBG)</td><td>5.4</td><td>mmol/L</td><td>3.9-6.1</td><td>-</td></tr>
+              <tr><td>肌酐 (CREA)</td><td>82</td><td>umol/L</td><td>57-97</td><td>-</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </a-modal>
+
+    <!-- Refill Modal -->
+    <a-modal
+      v-model:open="showRefillModal"
+      title="复诊续费"
+      :footer="null"
+      @cancel="showRefillModal = false"
+    >
+      <div class="modal-body">
+        <div class="refill-info">
+          <div class="ri-row"><span>患者姓名：</span>陈 ** 明</div>
+          <div class="ri-row"><span>诊断：</span>原发性高血压 3级</div>
+          <div class="ri-row"><span>上次就诊：</span>2024-05-15 常州市第一人民医院</div>
+        </div>
+        <div class="refill-section">
+          <div class="rs-hd">续药清单</div>
+          <div class="rs-list">
+            <div class="rs-item">
+              <div class="rs-check">✅</div>
+              <div class="rs-med"><div class="rs-name">苯磺酸氨氯地平片</div><div class="rs-spec">5mg × 30片</div></div>
+              <div class="rs-qty">x 1</div>
+              <div class="rs-price">¥28.50</div>
+            </div>
+            <div class="rs-item">
+              <div class="rs-check">✅</div>
+              <div class="rs-med"><div class="rs-name">缬沙坦胶囊</div><div class="rs-spec">80mg × 7粒</div></div>
+              <div class="rs-qty">x 4</div>
+              <div class="rs-price">¥112.00</div>
+            </div>
+          </div>
+        </div>
+        <div class="refill-summary">
+          <div class="ry-row"><span>药品总额：</span>¥140.50</div>
+          <div class="ry-row"><span>诊察费：</span>¥20.00</div>
+          <div class="ry-total"><span>应付总额：</span>¥160.50</div>
+        </div>
+        <div class="refill-actions">
+          <button class="refill-btn-cancel" @click="showRefillModal = false">取消</button>
+          <button class="refill-btn-confirm" @click="showRefillModal = false">确认开具并支付</button>
+        </div>
+      </div>
+    </a-modal>
+
+    <!-- Health Record Refill Modal -->
+    <a-modal
+      v-model:open="showHealthRefillModal"
+      title="开具续药处方"
+      :footer="null"
+      @cancel="showHealthRefillModal = false"
+    >
+      <div class="modal-body">
+        <div class="refill-info">
+          <div class="ri-row"><span>患者姓名：</span>陈 ** 明</div>
+          <div class="ri-row"><span>诊断：</span>原发性高血压 3级</div>
+          <div class="ri-row"><span>上次就诊：</span>2024-05-15 常州市第一人民医院</div>
+        </div>
+        <div class="refill-section">
+          <div class="rs-hd">续药清单</div>
+          <div class="rs-list">
+            <div class="rs-item">
+              <div class="rs-check">✅</div>
+              <div class="rs-med"><div class="rs-name">苯磺酸氨氯地平片</div><div class="rs-spec">5mg × 30片</div></div>
+              <div class="rs-qty">x 1</div>
+              <div class="rs-price">¥28.50</div>
+            </div>
+            <div class="rs-item">
+              <div class="rs-check">✅</div>
+              <div class="rs-med"><div class="rs-name">缬沙坦胶囊</div><div class="rs-spec">80mg × 7粒</div></div>
+              <div class="rs-qty">x 4</div>
+              <div class="rs-price">¥112.00</div>
+            </div>
+          </div>
+        </div>
+        <div class="refill-summary">
+          <div class="ry-row"><span>药品总额：</span>¥140.50</div>
+          <div class="ry-row"><span>诊察费：</span>¥20.00</div>
+          <div class="ry-total"><span>应付总额：</span>¥160.50</div>
+        </div>
+        <div class="refill-actions">
+          <button class="refill-btn-cancel" @click="showHealthRefillModal = false">取消</button>
+          <button class="refill-btn-confirm" @click="showHealthRefillModal = false">确认开具并支付</button>
+        </div>
+      </div>
+    </a-modal>
+
+    <!-- Reimbursement Details Modal -->
+    <a-modal
+      v-model:open="showReimbursementModal"
+      title="报销申请明细记录"
+      :footer="null"
+      width="800px"
+      @cancel="showReimbursementModal = false"
+    >
+      <div class="modal-body" style="padding: 0">
+        <div class="modal-filter-bar">
+          <div class="filter-group"><label>时间范围：</label><select class="ch-sel"><option>近半年</option><option>近一年</option><option>全部</option></select></div>
+          <div class="filter-group"><label>结算类型：</label><select class="ch-sel"><option>全部</option><option>门诊</option><option>住院</option></select></div>
+          <div class="filter-stats">累计报销：<span style="color: var(--green); font-weight: 700">¥12,450.00</span></div>
+        </div>
+        <div class="scroll-y" style="max-height: 500px">
+          <table class="tbl">
+            <thead>
+              <tr>
+                <th>日期</th>
+                <th>机构</th>
+                <th>类型</th>
+                <th>总费用</th>
+                <th>现金支付</th>
+                <th>基金支付</th>
+                <th>个账支付</th>
+                <th>账户抵扣</th>
+                <th>其他支付</th>
+                <th>比例</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, i) in reimbursementData" :key="i">
+                <td style="font-size: 11px; color: var(--ink4)">{{ item.date }}</td>
+                <td>{{ item.hosp }}</td>
+                <td><span :class="['tag', item.type === '门诊' ? 't-blue' : 't-red']">{{ item.type }}</span></td>
+                <td style="font-weight: 700">¥{{ item.total }}</td>
+                <td style="color: var(--red); font-weight: 600">¥{{ item.cash }}</td>
+                <td style="color: var(--blue); font-weight: 600">¥{{ item.fund }}</td>
+                <td style="color: var(--green); font-weight: 600">¥{{ item.account }}</td>
+                <td>¥{{ item.deduct }}</td>
+                <td>¥{{ item.other }}</td>
+                <td>
+                  <div style="display: flex; align-items: center; gap: 4px">
+                    <div class="prog-track" style="width: 40px; height: 4px">
+                      <div class="prog-bar" :style="{ width: item.ratio, background: 'var(--blue)' }"></div>
+                    </div>
+                    <span style="font-size: 10px; color: var(--ink4)">{{ item.ratio }}</span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-ft">
+        <button class="btn-p" @click="showReimbursementModal = false">关闭</button>
+      </div>
+    </a-modal>
+
+    <!-- Expired Insurance Modal -->
+    <a-modal
+      v-model:open="showExpiredInsuranceModal"
+      title="到期保单管理"
+      :footer="null"
+      width="500px"
+      @cancel="showExpiredInsuranceModal = false"
+    >
+      <div class="modal-body" style="background: #f8fafc">
+        <div style="font-size: 12px; color: var(--ink4); margin-bottom: 16px; padding: 0 4px">
+          以下是已到期的商业保险保单，建议及时续保以维持保障
+        </div>
+        <div class="expired-ins-list" style="display: flex; flex-direction: column; gap: 12px">
+          <div v-for="(ins, i) in expiredInsurancePolicies" :key="i" class="ins-card-v2 expired">
+            <div class="ins-v2-top">
+              <div class="ins-v2-logo">{{ ins.logo }}</div>
+              <div class="ins-v2-info">
+                <div class="ins-v2-name">{{ ins.name }}</div>
+                <div class="ins-v2-id">{{ ins.id }}</div>
+              </div>
+              <div class="tag t-gray">已到期</div>
+            </div>
+            <div class="ins-v2-body">
+              <div class="ins-v2-item">
+                <div class="ins-v2-lbl">年度保额</div>
+                <div class="ins-v2-val">{{ ins.amount }}</div>
+              </div>
+              <div class="ins-v2-item">
+                <div class="ins-v2-lbl">免赔额</div>
+                <div class="ins-v2-val">{{ ins.deductible }}</div>
+              </div>
+              <div class="ins-v2-item">
+                <div class="ins-v2-lbl">到期日期</div>
+                <div class="ins-v2-val" style="color: var(--red)">{{ ins.expiry }}</div>
+              </div>
+            </div>
+            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--line2); display: flex; justify-content: flex-end">
+              <button class="btn-p" style="padding: 6px 16px; font-size: 12px" @click="handleAction('toast', '暂未开通', null)">立即续保</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </a-modal>
+
+    <!-- Family Management Modal -->
+    <a-modal
+      v-model:open="showFamilyManagementModal"
+      title="家庭共济成员管理"
+      :footer="null"
+      width="600px"
+      @cancel="showFamilyManagementModal = false"
+    >
+      <div class="modal-body fam-mgmt-v2">
+        <div class="fam-v2-header">
+          <div class="fam-v2-user">
+            <div class="fam-v2-av">👨‍⚕️</div>
+            <div class="fam-v2-info">
+              <div class="fam-v2-name">陈 ** 明 <span class="fam-v2-tag">主授权人</span></div>
+              <div class="fam-v2-id">身份证号：3204**********1234</div>
+            </div>
+          </div>
+          <div class="fam-v2-balance">
+            <div class="fam-v2-bal-lbl">个账余额</div>
+            <div class="fam-v2-bal-val">¥ 12,450.00</div>
+          </div>
+        </div>
+
+        <div class="fam-v2-tabs">
+          <div :class="['fam-v2-tab', activeFamilyTab === 0 ? 'active' : '']" @click="activeFamilyTab = 0">我授权的亲属 ({{ familyMembers.length }})</div>
+          <div :class="['fam-v2-tab', activeFamilyTab === 1 ? 'active' : '']" @click="activeFamilyTab = 1">授权给我使用的亲属 ({{ authorizedMeMembers.length }})</div>
+        </div>
+
+        <div class="fam-v2-list" v-if="activeFamilyTab === 0">
+          <div v-for="(member, i) in familyMembers" :key="i" class="fam-v2-card">
+            <div class="fam-v2-card-top">
+              <div class="fam-v2-card-user">
+                <div class="fam-v2-card-av" :style="{ background: member.color }">{{ member.av }}</div>
+                <div class="fam-v2-card-info">
+                  <div class="fam-v2-card-name">{{ member.name }} <span class="tag t-blue">{{ member.rel }}</span></div>
+                  <div class="fam-v2-card-id">{{ member.id }}</div>
+                </div>
+              </div>
+              <div :class="['tag', member.status === '已激活' ? 't-green' : 't-amber']">{{ member.status }}</div>
+            </div>
+            
+            <div class="fam-v2-permissions">
+              <div class="fam-v2-perm-hd">权限设置</div>
+              <div class="fam-v2-perm-list">
+                <div class="fam-v2-perm-item">
+                  <span>使用我的个账余额</span>
+                  <div :class="['toggle', member.balance ? 'on' : '']"></div>
+                </div>
+                <div class="fam-v2-perm-item">
+                  <span>代办医保业务授权</span>
+                  <div :class="['toggle', member.balance ? 'on' : '']"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="fam-v2-card-actions">
+              <button class="fam-v2-btn" @click="handleAction('toast', '暂未开通', null)">解绑</button>
+              <button class="fam-v2-btn" @click="handleAction('toast', '暂未开通', null)">支付明细</button>
+              <button class="fam-v2-btn p-color" @click="handleAction('toast', '暂未开通', null)">共济缴费</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="fam-v2-list" v-else>
+          <div v-for="(member, i) in authorizedMeMembers" :key="i" class="fam-v2-card">
+            <div class="fam-v2-card-top">
+              <div class="fam-v2-card-user">
+                <div class="fam-v2-card-av" :style="{ background: member.color }">{{ member.av }}</div>
+                <div class="fam-v2-card-info">
+                  <div class="fam-v2-card-name">{{ member.name }} <span class="tag t-blue">{{ member.rel }}</span></div>
+                  <div class="fam-v2-card-id">{{ member.id }}</div>
+                </div>
+              </div>
+              <div :class="['tag', member.status === '已激活' ? 't-green' : 't-amber']">{{ member.status }}</div>
+            </div>
+            
+            <div class="fam-v2-card-actions">
+              <button class="fam-v2-btn" @click="handleAction('toast', '暂未开通', null)">支付明细</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="fam-v2-footer">
+          <button class="fam-v2-foot-btn" @click="handleAction('toast', '暂未开通', null)"><Search :size="16" /> 查询共济支出</button>
+          <button class="fam-v2-foot-btn p-bg" @click="handleAction('toast', '暂未开通', null)"><Plus :size="16" /> 添加家庭成员</button>
+        </div>
+      </div>
+    </a-modal>
+
+    <!-- Medical Detail Page (Full Screen Overlay) -->
+    <MedicalDetail 
+      v-if="showOutpatientDetail" 
+      :patient="selectedPatient" 
+      :record="selectedRecordForDetail"
+      @back="showOutpatientDetail = false"
+      @show-dicom="showDicomViewer = true"
+    />
+
+    <!-- DICOM Viewer Page (Full Screen Overlay) -->
+    <DicomViewer
+      v-if="showDicomViewer"
+      :patient="selectedPatient"
+      :record="selectedRecordForDetail"
+      @back="showDicomViewer = false"
+    />
+
+    <!-- Insurance Claim Modal -->
+    <a-modal
+      v-model:open="showInsuranceClaimModal"
+      title="一键直赔申请"
+      :footer="null"
+      width="500px"
+      @cancel="showInsuranceClaimModal = false; claimStep = 1"
+    >
+      <div class="claim-modal">
+        <div class="claim-steps">
+          <div :class="['cs-item', claimStep >= 1 ? 'on' : '']">1. 确认信息</div>
+          <div class="cs-line"></div>
+          <div :class="['cs-item', claimStep >= 2 ? 'on' : '']">2. 提交申请</div>
+          <div class="cs-line"></div>
+          <div :class="['cs-item', claimStep >= 3 ? 'on' : '']">3. 审核中</div>
+        </div>
+
+        <div v-if="claimStep === 1" class="claim-body">
+          <div class="claim-info-box">
+            <div class="ci-row"><span>理赔类型</span><strong>{{ claimForm.type }}</strong></div>
+            <div class="ci-row"><span>预估赔付</span><strong style="color: var(--red)">¥{{ claimForm.amount }}</strong></div>
+            <div class="ci-row"><span>收款银行</span><strong>{{ claimForm.bank }}</strong></div>
+            <div class="ci-row"><span>收款账号</span><strong>{{ claimForm.account }}</strong></div>
+          </div>
+          <div class="claim-notice">
+            <ShieldCheck :size="14" />
+            <span>基于医保大数据，已自动为您匹配诊疗记录及发票，无需手动上传。</span>
+          </div>
+          <button class="btn-p w-full" style="margin-top: 20px" @click="claimStep = 2">确认并下一步</button>
+        </div>
+
+        <div v-if="claimStep === 2" class="claim-body">
+          <div style="text-align: center; padding: 20px 0">
+            <div style="font-size: 40px; margin-bottom: 10px">📄</div>
+            <div style="font-size: 16px; font-weight: 700">正在生成理赔申请书...</div>
+            <div style="font-size: 12px; color: var(--ink4); margin-top: 6px">我们将自动调取您的电子发票、费用明细及病历资料</div>
+          </div>
+          <button class="btn-p w-full" @click="claimStep = 3">立即提交申请</button>
+        </div>
+
+        <div v-if="claimStep === 3" class="claim-body">
+          <div style="text-align: center; padding: 30px 0">
+            <div style="font-size: 48px; color: var(--green); margin-bottom: 16px">✅</div>
+            <div style="font-size: 18px; font-weight: 700">申请已提交</div>
+            <div style="font-size: 13px; color: var(--ink4); margin-top: 8px; line-height: 1.6">
+              您的理赔申请已进入快速审核通道。<br/>
+              预计 1-3 个工作日内完成审核并打款。
+            </div>
+          </div>
+          <button class="btn-p w-full" @click="showInsuranceClaimModal = false; claimStep = 1">返回</button>
+        </div>
+      </div>
+    </a-modal>
+
+    <!-- ════ DICOM Viewer Modal ════ -->
+    <a-modal
+      :open="showDicom"
+      :footer="null"
+      :closable="false"
+      width="100%"
+      wrap-class-name="dicom-wrap"
+      :body-style="{ padding: 0 }"
+      @cancel="showDicom = false"
+    >
+      <div class="fixed inset-0 z-[600] bg-white/95 backdrop-blur-md flex flex-col font-sans select-none">
+        <div class="h-12 bg-white/80 border-b border-slate-200/80 flex items-center justify-between px-4 flex-shrink-0">
+          <div class="flex items-center gap-4">
+            <div class="flex items-center gap-2">
+              <Radar :size="18" class="text-blue-600" />
+              <span class="text-slate-900 font-black text-sm tracking-tighter">健康数据共享中心</span>
+              <div class="h-3.5 w-[1px] bg-slate-300 mx-0.5"></div>
+              <span class="text-blue-700/70 text-xs font-light tracking-widest uppercase">参保人全息视图</span>
+            </div>
+            <div class="h-3.5 w-[1px] bg-slate-200"></div>
+            <span class="text-[10px] text-slate-500 font-mono">DICOM · 张伟 · Head CT · 2024-05-10</span>
+          </div>
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded border border-slate-200">
+              <button class="p-1 text-slate-500 hover:text-slate-900 transition-colors rounded hover:bg-slate-100" type="button">
+                <ZoomIn :size="13" />
+              </button>
+              <div class="w-[1px] h-3 bg-slate-200"></div>
+              <button class="p-1 text-slate-500 hover:text-slate-900 transition-colors rounded hover:bg-slate-100" type="button">
+                <Hand :size="13" />
+              </button>
+              <div class="w-[1px] h-3 bg-slate-200"></div>
+              <button class="p-1 text-slate-500 hover:text-slate-900 transition-colors rounded hover:bg-slate-100" type="button">
+                <Contrast :size="13" />
+              </button>
+            </div>
+            <button type="button" class="text-slate-500 hover:text-red-600 p-1 hover:bg-red-500/10 rounded transition-all" @click="showDicom = false">
+              <X :size="15" />
+            </button>
+          </div>
+        </div>
+
+        <div class="flex-1 flex overflow-hidden">
+          <div class="w-14 bg-slate-50 border-r border-slate-200 flex flex-col items-center py-3 gap-4 text-[8px] font-mono text-slate-500">
+            <div class="text-center"><div class="text-orange-500 font-bold">120</div><div>kV</div></div>
+            <div class="text-center"><div class="text-orange-500 font-bold">200</div><div>mA</div></div>
+            <div class="text-center"><div class="text-blue-600/60 font-bold">5.0</div><div>mm</div></div>
+            <div class="text-center"><div class="text-blue-600/60 font-bold">W:350</div><div>L:50</div></div>
+            <div class="flex-1"></div>
+            <div class="text-center text-slate-500"><div>12/28</div><div>SL</div></div>
+          </div>
+
+          <div class="flex-1 relative bg-[#060809] flex items-center justify-center">
+            <div
+              class="absolute inset-0 pointer-events-none"
+              :style="{
+                backgroundImage:
+                  'linear-gradient(rgba(59,130,246,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(59,130,246,0.04) 1px, transparent 1px)',
+                backgroundSize: '40px 40px',
+              }"
+            />
+            <button class="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/70 transition-colors z-10 bg-white/5 hover:bg-white/10 rounded p-1" type="button">
+              <ChevronRight :size="22" class="rotate-180" />
+            </button>
+            <div class="relative" style="width: min(70vh, 100%); aspect-ratio: 1">
+              <img src="/dicom.png" alt="CT Scan" class="w-full h-full object-cover" />
+            </div>
+            <button class="absolute right-3 top-1/2 -translate-y-1/2 text-white/30 hover:text-white/70 transition-colors z-10 bg-white/5 hover:bg-white/10 rounded p-1" type="button">
+              <ChevronRight :size="22" />
+            </button>
+          </div>
+
+          <div class="w-64 bg-white border-l border-slate-200 flex flex-col overflow-hidden">
+            <div class="px-4 py-3 border-b border-slate-200">
+              <h3 class="text-slate-900 text-xs font-bold flex items-center gap-2">
+                <Radar :size="13" class="text-blue-600 animate-pulse" />
+                AI 辅助诊断报告
+              </h3>
+            </div>
+            <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
+              <div class="bg-red-500/10 border border-red-500/25 p-3 rounded">
+                <div class="flex items-center gap-1.5 text-red-600 text-[9px] font-bold mb-2 uppercase tracking-wider">
+                  <Activity :size="10" />
+                  异常发现
+                </div>
+                <p class="text-[10px] text-slate-700 leading-relaxed">右侧基底节区可见斑点状低密度影，边界模糊，提示轻度腔隙性脑梗死。</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </a-modal>
+
+    <!-- ════ Clinical Record Detail Modal (DELETED) ════ -->
+
+    <!-- Global Toast -->
+    <div v-if="showToast" class="global-toast">
+      {{ toastMessage }}
+    </div>
+
+    <!-- ════ Health Metric Detail Modal ════ -->
+    <a-modal v-model:open="showMetricDetailModal" width="1000px" :footer="null">
+      <div class="metric-detail">
+        <div class="md-modal-title" style="font-size: 16px; font-weight: 700; margin-bottom: 20px;">体征数据</div>
+        
+        <div class="md-body">
+          <div class="md-sidebar">
+            <div :class="['md-tab', selectedMetric === '血压' ? 'on' : '']" @click="selectedMetric = '血压'">血压</div>
+            <div :class="['md-tab', selectedMetric === '血糖' ? 'on' : '']" @click="selectedMetric = '血糖'">血糖</div>
+            <div :class="['md-tab', selectedMetric === '心率' ? 'on' : '']" @click="selectedMetric = '心率'">心率</div>
+            <div :class="['md-tab', selectedMetric === '体重' ? 'on' : '']" @click="selectedMetric = '体重'">体重</div>
+            <div :class="['md-tab', selectedMetric === '身高' ? 'on' : '']" @click="selectedMetric = '身高'">身高</div>
+            <div :class="['md-tab', selectedMetric === 'BMI' ? 'on' : '']" @click="selectedMetric = 'BMI'">体质指数(BMI)</div>
+          </div>
+          
+          <div class="md-content">
+            <div class="md-toolbar">
+              <div class="md-ranges">
+                <span 
+                  v-for="range in ['近一周', '近一月', '近三月', '近一年']" 
+                  :key="range"
+                  :class="['md-range', { on: selectedMetricRange === range }]"
+                  @click="selectedMetricRange = range"
+                >{{ range }}</span>
+              </div>
+              <div class="md-date-picker">
+                <input type="text" :value="selectedMetricRange === '近三月' ? '2022-03-27 - 2022-06-27' : '自定义时间范围'" readonly />
+                <Calendar :size="14" />
+              </div>
+            </div>
+            
+            <div class="md-chart-container">
+              <!-- Mock Chart -->
+              <div class="md-chart-placeholder">
+                <svg viewBox="0 0 800 250" class="md-svg">
+                  <!-- Grid lines -->
+                  <line x1="50" y1="30" x2="750" y2="30" stroke="#eee" stroke-dasharray="4" />
+                  <line x1="50" y1="93" x2="750" y2="93" stroke="#eee" stroke-dasharray="4" />
+                  <line x1="50" y1="156" x2="750" y2="156" stroke="#eee" stroke-dasharray="4" />
+                  <line x1="50" y1="220" x2="750" y2="220" stroke="#eee" stroke-dasharray="4" />
+                  
+                  <path :d="chartPaths.p1" fill="none" stroke="var(--blue)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  <path v-if="metricConfig.hasDoubleLine" :d="chartPaths.p2" fill="none" stroke="var(--green)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  
+                  <!-- Dots -->
+                  <circle v-for="(p, i) in metricData" :key="'p1'+i" :cx="50 + (i / (metricData.length - 1)) * 700" :cy="250 - 30 - ((p.v1 - (chartPaths.p1 ? Math.min(...metricData.map(d => Math.min(d.v1 || Infinity, d.v2 || Infinity))) : 0)) / (Math.max(...metricData.map(d => Math.max(d.v1 || -Infinity, d.v2 || -Infinity))) - Math.min(...metricData.map(d => Math.min(d.v1 || Infinity, d.v2 || Infinity))) || 1)) * 190" r="4" fill="var(--blue)" />
+                  <circle v-if="metricConfig.hasDoubleLine" v-for="(p, i) in metricData" :key="'p2'+i" :cx="50 + (i / (metricData.length - 1)) * 700" :cy="250 - 30 - ((p.v2 - Math.min(...metricData.map(d => Math.min(d.v1 || Infinity, d.v2 || Infinity)))) / (Math.max(...metricData.map(d => Math.max(d.v1 || -Infinity, d.v2 || -Infinity))) - Math.min(...metricData.map(d => Math.min(d.v1 || Infinity, d.v2 || Infinity))) || 1)) * 190" r="4" fill="var(--green)" />
+                </svg>
+                <div class="md-chart-legend">
+                  <span v-for="leg in metricConfig.legend" :key="leg.label" class="md-leg-item">
+                    <i :style="{ background: leg.color }"></i> {{ leg.label }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            <div class="md-stats-grid" :style="{ gridTemplateColumns: `repeat(${metricConfig.stats.length}, 1fr)` }">
+              <div v-for="stat in metricConfig.stats" :key="stat.label" class="md-stat-card">
+                <div class="md-stat-val">{{ stat.val }} <small>{{ metricConfig.unit }}</small></div>
+                <div class="md-stat-lbl">{{ stat.label }}</div>
+              </div>
+            </div>
+            
+            <div class="md-source-info">
+              <div style="white-space: pre-line">{{ metricConfig.sourceInfo }}</div>
+            </div>
+            
+            <div class="md-table-container">
+              <table class="md-table">
+                <thead>
+                  <tr>
+                    <th v-for="col in metricConfig.columns" :key="col">{{ col }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="(row, i) in metricData" :key="i">
+                    <td>{{ row.date }}</td>
+                    <td v-if="row.v1 !== undefined">{{ row.v1 }}</td>
+                    <td v-if="row.v2 !== undefined">{{ row.v2 }}</td>
+                    <td class="t-blue">{{ row.source }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </a-modal>
+  </div>
+  </a-config-provider>
+</template>
+
+<style>
+/* 优化 Ant Design Tabs 样式 */
+.ant-tabs-nav::before {
+  border-bottom: 1px solid #f1f5f9 !important;
+}
+
+.ant-tabs-tab {
+  padding: 8px 16px !important;
+  margin: 0 4px 0 0 !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  border-radius: 8px 8px 0 0 !important;
+}
+
+.ant-tabs-tab-active {
+  background: #f8fafc !important;
+}
+
+.ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: var(--blue) !important;
+  font-weight: 700 !important;
+  text-shadow: 0 0 0.25px currentColor !important;
+}
+
+.ant-tabs-ink-bar {
+  height: 3px !important;
+  border-radius: 3px 3px 0 0 !important;
+  background: var(--blue) !important;
+}
+
+.dicom-wrap .ant-modal {
+  max-width: none;
+  top: 0;
+  padding-bottom: 0;
+}
+.dicom-wrap .ant-modal-content {
+  height: 100vh;
+  border-radius: 0;
+}
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-slow {
+  animation: spin-slow 30s linear infinite;
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(229, 231, 235, 1);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+.alert-pulse {
+  animation: pulse-red 2s infinite;
+}
+@keyframes pulse-red {
+  0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+.animate__animated {
+  animation-duration: 0.35s;
+  animation-fill-mode: both;
+}
+.animate__fadeInRight {
+  animation-name: fadeInRight;
+}
+.animate__fadeOutRight {
+  animation-name: fadeOutRight;
+}
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translate3d(24px, 0, 0); }
+  to { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes fadeOutRight {
+  from { opacity: 1; transform: translate3d(0, 0, 0); }
+  to { opacity: 0; transform: translate3d(24px, 0, 0); }
+}
+</style>
+
+<style scoped>
+.v.on.flex-layout {
+  display: flex !important;
+}
+
+.pt-panel {
+  position: relative;
+  transition: width 0.3s ease;
+}
+
+.pt-collapse-btn {
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px;
+  height: 48px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-left: none;
+  border-radius: 0 8px 8px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  color: var(--ink3);
+  box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+}
+
+.pt-collapse-btn:hover {
+  color: var(--blue);
+}
+</style>
