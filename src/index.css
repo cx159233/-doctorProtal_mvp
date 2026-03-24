@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
-@theme {
+/* @theme {
   --font-sans: -apple-system, "PingFang SC", "Inter", sans-serif;
-}
+} */
 
 :root {
   --blue: #2563eb;

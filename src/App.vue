@@ -5,7 +5,6 @@ import RecordList from './components/RecordList.vue';
 import MedicalDetail from './components/MedicalDetail.vue';
 import DicomViewer from './components/DicomViewer.vue';
 import BodyAnnotation from './components/BodyAnnotation.vue';
-import { patientList, allRecords } from './data';
 import type { ConfigProviderProps } from 'ant-design-vue';
 import { 
   UserCircle, 
@@ -58,7 +57,15 @@ import {
   AlertTriangle
 } from 'lucide-vue-next';
 
-type RecordType = (typeof allRecords)[number];
+const patients = [
+  { id: 1, name: "陈 ** 明", age: 42, gender: "男", status: "就诊中", tags: ["高血压", "门诊"], av: "👨", avBg: "#EFF6FF", tagColors: ["t-amber", "t-blue"] },
+  { id: 2, name: "王 ** 芳", age: 35, gender: "女", status: "待诊", tags: ["糖尿病", "复查"], av: "👩", avBg: "#ECFDF5", tagColors: ["t-purple", "t-blue"] },
+  { id: 3, name: "张 ** 国", age: 68, gender: "男", status: "已诊", tags: ["心衰", "随访"], av: "👴", avBg: "#FFF7E6", tagColors: ["t-red", "t-amber"] },
+  { id: 4, name: "赵 ** 敏", age: 28, gender: "女", status: "待诊", tags: ["孕32周", "产检"], av: "👧", avBg: "#F5F3FF", tagColors: ["t-green", "t-cyan"] },
+  { id: 5, name: "刘 ** 阳", age: 55, gender: "男", status: "待诊", tags: ["冠心病", "门诊"], av: "👦", avBg: "#FEF2F2", tagColors: ["t-red", "t-blue"] },
+];
+
+type RecordType = Record<string, any>;
 type ModalState =
   | { type: 'outpatient'; item: RecordType }
   | { type: 'inpatient'; item: RecordType }
@@ -408,7 +415,6 @@ const claimForm = ref({
 });
 
 type ViewType = "overview" | "health" | "finance" | "info" | "logout" | "medintercept" | "rulesadapt";
-type RecordTab = "op" | "ip" | "lab" | "exam" | "med" | "pe";
 type LifecycleTab = "all" | "op" | "ip" | "lab" | "exam" | "med" | "pe";
 
 const activeView = ref<ViewType>("overview");
@@ -418,7 +424,6 @@ const selectedPatientId = ref(1);
 const selectedPatient = computed(() => {
   return patients.find(p => p.id === selectedPatientId.value) || patients[0];
 });
-const activeRecordTab = ref<RecordTab>("op");
 const activeLifecycleTab = ref<LifecycleTab>("op");
 const showDetail = ref<{ type: string; title: string } | null>(null);
 const showRefillModal = ref(false);
@@ -506,15 +511,7 @@ const lifecycleTabs = [
   { id: "exam", label: "检查" },
   { id: "med", label: "药耗" },
   { id: "pe", label: "体检" },
-];
-
-const patients = [
-  { id: 1, name: "陈 ** 明", age: 42, gender: "男", status: "就诊中", tags: ["高血压", "门诊"], av: "👨", avBg: "#EFF6FF", tagColors: ["t-amber", "t-blue"] },
-  { id: 2, name: "王 ** 芳", age: 35, gender: "女", status: "待诊", tags: ["糖尿病", "复查"], av: "👩", avBg: "#ECFDF5", tagColors: ["t-purple", "t-blue"] },
-  { id: 3, name: "张 ** 国", age: 68, gender: "男", status: "已诊", tags: ["心衰", "随访"], av: "👴", avBg: "#FFF7E6", tagColors: ["t-red", "t-amber"] },
-  { id: 4, name: "赵 ** 敏", age: 28, gender: "女", status: "待诊", tags: ["孕32周", "产检"], av: "👧", avBg: "#F5F3FF", tagColors: ["t-green", "t-cyan"] },
-  { id: 5, name: "刘 ** 阳", age: 55, gender: "男", status: "待诊", tags: ["冠心病", "门诊"], av: "👦", avBg: "#FEF2F2", tagColors: ["t-red", "t-blue"] },
-];
+] as const;
 
 const viewTitle = computed(() => {
   switch (activeView.value) {
@@ -1233,7 +1230,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                           <span class="w-2 h-2 rounded-full bg-amber-500"></span>
                           路径优化建议（AI 分析）
                         </div>
-                        <div class="text-[10px] text-amber-900 leading-relaxed" style="-webkit-line-clamp: 4; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;">
+                        <div class="text-[10px] text-amber-900 leading-relaxed" style="line-clamp: 4; -webkit-line-clamp: 4; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;">
                           检测到高值耗材支出占比异常（+23%），建议核对是否使用了非集采止血粉。建议切换为集采品种以控制费用。
                         </div>
                       </div>
@@ -1365,7 +1362,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                                 <div v-for="(m, i) in record.metrics" :key="i" class="flex justify-between items-center p-1.5 rounded-lg text-[11px] bg-slate-50 group-hover:bg-blue-50/30 transition-colors">
                                   <span class="text-slate-600">{{ m.label }}</span>
                                   <span class="font-mono font-bold" :class="m.flag === 'high' ? 'text-red-600' : m.flag === 'low' ? 'text-yellow-600' : 'text-slate-700'">
-                                    {{ m.value }} {{ m.unit }} {{ m.flag === 'high' ? '↑' : m.flag === 'low' ? '↓' : '' }}
+                                    {{ m.value }} {{ 'unit' in m ? m.unit : '' }} {{ m.flag === 'high' ? '↑' : m.flag === 'low' ? '↓' : '' }}
                                   </span>
                                 </div>
                               </div>
@@ -1434,7 +1431,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                   v-for="tab in lifecycleTabs"
                   :key="tab.id"
                   :class="['lt-item', activeLifecycleTab === tab.id ? 'on' : '']"
-                  @click="activeLifecycleTab = tab.id as LifecycleTab"
+                  @click="activeLifecycleTab = tab.id"
                 >
                   {{ tab.label }}
                 </div>
@@ -2656,7 +2653,9 @@ const handleAction = (type: string, title: string, record?: any) => {
                   
                   <!-- Dots -->
                   <circle v-for="(p, i) in metricData" :key="'p1'+i" :cx="50 + (i / (metricData.length - 1)) * 700" :cy="250 - 30 - ((p.v1 - (chartPaths.p1 ? Math.min(...metricData.map(d => Math.min(d.v1 || Infinity, d.v2 || Infinity))) : 0)) / (Math.max(...metricData.map(d => Math.max(d.v1 || -Infinity, d.v2 || -Infinity))) - Math.min(...metricData.map(d => Math.min(d.v1 || Infinity, d.v2 || Infinity))) || 1)) * 190" r="4" fill="var(--blue)" />
-                  <circle v-if="metricConfig.hasDoubleLine" v-for="(p, i) in metricData" :key="'p2'+i" :cx="50 + (i / (metricData.length - 1)) * 700" :cy="250 - 30 - ((p.v2 - Math.min(...metricData.map(d => Math.min(d.v1 || Infinity, d.v2 || Infinity)))) / (Math.max(...metricData.map(d => Math.max(d.v1 || -Infinity, d.v2 || -Infinity))) - Math.min(...metricData.map(d => Math.min(d.v1 || Infinity, d.v2 || Infinity))) || 1)) * 190" r="4" fill="var(--green)" />
+                  <template v-if="metricConfig.hasDoubleLine">
+                    <circle v-for="(p, i) in metricData" :key="'p2'+i" :cx="50 + (i / (metricData.length - 1)) * 700" :cy="250 - 30 - ((p.v2 - Math.min(...metricData.map(d => Math.min(d.v1 || Infinity, d.v2 || Infinity)))) / (Math.max(...metricData.map(d => Math.max(d.v1 || -Infinity, d.v2 || -Infinity))) - Math.min(...metricData.map(d => Math.min(d.v1 || Infinity, d.v2 || Infinity))) || 1)) * 190" r="4" fill="var(--green)" />
+                  </template>
                 </svg>
                 <div class="md-chart-legend">
                   <span v-for="leg in metricConfig.legend" :key="leg.label" class="md-leg-item">
