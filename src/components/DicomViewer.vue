@@ -68,7 +68,7 @@
               <div>DOB: 1982-05-12</div>
             </div>
             <div class="dv-overlay dv-tr">
-              <div>常州市第一人民医院</div>
+              <div>南京大学医学院附属鼓楼医院</div>
               <div>CT Chest</div>
               <div>2024-05-16 10:24:15</div>
             </div>

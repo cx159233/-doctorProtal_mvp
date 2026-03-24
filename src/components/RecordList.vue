@@ -13,42 +13,42 @@ const handleAction = (type: string, title: string, record?: any) => {
 
 const opRecords = [
   { id: 1, date: '2024-03-15 09:30', hosp: '常州市第一人民医院', dept: '心内科', type: 'op', diag: '原发性高血压', tags: ['门诊'] },
-  { id: 2, date: '2024-02-10 14:20', hosp: '天宁区青龙街道社区卫生服务中心', dept: '消化内科', type: 'op', diag: '慢性胃炎', tags: ['门诊'] },
-  { id: 3, date: '2024-01-05 10:00', hosp: '常州市第二人民医院', dept: '呼吸内科', type: 'op', diag: '上呼吸道感染', tags: ['门诊'] },
+  { id: 2, date: '2024-02-10 14:20', hosp: '南京大学医学院附属鼓楼医院', dept: '消化内科', type: 'op', diag: '慢性胃炎', tags: ['门诊'] },
+  { id: 3, date: '2024-01-05 10:00', hosp: '南京大学医学院附属鼓楼医院', dept: '呼吸内科', type: 'op', diag: '上呼吸道感染', tags: ['门诊'] },
   { id: 4, date: '2023-11-20 11:15', hosp: '常州市第一人民医院', dept: '骨科', type: 'op', diag: '腰肌劳损', tags: ['门诊'] },
-  { id: 5, date: '2023-09-12 08:45', hosp: '天宁区青龙街道社区卫生服务中心', dept: '眼科', type: 'op', diag: '结膜炎', tags: ['门诊'] }
+  { id: 5, date: '2023-09-12 08:45', hosp: '南京大学医学院附属鼓楼医院', dept: '眼科', type: 'op', diag: '结膜炎', tags: ['门诊'] }
 ];
 
 const ipRecords = [
   { id: 101, date: '2024-03-10 ~ 2024-03-20', hosp: '常州市第一人民医院', dept: '心内科', type: 'ip', diag: '急性下壁心肌梗死', tags: ['住院'] },
   { id: 102, date: '2023-05-10 ~ 2023-05-18', hosp: '常州市第一人民医院', dept: '普外科', type: 'ip', diag: '阑尾炎住院', tags: ['住院'] },
-  { id: 103, date: '2022-12-01 ~ 2022-12-15', hosp: '常州市第二人民医院', dept: '呼吸内科', type: 'ip', diag: '大叶性肺炎', tags: ['住院'] },
+  { id: 103, date: '2022-12-01 ~ 2022-12-15', hosp: '南京大学医学院附属鼓楼医院', dept: '呼吸内科', type: 'ip', diag: '大叶性肺炎', tags: ['住院'] },
   { id: 104, date: '2022-08-15 ~ 2022-08-22', hosp: '常州市第一人民医院', dept: '消化内科', type: 'ip', diag: '急性胃肠炎', tags: ['住院'] },
-  { id: 105, date: '2022-03-10 ~ 2022-03-18', hosp: '常州市中医院', dept: '骨伤科', type: 'ip', diag: '左桡骨远端骨折', tags: ['住院'] }
+  { id: 105, date: '2022-03-10 ~ 2022-03-18', hosp: '常州市第一人民医院', dept: '骨伤科', type: 'ip', diag: '左桡骨远端骨折', tags: ['住院'] }
 ];
 
 const examRecords = [
   { id: 301, date: '2024-03-16 10:20', hosp: '常州市第一人民医院', dept: '放射科', type: 'exam', diag: '胸部CT平扫', tags: ['检查'] },
   { id: 302, date: '2024-03-15 15:00', hosp: '常州市第一人民医院', dept: '心功能室', type: 'exam', diag: '心电图检查', tags: ['检查'] },
-  { id: 303, date: '2023-12-10 09:00', hosp: '常州市第二人民医院', dept: '超声科', type: 'exam', diag: '腹部超声', tags: ['检查'] },
+  { id: 303, date: '2023-12-10 09:00', hosp: '南京大学医学院附属鼓楼医院', dept: '超声科', type: 'exam', diag: '腹部超声', tags: ['检查'] },
   { id: 304, date: '2023-10-05 14:30', hosp: '常州市第一人民医院', dept: '内镜中心', type: 'exam', diag: '胃镜检查', tags: ['检查'] },
-  { id: 305, date: '2023-06-20 11:00', hosp: '常州市中医院', dept: '放射科', type: 'exam', diag: '腰椎MRI', tags: ['检查'] }
+  { id: 305, date: '2023-06-20 11:00', hosp: '常州市第一人民医院', dept: '放射科', type: 'exam', diag: '腰椎MRI', tags: ['检查'] }
 ];
 
 const labRecords = [
   { id: 201, date: '2024-03-15 08:30', hosp: '常州市第一人民医院', dept: '检验科', type: 'lab', diag: '生化常规检查', tags: ['检验'] },
   { id: 202, date: '2024-03-15 08:35', hosp: '常州市第一人民医院', dept: '检验科', type: 'lab', diag: '血常规 (五分类)', tags: ['检验'] },
-  { id: 203, date: '2023-12-15 09:00', hosp: '常州市第二人民医院', dept: '检验科', type: 'lab', diag: '尿常规', tags: ['检验'] },
+  { id: 203, date: '2023-12-15 09:00', hosp: '南京大学医学院附属鼓楼医院', dept: '检验科', type: 'lab', diag: '尿常规', tags: ['检验'] },
   { id: 204, date: '2023-10-10 08:45', hosp: '常州市第一人民医院', dept: '检验科', type: 'lab', diag: '凝血功能', tags: ['检验'] },
-  { id: 205, date: '2023-05-20 10:15', hosp: '常州市中医院', dept: '检验科', type: 'lab', diag: '糖化血红蛋白', tags: ['检验'] }
+  { id: 205, date: '2023-05-20 10:15', hosp: '常州市第一人民医院', dept: '检验科', type: 'lab', diag: '糖化血红蛋白', tags: ['检验'] }
 ];
 
 const medRecords = [
   { id: 401, date: '2024-03-15 10:00', hosp: '常州市第一人民医院', dept: '心内科', type: 'med', diag: '高血压用药', tags: ['药耗'] },
-  { id: 402, date: '2024-02-10 15:00', hosp: '天宁区青龙街道社区卫生服务中心', dept: '消化内科', type: 'med', diag: '胃病用药', tags: ['药耗'] },
-  { id: 403, date: '2024-01-05 11:00', hosp: '常州市第二人民医院', dept: '呼吸内科', type: 'med', diag: '感冒用药', tags: ['药耗'] },
+  { id: 402, date: '2024-02-10 15:00', hosp: '南京大学医学院附属鼓楼医院', dept: '消化内科', type: 'med', diag: '胃病用药', tags: ['药耗'] },
+  { id: 403, date: '2024-01-05 11:00', hosp: '南京大学医学院附属鼓楼医院', dept: '呼吸内科', type: 'med', diag: '感冒用药', tags: ['药耗'] },
   { id: 404, date: '2023-11-20 12:00', hosp: '常州市第一人民医院', dept: '骨科', type: 'med', diag: '止痛用药', tags: ['药耗'] },
-  { id: 405, date: '2023-09-12 09:30', hosp: '天宁区青龙街道社区卫生服务中心', dept: '眼科', type: 'med', diag: '眼药水', tags: ['药耗'] }
+  { id: 405, date: '2023-09-12 09:30', hosp: '南京大学医学院附属鼓楼医院', dept: '眼科', type: 'med', diag: '眼药水', tags: ['药耗'] }
 ];
 </script>
 

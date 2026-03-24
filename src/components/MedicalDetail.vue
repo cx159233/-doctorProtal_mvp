@@ -11,47 +11,47 @@ const emit = defineEmits(['back', 'show-dicom']);
 
 const opTimeline = [
   { id: 1, date: '2024-03-15', time: '09:30', title: '原发性高血压', dept: '心内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'op' },
-  { id: 2, date: '2024-02-10', time: '14:20', title: '慢性胃炎', dept: '消化内科', hosp: '天宁区青龙街道社区卫生服务中心', level: '一级', type: 'op' },
-  { id: 3, date: '2024-01-05', time: '10:00', title: '上呼吸道感染', dept: '呼吸内科', hosp: '常州市第二人民医院', level: '三级甲等', type: 'op' },
+  { id: 2, date: '2024-02-10', time: '14:20', title: '慢性胃炎', dept: '消化内科', hosp: '南京大学医学院附属鼓楼医院', level: '一级', type: 'op' },
+  { id: 3, date: '2024-01-05', time: '10:00', title: '上呼吸道感染', dept: '呼吸内科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'op' },
   { id: 4, date: '2023-11-20', time: '11:15', title: '腰肌劳损', dept: '骨科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'op' },
-  { id: 5, date: '2023-09-12', time: '08:45', title: '结膜炎', dept: '眼科', hosp: '天宁区青龙街道社区卫生服务中心', level: '一级', type: 'op' },
+  { id: 5, date: '2023-09-12', time: '08:45', title: '结膜炎', dept: '眼科', hosp: '南京大学医学院附属鼓楼医院', level: '一级', type: 'op' },
   { id: 6, date: '2023-07-20', time: '15:30', title: '高脂血症复查', dept: '内分泌科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'op' },
-  { id: 7, date: '2023-05-15', time: '10:20', title: '皮肤瘙痒症', dept: '皮肤科', hosp: '常州市第二人民医院', level: '三级甲等', type: 'op' },
+  { id: 7, date: '2023-05-15', time: '10:20', title: '皮肤瘙痒症', dept: '皮肤科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'op' },
 ];
 
 const ipTimeline = [
   { id: 101, date: '2024-03-10', time: '10:00', title: '急性下壁心肌梗死', dept: '心内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'ip' },
   { id: 102, date: '2023-05-10', time: '08:00', title: '阑尾炎住院', dept: '普外科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'ip' },
-  { id: 103, date: '2022-12-01', time: '09:00', title: '大叶性肺炎', dept: '呼吸内科', hosp: '常州市第二人民医院', level: '三级甲等', type: 'ip' },
+  { id: 103, date: '2022-12-01', time: '09:00', title: '大叶性肺炎', dept: '呼吸内科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'ip' },
   { id: 104, date: '2022-08-15', time: '14:30', title: '急性胃肠炎', dept: '消化内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'ip' },
-  { id: 105, date: '2022-03-10', time: '11:00', title: '左桡骨远端骨折', dept: '骨伤科', hosp: '常州市中医院', level: '三级甲等', type: 'ip' },
+  { id: 105, date: '2022-03-10', time: '11:00', title: '左桡骨远端骨折', dept: '骨伤科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'ip' },
   { id: 106, date: '2021-11-25', time: '10:30', title: '冠心病介入治疗', dept: '心内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'ip' },
 ];
 
 const labTimeline = [
   { id: 201, date: '2024-03-15', time: '08:30', title: '生化常规检查', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
   { id: 202, date: '2024-03-15', time: '08:35', title: '血常规 (五分类)', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
-  { id: 203, date: '2023-12-15', time: '09:00', title: '尿常规', dept: '检验科', hosp: '常州市第二人民医院', level: '三级甲等', type: 'lab' },
+  { id: 203, date: '2023-12-15', time: '09:00', title: '尿常规', dept: '检验科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'lab' },
   { id: 204, date: '2023-10-10', time: '08:45', title: '凝血功能', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
-  { id: 205, date: '2023-05-20', time: '10:15', title: '糖化血红蛋白', dept: '检验科', hosp: '常州市中医院', level: '三级甲等', type: 'lab' },
+  { id: 205, date: '2023-05-20', time: '10:15', title: '糖化血红蛋白', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
   { id: 206, date: '2023-03-12', time: '08:00', title: '血脂四项', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
 ];
 
 const examTimeline = [
   { id: 301, date: '2024-03-16', time: '10:20', title: '胸部CT平扫', dept: '放射科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'exam' },
   { id: 302, date: '2024-03-15', time: '15:00', title: '心电图检查', dept: '心功能室', hosp: '常州市第一人民医院', level: '三级甲等', type: 'exam' },
-  { id: 303, date: '2023-12-10', time: '09:00', title: '腹部超声', dept: '超声科', hosp: '常州市第二人民医院', level: '三级甲等', type: 'exam' },
+  { id: 303, date: '2023-12-10', time: '09:00', title: '腹部超声', dept: '超声科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'exam' },
   { id: 304, date: '2023-10-05', time: '14:30', title: '胃镜检查', dept: '内镜中心', hosp: '常州市第一人民医院', level: '三级甲等', type: 'exam' },
-  { id: 305, date: '2023-06-20', time: '11:00', title: '腰椎MRI', dept: '放射科', hosp: '常州市中医院', level: '三级甲等', type: 'exam' },
+  { id: 305, date: '2023-06-20', time: '11:00', title: '腰椎MRI', dept: '放射科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'exam' },
   { id: 306, date: '2023-04-18', time: '09:40', title: '颈部超声', dept: '超声科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'exam' },
 ];
 
 const medTimeline = [
   { id: 401, date: '2024-03-15', time: '10:00', title: '高血压用药', dept: '心内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'med' },
-  { id: 402, date: '2024-02-10', time: '15:00', title: '胃病用药', dept: '消化内科', hosp: '天宁区青龙街道社区卫生服务中心', level: '一级', type: 'med' },
-  { id: 403, date: '2024-01-05', time: '11:00', title: '感冒用药', dept: '呼吸内科', hosp: '常州市第二人民医院', level: '三级甲等', type: 'med' },
+  { id: 402, date: '2024-02-10', time: '15:00', title: '胃病用药', dept: '消化内科', hosp: '南京大学医学院附属鼓楼医院', level: '一级', type: 'med' },
+  { id: 403, date: '2024-01-05', time: '11:00', title: '感冒用药', dept: '呼吸内科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'med' },
   { id: 404, date: '2023-11-20', time: '12:00', title: '止痛用药', dept: '骨科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'med' },
-  { id: 405, date: '2023-09-12', time: '09:30', title: '眼药水', dept: '眼科', hosp: '天宁区青龙街道社区卫生服务中心', level: '一级', type: 'med' },
+  { id: 405, date: '2023-09-12', time: '09:30', title: '眼药水', dept: '眼科', hosp: '南京大学医学院附属鼓楼医院', level: '一级', type: 'med' },
   { id: 406, date: '2023-07-25', time: '14:00', title: '降脂用药', dept: '内分泌科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'med' },
 ];
 

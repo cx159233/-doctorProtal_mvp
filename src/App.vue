@@ -90,13 +90,14 @@ const selectedMetric = ref<string>('血压');
 const selectedMetricRange = ref('近三月');
 
 // --- New State from doctorDashboard ---
-const recordTab = ref<'outpatient' | 'inpatient' | 'exam' | 'lab' | 'medicine'>('outpatient');
+const recordTab = ref<'outpatient' | 'inpatient' | 'exam' | 'lab' | 'medicine' | 'physical'>('outpatient');
 const recordTabOptions = [
   { id: 'outpatient', label: '门诊' },
   { id: 'inpatient', label: '住院' },
   { id: 'exam', label: '检查' },
   { id: 'lab', label: '检验' },
   { id: 'medicine', label: '药耗' },
+  { id: 'physical', label: '体检' },
 ] as const;
 const activeModal = ref<ModalState>(null);
 const showDicom = ref(false);
@@ -113,7 +114,8 @@ const tabLabelMap: Record<string, string> = {
   inpatient: '住院',
   exam: '检查',
   lab: '检验',
-  medicine: '药耗'
+  medicine: '药耗',
+  physical: '体检'
 };
 
 const recordTabLabel = computed(() => tabLabelMap[recordTab.value] || recordTab.value);
@@ -156,7 +158,8 @@ const filteredRecords = computed(() => {
     inpatient: "住院",
     lab: "检验",
     exam: "检查",
-    medicine: "药耗"
+    medicine: "药耗",
+    physical: "体检"
   };
   const targetTag = map[recordTab.value];
   
@@ -166,27 +169,31 @@ const filteredRecords = computed(() => {
     inpatient: "ip",
     lab: "lab",
     exam: "exam",
-    medicine: "med"
+    medicine: "med",
+    physical: "pe"
   };
   const currentType = typeMap[recordTab.value];
 
   // Map LifecycleList records to Clinical Center format
   const lifecycleRecords = [
-    { id: "1", date: "2024-05-15", hosp: "上海市第一人民医院", dept: "心内科", type: "op", diag: "冠心病常规复诊", cost: "¥386", reimb: "¥268", tags: ["门诊"], desc: "1. 冠状动脉粥样硬化性心脏病 2. 高血压病3级（极高危）" },
-    { id: "2", date: "2024-03-22", hosp: "上海市第一人民医院", dept: "骨科", type: "op", diag: "腰椎间盘突出治疗", cost: "¥50", reimb: "¥45", tags: ["门诊"], desc: "腰椎间盘突出症 (L4/L5)" },
+    { id: "1", date: "2024-05-15", hosp: "常州市第一人民医院", dept: "心内科", type: "op", diag: "冠心病常规复诊", cost: "¥386", reimb: "¥268", tags: ["门诊"], desc: "1. 冠状动脉粥样硬化性心脏病 2. 高血压病3级（极高危）" },
+    { id: "2", date: "2024-03-22", hosp: "常州市第一人民医院", dept: "骨科", type: "op", diag: "腰椎间盘突出治疗", cost: "¥50", reimb: "¥45", tags: ["门诊"], desc: "腰椎间盘突出症 (L4/L5)" },
     
-    { id: "6", date: "2024-03-10", dateEnd: "2024-03-20", hosp: "复旦大学附属中山医院", dept: "心内科", type: "ip", diag: "急性心肌梗死住院记录", cost: "¥12,450", reimb: "¥9,800", tags: ["住院"], desc: "主要诊断：入院后急诊PCI术，于前降支植入支架一枚。术后予以抗血小板、调脂、改善心肌重构等治疗。", status: "已出院" },
-    { id: "7", date: "2021-08-05", dateEnd: "2021-08-12", hosp: "上海市中医医院", dept: "内分泌科", type: "ip", diag: "血糖平衡调节", cost: "¥8,420", reimb: "¥6,230", tags: ["住院"], desc: "主要诊断：II型糖尿病，血糖控制不佳", status: "已出院" },
+    { id: "6", date: "2024-03-10", dateEnd: "2024-03-20", hosp: "常州市第一人民医院", dept: "心内科", type: "ip", diag: "急性心肌梗死住院记录", cost: "¥12,450", reimb: "¥9,800", tags: ["住院"], desc: "主要诊断：入院后急诊PCI术，于前降支植入支架一枚。术后予以抗血小板、调脂、改善心肌重构等治疗。", status: "已出院" },
+    { id: "7", date: "2021-08-05", dateEnd: "2021-08-12", hosp: "常州市第一人民医院", dept: "内分泌科", type: "ip", diag: "血糖平衡调节", cost: "¥8,420", reimb: "¥6,230", tags: ["住院"], desc: "主要诊断：II型糖尿病，血糖控制不佳", status: "已出院" },
     
-    { id: "11", date: "2024-05-16", hosp: "上海市第一人民医院", dept: "检验科", type: "lab", diag: "生化常规检查", cost: "¥120", reimb: "¥100", tags: ["检验"], metrics: [{label: "谷丙转氨酶 (ALT)", value: "45", unit: "U/L", flag: "high"}, {label: "总胆固醇 (TC)", value: "6.2", unit: "mmol/L", flag: "high"}], moreCount: 3 },
-    { id: "12", date: "2024-04-12", hosp: "上海市第二人民医院", dept: "检验科", type: "lab", diag: "糖化血红蛋白", cost: "¥80", reimb: "¥60", tags: ["检验"], metrics: [{label: "糖化血红蛋白", value: "5.8", unit: "%", flag: ""}] },
+    { id: "11", date: "2024-05-16", hosp: "常州市第一人民医院", dept: "检验科", type: "lab", diag: "生化常规检查", cost: "¥120", reimb: "¥100", tags: ["检验"], metrics: [{label: "谷丙转氨酶 (ALT)", value: "45", unit: "U/L", flag: "high"}, {label: "总胆固醇 (TC)", value: "6.2", unit: "mmol/L", flag: "high"}], moreCount: 3 },
+    { id: "12", date: "2024-04-12", hosp: "南京大学医学院附属鼓楼医院", dept: "检验科", type: "lab", diag: "糖化血红蛋白", cost: "¥80", reimb: "¥60", tags: ["检验"], metrics: [{label: "糖化血红蛋白", value: "5.8", unit: "%", flag: ""}] },
     
-    { id: "16", date: "2024-05-16", hosp: "上海市第一人民医院", dept: "放射科", type: "exam", diag: "胸部CT平扫", cost: "¥240", reimb: "¥180", tags: ["放射科"], desc: "诊断结论：双肺纹理增多；建议结合临床，必要时随访。" },
-    { id: "17", date: "2024-03-12", hosp: "复旦大学附属中山医院", dept: "超声科", type: "exam", diag: "心脏彩超", cost: "¥60", reimb: "¥40", tags: ["超声科"], desc: "诊断结论：左房稍大，左室壁节段性运动异常，EF 52%。" },
-    { id: "18", date: "2024-04-12", hosp: "上海市第二人民医院", dept: "超声科", type: "exam", diag: "彩色多普勒超声", cost: "¥180", reimb: "¥140", tags: ["超声科"], desc: "结论：颈动脉内膜毛糙，未见明显斑块。建议定期复查。" },
+    { id: "16", date: "2024-05-16", hosp: "常州市第一人民医院", dept: "放射科", type: "exam", diag: "胸部CT平扫", cost: "¥240", reimb: "¥180", tags: ["放射科"], desc: "诊断结论：双肺纹理增多；建议结合临床，必要时随访。" },
+    { id: "17", date: "2024-03-12", hosp: "南京大学医学院附属鼓楼医院", dept: "超声科", type: "exam", diag: "心脏彩超", cost: "¥60", reimb: "¥40", tags: ["超声科"], desc: "诊断结论：左房稍大，左室壁节段性运动异常，EF 52%。" },
+    { id: "18", date: "2024-04-12", hosp: "南京大学医学院附属鼓楼医院", dept: "超声科", type: "exam", diag: "彩色多普勒超声", cost: "¥180", reimb: "¥140", tags: ["超声科"], desc: "结论：颈动脉内膜毛糙，未见明显斑块。建议定期复查。" },
     
-    { id: "21", date: "2024-05-17", hosp: "上海市第一人民医院", dept: "心内科", type: "med", diag: "长期用药处方", cost: "¥158", reimb: "¥120", tags: ["药耗"], items: [{name: "阿司匹林肠溶片", count: "1盒"}, {name: "阿托伐他汀钙片", count: "2盒"}], moreCount: 1 },
-    { id: "22", date: "2024-04-15", hosp: "上海市第一人民医院", dept: "门诊部", type: "med", diag: "门诊处方详单", cost: "¥85", reimb: "¥65", tags: ["药耗"], items: [{name: "一次性使用无菌注射器 5ml", count: "1具"}] },
+    { id: "21", date: "2024-05-17", hosp: "常州德仁堂药店", dept: "心内科", type: "med", diag: "长期用药处方", cost: "¥158", reimb: "¥120", tags: ["药耗"], items: [{name: "阿司匹林肠溶片", count: "1盒"}, {name: "阿托伐他汀钙片", count: "2盒"}], moreCount: 1 },
+    { id: "22", date: "2024-04-15", hosp: "常州万民药店", dept: "门诊部", type: "med", diag: "门诊处方详单", cost: "¥85", reimb: "¥65", tags: ["药耗"], items: [{name: "一次性使用无菌注射器 5ml", count: "1具"}] },
+
+    { id: "30", date: "2024-06-01", hosp: "常州爱康国宾体检中心", dept: "体检中心", type: "pe", diag: "年度员工健康体检", tags: ["体检"], desc: "建议：1. 发现轻度脂肪肝，建议低脂饮食。2. 尿酸指标偏高，需控制嘌呤摄入。", metrics: [{label: "甘油三酯", value: "2.45", flag: "high"}, {label: "血尿酸", value: "468", flag: "high"}] },
+    { id: "31", date: "2024-05-15", hosp: "常州美年大健康体检中心", dept: "体检中心", type: "pe", diag: "专项防癌筛查体检", tags: ["体检"], desc: "诊断：各项指标在正常范围内，未见明显异常。" },
   ];
 
   return lifecycleRecords.filter(r => r.type === currentType);
@@ -401,8 +408,8 @@ const claimForm = ref({
 });
 
 type ViewType = "overview" | "health" | "finance" | "info" | "logout" | "medintercept" | "rulesadapt";
-type RecordTab = "op" | "ip" | "lab" | "exam" | "med";
-type LifecycleTab = "all" | "op" | "ip" | "lab" | "exam" | "med";
+type RecordTab = "op" | "ip" | "lab" | "exam" | "med" | "pe";
+type LifecycleTab = "all" | "op" | "ip" | "lab" | "exam" | "med" | "pe";
 
 const activeView = ref<ViewType>("overview");
 const showMedInterceptPopup = ref(true);
@@ -429,8 +436,8 @@ const cbCurrentPage = ref(1);
 const cbItemsPerPage = 5;
 
 const cbReimbursementData = [
-  { date: "2026-01-15", name: "平安e生保·长期医疗", hosp: "市第一人民医院", type: "住院理赔", typeTag: "t-red", amount: "1,250.00", status: "已打款", statusTag: "t-green" },
-  { date: "2025-06-20", name: "泰康在线·百万医疗险", hosp: "常州市中医院", type: "门诊理赔", typeTag: "t-blue", amount: "450.00", status: "已打款", statusTag: "t-green" }
+  { date: "2026-01-15", name: "平安e生保·长期医疗", hosp: "常州市第一人民医院", type: "住院理赔", typeTag: "t-red", amount: "1,250.00", status: "已打款", statusTag: "t-green" },
+  { date: "2025-06-20", name: "泰康在线·百万医疗险", hosp: "常州市第一人民医院", type: "门诊理赔", typeTag: "t-blue", amount: "450.00", status: "已打款", statusTag: "t-green" }
 ];
 
 const paginatedCbReimbursementData = computed(() => {
@@ -448,13 +455,13 @@ const changeCbPage = (page: number) => {
 };
 
 const reimbursementData = [
-  { date: "2026-03-05 14:20:31", hosp: "市第一人民医院", type: "门诊", total: "386.00", cash: "38.00", fund: "268.00", account: "80.00", deduct: "0.00", other: "0.00", ratio: "69.4%" },
-  { date: "2026-02-18 09:12:05", hosp: "天宁区社区卫生中心", type: "门诊", total: "50.00", cash: "0.00", fund: "45.00", account: "5.00", deduct: "0.00", other: "0.00", ratio: "90.0%" },
+  { date: "2026-03-05 14:20:31", hosp: "常州市第一人民医院", type: "门诊", total: "386.00", cash: "38.00", fund: "268.00", account: "80.00", deduct: "0.00", other: "0.00", ratio: "69.4%" },
+  { date: "2026-02-18 09:12:05", hosp: "南京大学医学院附属鼓楼医院", type: "门诊", total: "50.00", cash: "0.00", fund: "45.00", account: "5.00", deduct: "0.00", other: "0.00", ratio: "90.0%" },
   { date: "2025-08-05 11:07:05", hosp: "常州市第一人民医院", type: "住院", total: "6101.50", cash: "3310.86", fund: "2790.64", account: "0.00", deduct: "0.00", other: "0.00", ratio: "45.7%" },
-  { date: "2025-07-20 09:30:12", hosp: "常州市第二人民医院", type: "门诊", total: "420.00", cash: "120.00", fund: "300.00", account: "0.00", deduct: "0.00", other: "0.00", ratio: "71.4%" },
-  { date: "2025-06-15 14:22:45", hosp: "常州市中医院", type: "药店", total: "158.50", cash: "0.00", fund: "0.00", account: "158.50", deduct: "0.00", other: "0.00", ratio: "0.0%" },
+  { date: "2025-07-20 09:30:12", hosp: "南京大学医学院附属鼓楼医院", type: "门诊", total: "420.00", cash: "120.00", fund: "300.00", account: "0.00", deduct: "0.00", other: "0.00", ratio: "71.4%" },
+  { date: "2025-06-15 14:22:45", hosp: "常州市第一人民医院", type: "药店", total: "158.50", cash: "0.00", fund: "0.00", account: "158.50", deduct: "0.00", other: "0.00", ratio: "0.0%" },
   { date: "2025-05-10 10:15:30", hosp: "常州市第一人民医院", type: "门诊", total: "850.00", cash: "250.00", fund: "600.00", account: "0.00", deduct: "0.00", other: "0.00", ratio: "70.6%" },
-  { date: "2025-04-02 08:45:00", hosp: "常州市妇幼保健院", type: "住院", total: "12500.00", cash: "3500.00", fund: "9000.00", account: "0.00", deduct: "0.00", other: "0.00", ratio: "72.0%" },
+  { date: "2025-04-02 08:45:00", hosp: "南京大学医学院附属鼓楼医院", type: "住院", total: "12500.00", cash: "3500.00", fund: "9000.00", account: "0.00", deduct: "0.00", other: "0.00", ratio: "72.0%" },
 ];
 
 const filteredReimbursementData = computed(() => {
@@ -498,6 +505,7 @@ const lifecycleTabs = [
   { id: "lab", label: "检验" },
   { id: "exam", label: "检查" },
   { id: "med", label: "药耗" },
+  { id: "pe", label: "体检" },
 ];
 
 const patients = [
@@ -1111,8 +1119,8 @@ const handleAction = (type: string, title: string, record?: any) => {
 
                     <div class="absolute top-4 left-4 z-10 flex flex-col gap-3">
                       <!-- Real-time Metrics -->
-                      <div class="bg-white/80 backdrop-blur-md border border-slate-200 rounded-lg p-3 w-48 shadow-sm">
-                        <h3 class="text-[10px] font-bold text-blue-700 uppercase tracking-widest mb-3">实时体征监测</h3>
+                      <div class="bg-white/80 backdrop-blur-md border border-slate-200 rounded-lg p-3 w-48 shadow-sm cursor-pointer hover:border-blue-300 hover:shadow-md transition-all" @click="showMetricDetailModal = true">
+                        <h3 class="text-[10px] font-bold text-blue-700 uppercase tracking-widest mb-3">健康体征数据</h3>
                         <div class="space-y-3">
                           <div class="flex items-center gap-2">
                             <HeartPulse :size="14" class="text-red-400/70 shrink-0" />
@@ -1157,10 +1165,22 @@ const handleAction = (type: string, title: string, record?: any) => {
                       </div>
                     </div>
 
-                    <div class="absolute bottom-4 right-4 z-10">
-                      <button type="button" class="p-2 bg-white/80 hover:bg-slate-50 border border-slate-200 rounded-lg text-blue-600 transition-all shadow-sm" @click="isVizExpanded = !isVizExpanded">
-                        <Move class="w-4 h-4" />
-                      </button>
+                    <div class="absolute bottom-2 left-4 right-4 z-10">
+                      <div class="flex items-center gap-x-3" style="font-size: 10px;">
+                        <div class="text-slate-500 font-medium shrink-0">
+                          归集自以下系统，实时清洗入档：
+                        </div>
+                        <div class="chips flex-1 min-w-0">
+                          <div class="chip"><div class="cdot" style="background: var(--blue)"></div>HIS 门急诊</div>
+                          <div class="chip"><div class="cdot" style="background: var(--green)"></div>PACS 影像</div>
+                          <div class="chip"><div class="cdot" style="background: var(--amber)"></div>LIS 检验</div>
+                          <div class="chip"><div class="cdot" style="background: var(--purple)"></div>EMR 病历</div>
+                          <div class="chip"><div class="cdot" style="background: #EC4899"></div>公卫档案</div>
+                          <div class="chip"><div class="cdot" style="background: var(--cyan)"></div>可穿戴设备</div>
+                          <div class="chip"><div class="cdot" style="background: #F97316"></div>体检机构</div>
+                          <div class="chip"><div class="cdot" style="background: #6B7280"></div>药店购药</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
@@ -1278,7 +1298,8 @@ const handleAction = (type: string, title: string, record?: any) => {
                                'bg-purple-500': record.type === 'ip',
                                'bg-emerald-500': record.type === 'exam',
                                'bg-orange-500': record.type === 'lab',
-                               'bg-rose-500': record.type === 'med'
+                               'bg-rose-500': record.type === 'med',
+                               'bg-indigo-500': record.type === 'pe'
                              }">
                         </div>
 
@@ -1304,13 +1325,15 @@ const handleAction = (type: string, title: string, record?: any) => {
                                      'bg-purple-50 text-purple-500': record.type === 'ip',
                                      'bg-emerald-50 text-emerald-500': record.type === 'exam',
                                      'bg-orange-50 text-orange-500': record.type === 'lab',
-                                     'bg-rose-50 text-rose-500': record.type === 'med'
+                                     'bg-rose-50 text-rose-500': record.type === 'med',
+                                     'bg-indigo-50 text-indigo-500': record.type === 'pe'
                                    }">
                                 <Stethoscope v-if="record.type === 'op'" :size="14" />
                                 <Hospital v-else-if="record.type === 'ip'" :size="14" />
                                 <Scan v-else-if="record.type === 'exam'" :size="14" />
                                 <Microscope v-else-if="record.type === 'lab'" :size="14" />
-                                <Pill v-else :size="14" />
+                                <Pill v-else-if="record.type === 'med'" :size="14" />
+                                <Activity v-else-if="record.type === 'pe'" :size="14" />
                               </div>
                               <div class="text-sm font-bold text-slate-900 truncate">{{ record.diag }}</div>
                             </div>
@@ -1350,6 +1373,14 @@ const handleAction = (type: string, title: string, record?: any) => {
                                 展开剩余 {{ record.moreCount }} 项指标 <ChevronDown :size="10" />
                               </div>
                             </div>
+                            <div v-else-if="record.type === 'pe'" class="space-y-1">
+                              <div class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">{{ record.desc }}</div>
+                              <div class="flex flex-wrap gap-2 mt-2">
+                                <div v-for="metric in record.metrics" :key="metric.label" class="warning-tag flex items-center">
+                                    {{ metric.label }} {{ metric.value }} ↑
+                                </div>
+                              </div>
+                            </div>
                             <div v-else class="space-y-1">
                               <div class="flex flex-col gap-1 mt-1">
                                 <div v-for="(it, i) in record.items" :key="i" class="flex justify-between items-center p-1.5 rounded-lg text-[11px] bg-slate-50 group-hover:bg-blue-50/30 transition-colors">
@@ -1383,7 +1414,7 @@ const handleAction = (type: string, title: string, record?: any) => {
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 13px; color: var(--ink3); font-weight: 500;">机构：</span>
                 <select class="ch-sel" style="width: 140px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; background: #f8fafc; outline: none; cursor: pointer;">
-                  <option>市第一人民医院</option>
+                  <option>常州市第一人民医院</option>
                   <option>市第二人民医院</option>
                 </select>
               </div>
@@ -1494,7 +1525,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                   </div>
                   <div class="hi" @click="showMetricDetailModal = true; selectedMetric = '心率'">
                     <div class="hi-top">
-                      <span class="hi-ico">🫀</span>
+                      <span class="hi-ico"><HeartPulse :size="16" /></span>
                       <span class="hi-s hi-ok">正常</span>
                     </div>
                     <div class="hi-val" style="color: var(--green)">72</div>
@@ -2065,7 +2096,7 @@ const handleAction = (type: string, title: string, record?: any) => {
         <div v-if="showDetail.type === 'ip'" class="emr-mock">
           <div class="emr-header">病案首页</div>
           <div class="emr-info-grid">
-            <div class="emr-row"><span>医疗机构：</span>复旦大学附属中山医院</div>
+            <div class="emr-row"><span>医疗机构：</span>南京大学医学院附属鼓楼医院</div>
             <div class="emr-row"><span>住院号：</span>IP20240310001</div>
             <div class="emr-row"><span>入院日期：</span>2024-03-10</div>
             <div class="emr-row"><span>出院日期：</span>2024-03-20</div>
@@ -2787,5 +2818,31 @@ const handleAction = (type: string, title: string, record?: any) => {
 
 .pt-collapse-btn:hover {
   color: var(--blue);
+}
+
+.warning-tag {
+  background-color: #FEF3C7; /* amber-100 */
+  color: #92400E; /* amber-800 */
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 10px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+}
+
+.t-indigo {
+  background: var(--indigo-l);
+  color: var(--indigo);
+}
+
+.chips .chip {
+  font-size: 9px;
+  padding: 2px 6px;
+}
+
+.chips .cdot {
+  width: 6px;
+  height: 6px;
 }
 </style>
