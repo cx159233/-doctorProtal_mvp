@@ -1,7 +1,13 @@
 {
   "permissions": {
     "allow": [
-      "Bash(find /f/my-gemini-project/doctorProtal -type f -name *.png -o -name *.jpg -o -name *.glb -o -name *.obj)"
+      "Bash(find /f/my-gemini-project/doctorProtal -type f -name *.png -o -name *.jpg -o -name *.glb -o -name *.obj)",
+      "Bash(git checkout *)",
+      "Bash(node -e ' *)",
+      "Bash(git remote *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)"
     ]
   }
 }

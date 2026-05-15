@@ -1372,23 +1372,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                         </div>
                       </div>
 
-                      <!-- Health Alert Section -->
-                      <div class="bg-amber-50/90 backdrop-blur-md border border-amber-200/60 rounded-lg p-3 w-48 shadow-sm">
-                        <div class="flex items-center gap-2 mb-2 text-amber-600">
-                          <AlertTriangle :size="14" />
-                          <h4 class="text-[10px] font-bold uppercase tracking-widest">患者健康预警</h4>
-                        </div>
-                        <p class="text-[10px] text-amber-800 leading-tight mb-3">
-                          血压近3次均超标 (148/92); 氨氯地平片余3天
-                        </p>
-                        <button 
-                          class="w-full py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-bold rounded-md transition-colors shadow-sm"
-                          style="color: #ffffff !important; font-size: 10px;"
-                          @click="showHealthRefillModal = true"
-                        >
-                          开具续药处方
-                        </button>
-                      </div>
+                      <!-- 患者健康预警已隐藏，后续可能恢复 -->
                     </div>
 
                     <div class="absolute bottom-2 left-4 right-4 z-10">
