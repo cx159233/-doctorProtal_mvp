@@ -414,10 +414,11 @@ const claimForm = ref({
   account: '6222 **** **** 8832'
 });
 
-type ViewType = "overview" | "health" | "finance" | "info" | "logout" | "medintercept" | "rulesadapt";
+type ViewType = "his" | "his1" | "his2" | "his3" | "overview" | "health" | "finance" | "info" | "logout" | "medintercept" | "rulesadapt";
 type LifecycleTab = "all" | "op" | "ip" | "lab" | "exam" | "med" | "pe";
 
-const activeView = ref<ViewType>("overview");
+const activeView = ref<ViewType>("his");
+const showHisDropdown = ref(false);
 const showMedInterceptPopup = ref(true);
 const showRulesAdaptPopup = ref(true);
 const selectedPatientId = ref(1);
@@ -563,7 +564,257 @@ const handleAction = (type: string, title: string, record?: any) => {
 
 <template>
   <a-config-provider :theme="antdTheme">
-  <div v-if="activeView === 'medintercept'" style="position: relative; width: 100vw; height: 100vh; background: url('/his.png') center / cover no-repeat;">
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <!-- HIS 界面还原设计 — 首次进入系统展示的门诊医生站界面，后续可删除此区块 -->
+  <!-- ════════════════════════════════════════════════════════════════════════ -->
+  <div v-if="activeView === 'his'" class="flex flex-col h-screen w-screen" style="font-family: 'Microsoft YaHei', sans-serif; background: #f0f2f5; color: #333; overflow: hidden;">
+    <!-- 顶层蓝色工具栏 -->
+    <header style="background: #1e5494; color: #fff;" class="flex justify-between items-center px-4 h-10 shrink-0">
+      <div class="flex items-center space-x-4">
+        <div class="flex items-center space-x-1 font-bold text-sm">
+          <i class="fas fa-hospital"></i>
+          <span>门诊医生站</span>
+        </div>
+        <nav class="flex space-x-4 text-xs opacity-90">
+          <div class="flex items-center space-x-1 cursor-pointer hover:opacity-100 hover:bg-white/20 px-2 py-0.5 rounded-sm transition"><i class="fas fa-user-friends"></i><span>转诊</span></div>
+          <div class="flex items-center space-x-1 cursor-pointer hover:opacity-100 hover:bg-white/20 px-2 py-0.5 rounded-sm transition"><i class="fas fa-stethoscope"></i><span>首诊测压</span></div>
+          <div class="flex items-center space-x-1 cursor-pointer hover:opacity-100 hover:bg-white/20 px-2 py-0.5 rounded-sm transition"><i class="fas fa-history"></i><span>历史处方</span></div>
+          <div class="flex items-center space-x-1 cursor-pointer hover:opacity-100 hover:bg-white/20 px-2 py-0.5 rounded-sm transition"><i class="fas fa-file-medical"></i><span>入院单</span></div>
+          <div class="relative" @mouseenter="showHisDropdown = true" @mouseleave="showHisDropdown = false">
+            <div class="flex items-center space-x-1 cursor-pointer hover:opacity-100 hover:bg-white/20 px-2 py-0.5 rounded-sm transition"><i class="fas fa-th-large"></i><span>其他</span><i class="fas fa-caret-down text-[10px] ml-0.5"></i></div>
+            <div v-if="showHisDropdown" class="absolute top-full left-0 mt-1 bg-white text-gray-700 rounded shadow-lg border border-gray-200 py-1 z-50 min-w-[200px]">
+              <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">医生工作量查血</div>
+              <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">门诊病人范围设置</div>
+              <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">报告卡管理</div>
+              <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap font-bold" @click="showHisDropdown = false; activeView = 'his1'">医保健康数据共享</div>
+              <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">卫生健康应用服务</div>
+              <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">应用市场</div>
+            </div>
+          </div>
+          <div class="flex items-center space-x-1 cursor-pointer hover:opacity-100 hover:bg-white/20 px-2 py-0.5 rounded-sm transition"><i class="fas fa-file-alt"></i><span>单据</span></div>
+        </nav>
+      </div>
+      <div class="flex items-center space-x-4 text-xs">
+        <div class="text-right whitespace-nowrap">测血压 · 专家</div>
+        <div class="flex items-center space-x-1 border-l border-blue-400 pl-4">
+          <i class="fas fa-user-circle text-lg"></i>
+          <span>工程师</span>
+          <i class="fas fa-comment-dots"></i>
+        </div>
+        <div class="flex space-x-3 text-sm ml-4">
+          <i class="fas fa-cog cursor-pointer"></i>
+          <i class="fas fa-lock cursor-pointer"></i>
+          <i class="fas fa-user cursor-pointer"></i>
+          <i class="fas fa-minus cursor-pointer"></i>
+          <i class="fas fa-power-off cursor-pointer"></i>
+        </div>
+      </div>
+    </header>
+
+    <div class="flex flex-1 overflow-hidden">
+      <!-- 左侧边栏：患者列表 -->
+      <aside class="w-48 bg-white border-r border-gray-300 flex flex-col shrink-0">
+        <div class="p-2 border-b border-gray-300 flex justify-between items-center bg-gray-50">
+          <span class="text-xs font-bold text-blue-800">患者列表</span>
+          <i class="fas fa-thumbtack text-gray-400 text-[10px]"></i>
+        </div>
+        <div class="p-2 border-b border-gray-300">
+          <div class="flex">
+            <select class="text-[11px] border border-gray-300 rounded px-1 py-0.5 flex-1 bg-white">
+              <option>医保卡</option><option>身份证</option><option>就诊卡</option>
+            </select>
+            <button class="ml-1 bg-gray-100 text-gray-700 text-[10px] px-2 py-0.5 rounded border border-gray-300">读卡</button>
+          </div>
+          <input class="mt-1 w-full text-[11px] border border-gray-300 rounded px-1 py-0.5" placeholder="姓名/卡号查询" />
+        </div>
+        <div class="flex text-[10px] border-b border-gray-300 bg-gray-50">
+          <div class="flex-1 text-center py-1 text-blue-800 font-bold border-b-2 border-blue-800">候诊(<span class="text-red-500">5</span>)</div>
+          <div class="flex-1 text-center py-1 text-gray-500">诊中(<span>2</span>)</div>
+          <div class="flex-1 text-center py-1 text-gray-500">已诊(<span>8</span>)</div>
+        </div>
+        <!-- 患者列表项 -->
+        <div class="flex-1 overflow-y-auto" style="scrollbar-width: thin;">
+          <div class="px-2 py-1.5 border-b border-gray-100 cursor-pointer hover:bg-blue-50" style="background: #b9cceb;">
+            <div class="flex justify-between items-center"><span class="text-xs font-bold">1 陈志明</span><span class="text-[10px] text-gray-500">男 42岁</span></div>
+            <div class="text-[10px] text-gray-500 mt-0.5">心内科 · 高血压</div>
+          </div>
+          <div class="px-2 py-1.5 border-b border-gray-100 cursor-pointer hover:bg-blue-50">
+            <div class="flex justify-between items-center"><span class="text-xs font-bold">2 王秀兰</span><span class="text-[10px] text-gray-500">女 65岁</span></div>
+            <div class="text-[10px] text-gray-500 mt-0.5">内分泌 · 糖尿病</div>
+          </div>
+          <div class="px-2 py-1.5 border-b border-gray-100 cursor-pointer hover:bg-blue-50">
+            <div class="flex justify-between items-center"><span class="text-xs font-bold">3 张伟</span><span class="text-[10px] text-gray-500">男 55岁</span></div>
+            <div class="text-[10px] text-gray-500 mt-0.5">神经内科 · 头痛</div>
+          </div>
+          <div class="px-2 py-1.5 border-b border-gray-100 cursor-pointer hover:bg-blue-50">
+            <div class="flex justify-between items-center"><span class="text-xs font-bold">4 李芳</span><span class="text-[10px] text-gray-500">女 38岁</span></div>
+            <div class="text-[10px] text-gray-500 mt-0.5">呼吸科 · 咳嗽</div>
+          </div>
+          <div class="px-2 py-1.5 border-b border-gray-100 cursor-pointer hover:bg-blue-50">
+            <div class="flex justify-between items-center"><span class="text-xs font-bold">5 刘建国</span><span class="text-[10px] text-gray-500">男 70岁</span></div>
+            <div class="text-[10px] text-gray-500 mt-0.5">骨科 · 腰痛</div>
+          </div>
+        </div>
+      </aside>
+
+      <!-- 主内容区 -->
+      <main class="flex-1 flex flex-col overflow-hidden">
+        <!-- 患者信息栏 -->
+        <div class="bg-white border-b border-gray-300 px-4 py-1.5 flex items-center justify-between shrink-0">
+          <div class="flex items-center space-x-4 text-xs">
+            <span class="font-bold text-blue-800">陈志明</span>
+            <span class="text-gray-500">男 · 42岁 · 医保</span>
+            <span class="px-1.5 py-0.5 bg-blue-100 text-blue-800 rounded text-[10px]">高血压3级</span>
+            <span class="px-1.5 py-0.5 bg-yellow-100 text-yellow-800 rounded text-[10px]">过敏史: 青霉素</span>
+          </div>
+          <div class="flex items-center space-x-2 text-[10px]">
+            <button class="px-2 py-1 bg-gray-100 text-gray-600 rounded border border-gray-300">病历</button>
+            <button class="px-2 py-1 bg-gray-100 text-gray-600 rounded border border-gray-300">处方</button>
+            <button class="px-2 py-1 bg-gray-100 text-gray-600 rounded border border-gray-300">检查</button>
+            <button class="px-2 py-1 bg-gray-100 text-gray-600 rounded border border-gray-300">检验</button>
+            <button class="px-2 py-1 bg-gray-100 text-gray-600 rounded border border-gray-300">治疗</button>
+          </div>
+        </div>
+
+        <!-- Tab 栏 -->
+        <div class="bg-white border-b border-gray-300 flex text-xs shrink-0">
+          <div class="px-4 py-2 text-blue-800 font-bold border-b-2 border-blue-800 cursor-pointer">主诉/现病史</div>
+          <div class="px-4 py-2 text-gray-500 cursor-pointer hover:text-blue-800">既往史</div>
+          <div class="px-4 py-2 text-gray-500 cursor-pointer hover:text-blue-800">体格检查</div>
+          <div class="px-4 py-2 text-gray-500 cursor-pointer hover:text-blue-800">诊断</div>
+          <div class="px-4 py-2 text-gray-500 cursor-pointer hover:text-blue-800">处置</div>
+        </div>
+
+        <!-- 编辑区 -->
+        <div class="flex-1 bg-white p-4 overflow-y-auto" style="scrollbar-width: thin;">
+          <div class="mb-3">
+            <label class="text-xs font-bold text-gray-600 block mb-1">主诉</label>
+            <div class="text-sm p-2 bg-gray-50 border border-gray-200 rounded min-h-[40px]">发现血压升高10年，伴头晕1周。</div>
+          </div>
+          <div class="mb-3">
+            <label class="text-xs font-bold text-gray-600 block mb-1">现病史</label>
+            <div class="text-sm p-2 bg-gray-50 border border-gray-200 rounded min-h-[60px]">患者10年前体检发现血压升高，最高160/100mmHg，平时服用苯磺酸氨氯地平片，血压控制在140/90mmHg左右。1周前无明显诱因出现头晕，呈持续性胀痛，休息后稍缓解。</div>
+          </div>
+          <div class="mb-3">
+            <label class="text-xs font-bold text-gray-600 block mb-1">过敏史</label>
+            <div class="text-sm p-2 bg-red-50 border border-red-200 rounded text-red-700">青霉素类 — 极度敏感</div>
+          </div>
+        </div>
+
+        <!-- 底部处方表格 -->
+        <div class="bg-white border-t border-gray-300 shrink-0" style="max-height: 200px; overflow-y: auto;">
+          <table class="w-full text-[11px]">
+            <thead>
+              <tr class="bg-gray-100 border-b border-gray-300">
+                <th class="py-1 px-2 text-left font-bold">药品名称</th>
+                <th class="py-1 px-2 text-left font-bold">规格</th>
+                <th class="py-1 px-2 text-left font-bold">用法</th>
+                <th class="py-1 px-2 text-left font-bold">用量</th>
+                <th class="py-1 px-2 text-left font-bold">频次</th>
+                <th class="py-1 px-2 text-left font-bold">天数</th>
+                <th class="py-1 px-2 text-left font-bold">数量</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-gray-100">
+                <td class="py-1 px-2">注射用阿莫西林钠</td>
+                <td class="py-1 px-2">1.0g/支</td>
+                <td class="py-1 px-2">静脉滴注</td>
+                <td class="py-1 px-2">2.0g</td>
+                <td class="py-1 px-2">bid</td>
+                <td class="py-1 px-2">3天</td>
+                <td class="py-1 px-2">12支</td>
+              </tr>
+              <tr class="border-b border-gray-100">
+                <td class="py-1 px-2">苯磺酸氨氯地平片</td>
+                <td class="py-1 px-2">5mg</td>
+                <td class="py-1 px-2">口服</td>
+                <td class="py-1 px-2">5mg</td>
+                <td class="py-1 px-2">qd</td>
+                <td class="py-1 px-2">14天</td>
+                <td class="py-1 px-2">14片</td>
+              </tr>
+              <tr class="border-b border-gray-100">
+                <td class="py-1 px-2">缬沙坦胶囊</td>
+                <td class="py-1 px-2">80mg</td>
+                <td class="py-1 px-2">口服</td>
+                <td class="py-1 px-2">80mg</td>
+                <td class="py-1 px-2">qd</td>
+                <td class="py-1 px-2">14天</td>
+                <td class="py-1 px-2">14粒</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  </div>
+  <!-- HIS 界面还原设计 END — 以上为 HIS 门诊医生站模拟界面，后续可删除 -->
+  <!-- HIS1 界面还原设计 — 医保健康数据共享界面，后续可删除此区块 -->
+  <div v-else-if="activeView === 'his1'" style="position: fixed; inset: 0; background: url('/his1.png') top center / 100% 100% no-repeat; cursor: default;">
+    <!-- 点击中间弹窗区域（短信授权、医生辅助授权）跳转到 his2 -->
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 360px; height: 280px; cursor: pointer;" @click="activeView = 'his2'"></div>
+  </div>
+  <!-- HIS1 界面还原设计 END -->
+  <!-- HIS2 界面还原设计 — 授权确认界面，后续可删除此区块 -->
+  <div v-else-if="activeView === 'his2'" style="position: fixed; inset: 0; background: url('/his2.png') top center / 100% 100% no-repeat; cursor: default;">
+    <!-- 点击中间弹窗区域跳转到 his3 -->
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 360px; height: 280px; cursor: pointer;" @click="activeView = 'his3'"></div>
+  </div>
+  <!-- HIS2 界面还原设计 END -->
+  <!-- HIS3 界面还原设计 — 授权结果界面，后续可删除此区块 -->
+  <div v-else-if="activeView === 'his3'" style="position: fixed; inset: 0; background: url('/his3.png') top center / 100% 100% no-repeat; cursor: default;">
+    <!-- 顶部导航栏 - HTML形式 -->
+    <div style="position: absolute; top: 0; left: 0; right: 0; height: 80px; display: flex; align-items: center; background: linear-gradient(to bottom, #f8fafc 0%, #ffffff 100%); border-bottom: 1px solid #e2e8f0;">
+      <!-- Logo 和标题 -->
+      <div style="display: flex; align-items: center; margin-left: 24px;">
+        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
+          <span style="color: white; font-size: 20px; font-weight: bold;">健</span>
+        </div>
+        <div>
+          <div style="font-size: 14px; font-weight: 600; color: #1e293b;">健康数据共享平台</div>
+          <div style="font-size: 10px; color: #64748b;">Health Data Sharing Platform</div>
+        </div>
+      </div>
+      
+      <!-- 导航菜单 -->
+      <div style="display: flex; margin-left: 200px;">
+        <button 
+          style="padding: 28px 24px; font-size: 14px; font-weight: 500; color: #64748b; background: transparent; border: none; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent;"
+          @click="activeView = 'his3'"
+        >
+          影像查询
+        </button>
+        <button 
+          style="padding: 28px 24px; font-size: 14px; font-weight: 500; color: #64748b; background: transparent; border: none; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent;"
+          @click="activeView = 'his3'"
+        >
+          检验查询
+        </button>
+        <button 
+          style="padding: 28px 24px; font-size: 14px; font-weight: 600; color: #2563eb; background: transparent; border: none; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid #2563eb;"
+          @click="activeView = 'overview'"
+        >
+          参保人画像
+        </button>
+      </div>
+      
+      <!-- 右侧信息 -->
+      <div style="margin-left: auto; margin-right: 24px; display: flex; align-items: center;">
+        <div style="display: flex; align-items: center; margin-right: 16px;">
+          <span style="font-size: 12px; color: #64748b;">张兮兮 |</span>
+          <span style="font-size: 12px; color: #334155; margin-left: 8px;">常州市第七人民医院</span>
+        </div>
+        <div style="width: 24px; height: 24px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+          <svg style="width: 14px; height: 14px; color: #64748b;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- HIS3 界面还原设计 END -->
+  <div v-else-if="activeView === 'medintercept'" style="position: relative; width: 100vw; height: 100vh; background: url('/his.png') center / cover no-repeat;">
     <div class="fixed bottom-6 right-6 z-50 flex flex-col items-end space-y-4 pointer-events-none">
       <transition enter-active-class="animate__animated animate__fadeInRight" leave-active-class="animate__animated animate__fadeOutRight">
         <div v-if="showMedInterceptPopup" class="pointer-events-auto glass-card w-96 rounded-xl overflow-hidden border-red-200 alert-pulse">
@@ -989,7 +1240,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                                   <p class="text-[10px] text-slate-500">保单号：PASH20240312001</p>
                                 </div>
                               </div>
-                              <a-button type="primary" danger size="small" class="rounded-full px-4 text-[10px]" @click="showInsuranceClaimModal = true">一键直赔</a-button>
+                              <!-- 一键直赔按钮已隐藏，后续可能恢复 -->
                             </div>
                             <div class="grid grid-cols-4 gap-2 border-t border-orange-100 pt-3">
                               <div>
@@ -1023,7 +1274,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                                   <p class="text-[10px] text-slate-500">保单号：LXJK20240520008</p>
                                 </div>
                               </div>
-                              <a-button type="primary" danger size="small" class="rounded-full px-4 text-[10px]" @click="showInsuranceClaimModal = true">一键直赔</a-button>
+                              <!-- 一键直赔按钮已隐藏，后续可能恢复 -->
                             </div>
                             <div class="grid grid-cols-4 gap-2 border-t border-blue-100 pt-3">
                               <div>
@@ -1045,29 +1296,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                             </div>
                           </div>
 
-                          <!-- AI 建议 -->
-                          <div class="mt-4 bg-slate-50 border border-slate-200 rounded-xl p-4 mb-2">
-                            <div class="flex items-center gap-2 mb-3">
-                              <div class="bg-blue-600 text-white rounded-lg p-1">
-                                <Zap :size="12" />
-                              </div>
-                              <span class="text-[11px] font-bold text-slate-900">AI 医保条款分析建议</span>
-                            </div>
-                            <div class="space-y-3">
-                              <div class="flex gap-2">
-                                <span class="text-[10px] font-bold text-slate-600 shrink-0 mt-0.5">推荐用药范围：</span>
-                                <p class="text-[10px] text-slate-700 leading-relaxed">
-                                  持<span class="text-orange-600 font-bold">江苏医惠保1号</span>，目录外可报销但有2万免赔。建议优先目录内药品。
-                                </p>
-                              </div>
-                              <div class="flex gap-2">
-                                <span class="text-[10px] font-bold text-slate-600 shrink-0 mt-0.5">重疾保障提示：</span>
-                                <p class="text-[10px] text-slate-700 leading-relaxed">
-                                  <span class="text-green-600 font-bold">乐享健康重疾险</span>覆120种重疾。注意肺结节随访，恶性肿瘤将触发全赔。
-                                </p>
-                              </div>
-                            </div>
-                          </div>
+                          <!-- AI 医保条款分析建议已隐藏，后续可能恢复 -->
                         </div>
                       </div>
                       <div v-else>
@@ -1181,68 +1410,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                     </div>
                   </div>
 
-                <div class="h-[210px] standard-card p-4 flex flex-col gap-2 relative overflow-hidden shrink-0 bg-gradient-to-b from-blue-50/50 to-white">
-                  <h3 class="text-[13px] font-bold text-[#2563eb] uppercase tracking-widest flex items-center gap-2">
-                    <Cpu class="w-4 h-4" />
-                    DRG/DIP智能反馈
-                  </h3>
-
-                  <div class="flex-1 grid grid-cols-2 gap-3 min-h-0">
-                    <div class="flex flex-col gap-2 min-h-0">
-                      <div class="grid grid-cols-2 gap-2">
-                        <div class="p-2 bg-white/70 backdrop-blur-sm border border-white/80 rounded-xl">
-                          <div class="text-[10px] text-slate-500 font-bold">本次入院天数</div>
-                          <div class="mt-1 text-[13px] font-bold text-slate-900">5天</div>
-                        </div>
-                        <div class="p-2 bg-white/70 backdrop-blur-sm border border-white/80 rounded-xl">
-                          <div class="text-[10px] text-slate-500 font-bold">预估DRG分组</div>
-                          <div class="mt-1 text-[13px] font-bold text-blue-600">[BR21]</div>
-                        </div>
-                        <div class="p-2 bg-white/70 backdrop-blur-sm border border-white/80 rounded-xl">
-                          <div class="text-[10px] text-slate-500 font-bold">标杆支付额</div>
-                          <div class="mt-1 text-[13px] font-bold text-slate-900">¥ 12,500</div>
-                        </div>
-                        <div class="p-2 bg-white/70 backdrop-blur-sm border border-white/80 rounded-xl">
-                          <div class="text-[10px] text-slate-500 font-bold">当前已发生</div>
-                          <div class="mt-1 text-[13px] font-bold text-red-600">¥ 14,280</div>
-                        </div>
-                      </div>
-
-                      <div class="p-2 bg-white/70 backdrop-blur-sm border border-white/80 rounded-xl min-h-[72px]">
-                        <div class="flex items-center justify-between mb-1.5">
-                          <div class="text-[10px] font-bold text-slate-700">
-                            费用消耗进度 <span class="text-slate-400 font-normal">(对比平均标杆)</span>
-                          </div>
-                          <span class="text-[10px] font-bold text-red-600 bg-red-50 border border-red-100 px-2 py-0.5 rounded-full">已超支 14.2%</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                          <div class="h-1.5 flex-1 bg-slate-100 rounded-full overflow-hidden">
-                            <div class="h-full bg-gradient-to-r from-red-400 to-red-500 w-[85%]"></div>
-                          </div>
-                          <span class="text-[9px] text-slate-400 font-mono whitespace-nowrap">120% <span class="text-slate-300">(标杆线100%)</span></span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="flex flex-col gap-2 min-h-0">
-                      <div class="p-2 bg-amber-50/70 border border-amber-200/60 rounded-xl flex-1 min-h-0 overflow-hidden">
-                        <div class="flex items-center gap-2 text-amber-700 font-bold text-[11px] mb-1">
-                          <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-                          路径优化建议（AI 分析）
-                        </div>
-                        <div class="text-[10px] text-amber-900 leading-relaxed" style="line-clamp: 4; -webkit-line-clamp: 4; display: -webkit-box; -webkit-box-orient: vertical; overflow: hidden;">
-                          检测到高值耗材支出占比异常（+23%），建议核对是否使用了非集采止血粉。建议切换为集采品种以控制费用。
-                        </div>
-                      </div>
-
-                      <div class="flex justify-end">
-                        <button type="button" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white text-[10px] font-bold hover:bg-blue-700 transition-colors" style="color: #ffffff !important;">
-                          优化路径并重新计算
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                <!-- DRG/DIP智能反馈已隐藏，后续可能恢复 -->
               </section>
 
               <!-- Right Column: Clinical Records -->
@@ -1943,7 +2111,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                             <div class="ins-v2-id" style="font-size: 12px; color: #94a3b8;" title="保单号：PASH20240312001">保单号：PASH20240312001</div>
                           </div>
                         </div>
-                        <button class="ins-v2-claim-btn" style="background: #dc2626; color: #fff; border: none; padding: 8px 24px; border-radius: 24px; font-size: 12px; font-weight: 700; cursor: pointer;" @click="showInsuranceClaimModal = true">一键直赔</button>
+                        <!-- 一键直赔按钮已隐藏，后续可能恢复 -->
                       </div>
                       <div class="ins-v2-body" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
                         <div class="ins-v2-item">
@@ -1967,14 +2135,8 @@ const handleAction = (type: string, title: string, record?: any) => {
 
                     <div class="ins-card-v2" style="background: #EFF6FF; border: 1px solid #DBEAFE; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
                       <div class="ins-v2-top" style="border-bottom: 1px dashed #DBEAFE; padding-bottom: 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                          <div class="ins-v2-logo" style="background: #fff; border: 1px solid #f1f5f9; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🛡️</div>
-                          <div class="ins-v2-info">
-                            <div class="ins-v2-name" style="font-size: 16px; font-weight: 700; color: #1e293b;" title="乐享健康重疾险">乐享健康重疾险</div>
-                            <div class="ins-v2-id" style="font-size: 12px; color: #94a3b8;" title="保单号：LXJK20240520008">保单号：LXJK20240520008</div>
-                          </div>
-                        </div>
-                        <button class="ins-v2-claim-btn" style="background: #dc2626; color: #fff; border: none; padding: 8px 24px; border-radius: 24px; font-size: 12px; font-weight: 700; cursor: pointer;" @click="showInsuranceClaimModal = true">一键直赔</button>
+                        <!-- AI 医保条款分析建议已隐藏，后续可能恢复 -->
+                        <!-- 一键直赔按钮已隐藏，后续可能恢复 -->
                       </div>
                       <div class="ins-v2-body" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
                         <div class="ins-v2-item">
@@ -1997,24 +2159,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                     </div>
                   </div>
                   
-                  <!-- AI 医保条款分析建议 -->
-                  <div style="margin-top: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px;">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
-                      <div style="background: var(--blue); color: white; border-radius: 12px; padding: 2px 8px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px;">
-                        <span style="font-size: 14px;">💡</span> AI 医保条款分析建议
-                      </div>
-                    </div>
-                    <div style="display: flex; flex-direction: column; gap: 12px;">
-                      <div style="display: flex; gap: 8px;">
-                        <div style="color: var(--ink); font-size: 13px; font-weight: 700; white-space: nowrap;">推荐用药范围：</div>
-                        <div style="color: var(--ink2); font-size: 13px; line-height: 1.5;">鉴于患者持有<span style="color: #e27329; font-weight: 700;">江苏医惠保1号</span>，医保目录外费用可报销，但有2万元免赔额。对于高额医疗费用，建议优先使用医保目录内药品以降低自付比例。</div>
-                      </div>
-                      <div style="display: flex; gap: 8px;">
-                        <div style="color: var(--ink); font-size: 13px; font-weight: 700; white-space: nowrap;">重疾保障提示：</div>
-                        <div style="color: var(--ink2); font-size: 13px; line-height: 1.5;"><span style="color: #23a074; font-weight: 700;">乐享健康重疾险</span>覆盖120种重疾。当前诊断（高血压、肺结节）暂未触发理赔，但需注意肺结节随访，若发展为恶性肿瘤将触发全额赔付。</div>
-                      </div>
-                    </div>
-                  </div>
+                  <!-- AI 医保条款分析建议已隐藏，后续可能恢复 -->
                 </div>
               </div>
 
