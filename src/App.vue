@@ -418,6 +418,7 @@ type ViewType = "his" | "his1" | "his2" | "his3" | "overview" | "health" | "fina
 type LifecycleTab = "all" | "op" | "ip" | "lab" | "exam" | "med" | "pe";
 
 const activeView = ref<ViewType>("his");
+const activeNavTab = ref("imaging");
 const showHisDropdown = ref(false);
 const showMedInterceptPopup = ref(true);
 const showRulesAdaptPopup = ref(true);
@@ -582,13 +583,15 @@ const handleAction = (type: string, title: string, record?: any) => {
           <div class="flex items-center space-x-1 cursor-pointer hover:opacity-100 hover:bg-white/20 px-2 py-0.5 rounded-sm transition"><i class="fas fa-file-medical"></i><span>入院单</span></div>
           <div class="relative" @mouseenter="showHisDropdown = true" @mouseleave="showHisDropdown = false">
             <div class="flex items-center space-x-1 cursor-pointer hover:opacity-100 hover:bg-white/20 px-2 py-0.5 rounded-sm transition"><i class="fas fa-th-large"></i><span>其他</span><i class="fas fa-caret-down text-[10px] ml-0.5"></i></div>
-            <div v-if="showHisDropdown" class="absolute top-full left-0 mt-1 bg-white text-gray-700 rounded shadow-lg border border-gray-200 py-1 z-50 min-w-[200px]">
+            <div v-if="showHisDropdown" class="absolute top-full left-0 pt-1 z-50">
+            <div class="bg-white text-gray-700 rounded shadow-lg border border-gray-200 py-1 min-w-[200px]">
               <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">医生工作量查血</div>
               <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">门诊病人范围设置</div>
               <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">报告卡管理</div>
-              <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap font-bold" @click="showHisDropdown = false; activeView = 'his1'">医保健康数据共享</div>
+              <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap" @click="showHisDropdown = false; activeView = 'his1'">医保健康数据共享</div>
               <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">卫生健康应用服务</div>
               <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">应用市场</div>
+            </div>
             </div>
           </div>
           <div class="flex items-center space-x-1 cursor-pointer hover:opacity-100 hover:bg-white/20 px-2 py-0.5 rounded-sm transition"><i class="fas fa-file-alt"></i><span>单据</span></div>
@@ -750,68 +753,62 @@ const handleAction = (type: string, title: string, record?: any) => {
     </div>
   </div>
   <!-- HIS 界面还原设计 END — 以上为 HIS 门诊医生站模拟界面，后续可删除 -->
-  <!-- HIS1 界面还原设计 — 医保健康数据共享界面，后续可删除此区块 -->
-  <div v-else-if="activeView === 'his1'" style="position: fixed; inset: 0; background: url('/his1.png') top center / 100% 100% no-repeat; cursor: default;">
-    <!-- 点击中间弹窗区域（短信授权、医生辅助授权）跳转到 his2 -->
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 360px; height: 280px; cursor: pointer;" @click="activeView = 'his2'"></div>
+  <!-- HIS1 界面还原设计 — 医保健康数据共享界面 -->
+  <div v-else-if="activeView === 'his1'" class="flex flex-col h-screen w-screen bg-white">
+    <header class="top-nav-bar">
+      <div class="top-nav-header flex items-center shrink-0 h-full">
+        <img src="/logo.png" class="h-12" alt="Logo" />
+        <span class="top-nav-title">健康数据共享平台</span>
+      </div>
+      <nav class="flex h-full items-center flex-1 ant-header-menu">
+        <a class="ant-menu-item" :class="activeNavTab === 'imaging' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询</span></a>
+        <a class="ant-menu-item" :class="activeNavTab === 'imaging-cross' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging-cross'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询(跨省)</span></a>
+        <a class="ant-menu-item" :class="activeNavTab === 'inspection' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'inspection'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>检验查询</span></a>
+        <a class="ant-menu-item" :class="activeNavTab === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'overview'; activeView = 'overview'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>参保人画像</span></a>
+      </nav>
+      <div class="top-nav-user"><span class="font-normal">陈**明</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
+    </header>
+    <div class="flex-1 relative" style="background: url('/his1.png') top center / 100% 100% no-repeat;">
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 360px; height: 280px; cursor: pointer;" @click="activeView = 'his2'"></div>
+    </div>
   </div>
   <!-- HIS1 界面还原设计 END -->
-  <!-- HIS2 界面还原设计 — 授权确认界面，后续可删除此区块 -->
-  <div v-else-if="activeView === 'his2'" style="position: fixed; inset: 0; background: url('/his2.png') top center / 100% 100% no-repeat; cursor: default;">
-    <!-- 点击中间弹窗区域跳转到 his3 -->
-    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 360px; height: 280px; cursor: pointer;" @click="activeView = 'his3'"></div>
+  <!-- HIS2 界面还原设计 — 授权确认界面 -->
+  <div v-else-if="activeView === 'his2'" class="flex flex-col h-screen w-screen bg-white">
+    <header class="top-nav-bar">
+      <div class="top-nav-header flex items-center shrink-0 h-full">
+        <img src="/logo.png" class="h-12" alt="Logo" />
+        <span class="top-nav-title">健康数据共享平台</span>
+      </div>
+      <nav class="flex h-full items-center flex-1 ant-header-menu">
+        <a class="ant-menu-item" :class="activeNavTab === 'imaging' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询</span></a>
+        <a class="ant-menu-item" :class="activeNavTab === 'imaging-cross' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging-cross'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询(跨省)</span></a>
+        <a class="ant-menu-item" :class="activeNavTab === 'inspection' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'inspection'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>检验查询</span></a>
+        <a class="ant-menu-item" :class="activeNavTab === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'overview'; activeView = 'overview'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>参保人画像</span></a>
+      </nav>
+      <div class="top-nav-user"><span class="font-normal">陈**明</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
+    </header>
+    <div class="flex-1 relative" style="background: url('/his2.png') top center / 100% 100% no-repeat;">
+      <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 360px; height: 280px; cursor: pointer;" @click="activeView = 'his3'"></div>
+    </div>
   </div>
   <!-- HIS2 界面还原设计 END -->
-  <!-- HIS3 界面还原设计 — 授权结果界面，后续可删除此区块 -->
-  <div v-else-if="activeView === 'his3'" style="position: fixed; inset: 0; background: url('/his3.png') top center / 100% 100% no-repeat; cursor: default;">
-    <!-- 顶部导航栏 - HTML形式 -->
-    <div style="position: absolute; top: 0; left: 0; right: 0; height: 80px; display: flex; align-items: center; background: linear-gradient(to bottom, #f8fafc 0%, #ffffff 100%); border-bottom: 1px solid #e2e8f0;">
-      <!-- Logo 和标题 -->
-      <div style="display: flex; align-items: center; margin-left: 24px;">
-        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">
-          <span style="color: white; font-size: 20px; font-weight: bold;">健</span>
-        </div>
-        <div>
-          <div style="font-size: 14px; font-weight: 600; color: #1e293b;">健康数据共享平台</div>
-          <div style="font-size: 10px; color: #64748b;">Health Data Sharing Platform</div>
-        </div>
+  <!-- HIS3 界面还原设计 — 授权结果界面 -->
+  <div v-else-if="activeView === 'his3'" class="flex flex-col h-screen w-screen bg-white">
+    <header class="top-nav-bar">
+      <div class="top-nav-header flex items-center shrink-0 h-full">
+        <img src="/logo.png" class="h-12" alt="Logo" />
+        <span class="top-nav-title">健康数据共享平台</span>
       </div>
-      
-      <!-- 导航菜单 -->
-      <div style="display: flex; margin-left: 200px;">
-        <button 
-          style="padding: 28px 24px; font-size: 14px; font-weight: 500; color: #64748b; background: transparent; border: none; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent;"
-          @click="activeView = 'his3'"
-        >
-          影像查询
-        </button>
-        <button 
-          style="padding: 28px 24px; font-size: 14px; font-weight: 500; color: #64748b; background: transparent; border: none; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid transparent;"
-          @click="activeView = 'his3'"
-        >
-          检验查询
-        </button>
-        <button 
-          style="padding: 28px 24px; font-size: 14px; font-weight: 600; color: #2563eb; background: transparent; border: none; cursor: pointer; transition: all 0.2s; border-bottom: 3px solid #2563eb;"
-          @click="activeView = 'overview'"
-        >
-          参保人画像
-        </button>
-      </div>
-      
-      <!-- 右侧信息 -->
-      <div style="margin-left: auto; margin-right: 24px; display: flex; align-items: center;">
-        <div style="display: flex; align-items: center; margin-right: 16px;">
-          <span style="font-size: 12px; color: #64748b;">张兮兮 |</span>
-          <span style="font-size: 12px; color: #334155; margin-left: 8px;">常州市第七人民医院</span>
-        </div>
-        <div style="width: 24px; height: 24px; background: #e2e8f0; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-          <svg style="width: 14px; height: 14px; color: #64748b;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-          </svg>
-        </div>
-      </div>
-    </div>
+      <nav class="flex h-full items-center flex-1 ant-header-menu">
+        <a class="ant-menu-item" :class="activeNavTab === 'imaging' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询</span></a>
+        <a class="ant-menu-item" :class="activeNavTab === 'imaging-cross' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging-cross'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询(跨省)</span></a>
+        <a class="ant-menu-item" :class="activeNavTab === 'inspection' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'inspection'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>检验查询</span></a>
+        <a class="ant-menu-item" :class="activeNavTab === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'overview'; activeView = 'overview'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>参保人画像</span></a>
+      </nav>
+      <div class="top-nav-user"><span class="font-normal">陈**明</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
+    </header>
+    <div class="flex-1 overflow-hidden" style="background: url('/his3.png') top center / 100% 100% no-repeat;"></div>
   </div>
   <!-- HIS3 界面还原设计 END -->
   <div v-else-if="activeView === 'medintercept'" style="position: relative; width: 100vw; height: 100vh; background: url('/his.png') center / cover no-repeat;">
@@ -910,46 +907,21 @@ const handleAction = (type: string, title: string, record?: any) => {
   <div v-else-if="activeView === 'logout'" style="width: 100vw; height: 100vh; background: url('/his.png') center / cover no-repeat;"></div>
   <div v-else class="layout">
     <!-- ════ Top Navigation ════ -->
-    <header class="topnav">
-      <div class="s-brand">
-        <div class="s-logo">
-          <div class="brand-logo">
-            <Radar :size="18" />
-          </div>
-        </div>
-        <div class="s-title-group">
-          <div class="s-name">健康数据共享中心</div>
-          <div class="s-sep-v"></div>
-          <div class="s-sub">参保人全息视图</div>
-        </div>
+    <header class="top-nav-bar">
+      <div class="top-nav-header flex items-center shrink-0 h-full">
+        <img src="/logo.png" class="h-12" alt="Logo" />
+        <span class="top-nav-title">健康数据共享平台</span>
+        <span class="top-nav-sep"></span>
+        <span class="top-nav-subtitle">参保人全息视图</span>
       </div>
-
-      <nav class="t-nav">
-        <div :class="['si', activeView === 'overview' ? 'on' : '']" @click="activeView = 'overview'">
-          <span class="si-ico"><UserCircle :size="18" /></span>参保人画像
-        </div>
-        <div :class="['si', activeView === 'health' ? 'on' : '']" @click="activeView = 'health'">
-          <span class="si-ico"><Activity :size="18" /></span>医保健康档案
-        </div>
-        <div :class="['si', activeView === 'finance' ? 'on' : '']" @click="activeView = 'finance'">
-          <span class="si-ico"><CreditCard :size="18" /></span>医保财务档案
-        </div>
-        <div :class="['si', activeView === 'info' ? 'on' : '']" @click="activeView = 'info'">
-          <span class="si-ico"><Info :size="18" /></span>医保信息档案
-        </div>
+      <nav class="flex h-full items-center ant-header-menu">
+        <a class="ant-menu-item" :class="activeView === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeView = 'overview'"><i class="ant-menu-item-icon"><UserCircle :size="14" /></i><span>参保人画像</span></a>
+        <a class="ant-menu-item" :class="activeView === 'health' ? 'ant-menu-item-selected' : ''" @click="activeView = 'health'"><i class="ant-menu-item-icon"><Activity :size="14" /></i><span>医保健康档案</span></a>
+        <a class="ant-menu-item" :class="activeView === 'finance' ? 'ant-menu-item-selected' : ''" @click="activeView = 'finance'"><i class="ant-menu-item-icon"><CreditCard :size="14" /></i><span>医保财务档案</span></a>
+        <a class="ant-menu-item" :class="activeView === 'info' ? 'ant-menu-item-selected' : ''" @click="activeView = 'info'"><i class="ant-menu-item-icon"><Info :size="14" /></i><span>医保信息档案</span></a>
       </nav>
-
       <a-dropdown trigger="click">
-        <div class="s-doctor" style="background: transparent; border: none; padding: 0; cursor: pointer;">
-          <div class="sd-av">李</div>
-          <div class="sd-info">
-            <div class="sd-name" style="color: var(--ink); display: flex; align-items: center; gap: 6px;">
-              李主任
-              <ChevronDown :size="14" style="opacity: 0.65;" />
-            </div>
-            <div class="sd-dept" style="color: var(--ink3);">心内科 · 主任医师</div>
-          </div>
-        </div>
+        <div class="top-nav-user"><span class="font-normal">陈**明</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
         <template #overlay>
           <a-menu @click="({ key }) => { if (key === 'medintercept') { activeView = 'medintercept'; showMedInterceptPopup = true; showRulesAdaptPopup = false } else if (key === 'rulesadapt') { activeView = 'rulesadapt'; showRulesAdaptPopup = true; showMedInterceptPopup = false } }">
             <a-menu-item key="medintercept">用药实时拦截</a-menu-item>
@@ -2915,6 +2887,120 @@ const handleAction = (type: string, title: string, record?: any) => {
 </style>
 
 <style scoped>
+/* 顶部导航栏 */
+.top-nav-bar {
+  width: 100%;
+  height: 64px;
+  background: white;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  select-none: none;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.top-nav-header {
+  height: 64px;
+  font-size: 14px;
+  font-weight: 400;
+  color: rgba(0, 0, 0, 0.65);
+  line-height: 64px;
+  font-feature-settings: "tnum";
+  margin: 0 0 0 12px;
+}
+
+.top-nav-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #002140;
+  line-height: 64px;
+  font-feature-settings: "tnum";
+  margin-left: 8px;
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.top-nav-subtitle {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.45);
+  margin-left: 0;
+  white-space: nowrap;
+}
+
+.top-nav-sep {
+  width: 1px;
+  height: 14px;
+  background: #e5e7eb;
+  margin: 0 8px;
+}
+
+.top-nav-user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.65);
+  cursor: pointer;
+  height: 100%;
+  padding: 0 20px;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.top-nav-user:hover {
+  color: rgba(0, 0, 0, 0.85);
+}
+
+/* Ant Design 风格菜单 */
+.ant-header-menu {
+  margin-left: 24px;
+}
+
+.ant-menu-item {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  padding: 0 20px;
+  font-size: 14px;
+  color: rgba(0, 0, 0, 0.65);
+  cursor: pointer;
+  transition: color 0.3s, border-color 0.3s;
+  border-bottom: 2px solid transparent;
+  text-decoration: none;
+  position: relative;
+  top: 1px;
+  white-space: nowrap;
+}
+
+.ant-menu-item:hover {
+  color: #1890ff;
+}
+
+.ant-menu-item-selected {
+  color: #1890ff;
+  border-bottom-color: #1890ff;
+}
+
+.ant-menu-item-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 8px;
+  font-size: 14px;
+}
+
+.ant-menu-item-icon svg {
+  display: block;
+}
+
+.ant-menu-item:focus,
+.ant-menu-item:active,
+.ant-menu-item:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 .v.on.flex-layout {
   display: flex !important;
 }
