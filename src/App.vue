@@ -86,7 +86,7 @@ const antdTheme = computed<ConfigProviderProps['theme']>(() => ({
   },
 }));
 
-const isPatientPanelCollapsed = ref(false);
+const isPatientPanelCollapsed = ref(true);
 const searchQuery = ref('');
 const showOutpatientDetail = ref(false);
 const selectedRecordForDetail = ref<any>(null);
@@ -1117,7 +1117,6 @@ const handleAction = (type: string, title: string, record?: any) => {
                       <a-button type="primary" block class="rounded-xl h-10 text-xs font-bold shadow-sm" @click="activeView = 'finance'">
                         <span class="inline-flex items-center justify-center gap-2">
                           查看报销记录
-                          <ChevronRight :size="14" />
                         </span>
                       </a-button>
                     </div>
