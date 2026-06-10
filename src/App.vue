@@ -770,7 +770,7 @@ const handleAction = (type: string, title: string, record?: any) => {
               <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">医生工作量查血</div>
               <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">门诊病人范围设置</div>
               <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">报告卡管理</div>
-              <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap" @click="showHisDropdown = false; activeView = 'his1'">医保健康数据共享</div>
+              <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap" @click="showHisDropdown = false; activeView = 'his1'">个人医保云数据共享</div>
               <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">卫生健康应用服务</div>
               <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">应用市场</div>
             </div>
@@ -935,12 +935,12 @@ const handleAction = (type: string, title: string, record?: any) => {
     </div>
   </div>
   <!-- HIS 界面还原设计 END — 以上为 HIS 门诊医生站模拟界面，后续可删除 -->
-  <!-- HIS1 界面还原设计 — 医保健康数据共享界面 -->
+  <!-- HIS1 界面还原设计 — 个人医保云数据共享界面 -->
   <div v-else-if="activeView === 'his1'" class="flex flex-col h-screen w-screen bg-white">
     <header class="top-nav-bar">
       <div class="top-nav-header flex items-center shrink-0 h-full">
         <img src="/logo.png" class="h-12" alt="Logo" />
-        <span class="top-nav-title">健康数据共享平台</span>
+        <span class="top-nav-title">个人医保云数据共享</span>
       </div>
       <nav class="flex h-full items-center flex-1 ant-header-menu">
         <a class="ant-menu-item" :class="activeNavTab === 'imaging' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询</span></a>
@@ -960,7 +960,7 @@ const handleAction = (type: string, title: string, record?: any) => {
     <header class="top-nav-bar">
       <div class="top-nav-header flex items-center shrink-0 h-full">
         <img src="/logo.png" class="h-12" alt="Logo" />
-        <span class="top-nav-title">健康数据共享平台</span>
+        <span class="top-nav-title">个人医保云数据共享</span>
       </div>
       <nav class="flex h-full items-center flex-1 ant-header-menu">
         <a class="ant-menu-item" :class="activeNavTab === 'imaging' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询</span></a>
@@ -980,7 +980,7 @@ const handleAction = (type: string, title: string, record?: any) => {
     <header class="top-nav-bar">
       <div class="top-nav-header flex items-center shrink-0 h-full">
         <img src="/logo.png" class="h-12" alt="Logo" />
-        <span class="top-nav-title">健康数据共享平台</span>
+        <span class="top-nav-title">个人医保云数据共享</span>
       </div>
       <nav class="flex h-full items-center flex-1 ant-header-menu">
         <a class="ant-menu-item" :class="activeNavTab === 'imaging' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询</span></a>
@@ -1094,7 +1094,7 @@ const handleAction = (type: string, title: string, record?: any) => {
     <header class="top-nav-bar">
       <div class="top-nav-header flex items-center shrink-0 h-full">
         <img src="/logo.png" class="h-12" alt="Logo" />
-        <span class="top-nav-title">健康数据共享平台</span>
+        <span class="top-nav-title">个人医保云数据共享</span>
         <span class="top-nav-sep"></span>
         <span class="top-nav-subtitle">AI辅助诊断</span>
       </div>
@@ -1325,7 +1325,7 @@ const handleAction = (type: string, title: string, record?: any) => {
     <header class="top-nav-bar">
       <div class="top-nav-header flex items-center shrink-0 h-full">
         <img src="/logo.png" class="h-12" alt="Logo" />
-        <span class="top-nav-title">健康数据共享平台</span>
+        <span class="top-nav-title">个人医保云数据共享</span>
         <span class="top-nav-sep"></span>
         <span class="top-nav-subtitle">参保人全息视图</span>
       </div>
