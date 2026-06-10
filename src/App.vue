@@ -5,6 +5,7 @@ import RecordList from './components/RecordList.vue';
 import MedicalDetail from './components/MedicalDetail.vue';
 import DicomViewer from './components/DicomViewer.vue';
 import BodyAnnotation from './components/BodyAnnotation.vue';
+import type { PortraitButton } from './components/BodyAnnotation.vue';
 import type { ConfigProviderProps } from 'ant-design-vue';
 import { 
   UserCircle, 
@@ -95,6 +96,11 @@ const showExpiredInsuranceModal = ref(false);
 const showMetricDetailModal = ref(false);
 const selectedMetric = ref<string>('血压');
 const selectedMetricRange = ref('近三月');
+const showCommercialInsuranceDetail = ref(false);
+const selectedCommercialInsurance = ref<any>(null);
+const showBasicInsuranceDetail = ref(false);
+const aiSearchQuery = ref('');
+const aiSearchType = ref<'name' | 'id'>('name');
 
 // --- New State from doctorDashboard ---
 const recordTab = ref<'outpatient' | 'inpatient' | 'exam' | 'lab' | 'medicine' | 'physical'>('outpatient');
@@ -106,6 +112,50 @@ const recordTabOptions = [
   { id: 'medicine', label: '药耗' },
   { id: 'physical', label: '体检' },
 ] as const;
+
+const portraitButtons: PortraitButton[] = [
+  // 右侧按钮
+  { id: 'outpatient', label: '门诊记录', icon: '🏥', dotX: 428, dotY: 115, boxX: 540, boxY: 83,  side: 'right', color: '#3B82F6', ringR: 28, ringDur: 3.2, ringDelay: 0.0 },
+  { id: 'inpatient',  label: '住院记录', icon: '🛏️', dotX: 435, dotY: 225, boxX: 540, boxY: 193, side: 'right', color: '#8B5CF6', ringR: 32, ringDur: 3.8, ringDelay: 0.8 },
+  { id: 'medicine',   label: '药耗记录', icon: '💊', dotX: 435, dotY: 345, boxX: 540, boxY: 313, side: 'right', color: '#F59E0B', ringR: 26, ringDur: 3.0, ringDelay: 1.6 },
+  { id: 'physical',   label: '体检记录', icon: '🩺', dotX: 428, dotY: 460, boxX: 540, boxY: 428, side: 'right', color: '#10B981', ringR: 30, ringDur: 3.5, ringDelay: 2.4 },
+  // 左侧按钮 - 下移避免与AI辅助诊断重叠
+  { id: 'exam',       label: '检查记录', icon: '🔍', dotX: 372, dotY: 250, boxX: 100, boxY: 218, side: 'left',  color: '#06B6D4', ringR: 28, ringDur: 3.6, ringDelay: 0.4, 
+    recentRecords: [
+      { date: '2024-01-15', type: 'CT平扫', result: '未见异常' },
+      { date: '2023-12-20', type: 'MRI', result: '轻度脑萎缩' },
+      { date: '2023-11-05', type: 'X光胸片', result: '双肺纹理增多' }
+    ]
+  },
+  { id: 'lab',         label: '检验记录', icon: '🧪', dotX: 377, dotY: 390, boxX: 100, boxY: 358, side: 'left',  color: '#EF4444', ringR: 34, ringDur: 4.0, ringDelay: 1.2,
+    recentRecords: [
+      { date: '2024-01-15', type: '血常规', result: '白细胞: 7.2×10^9/L' },
+      { date: '2023-12-20', type: '血糖', result: '5.8 mmol/L' },
+      { date: '2023-11-05', type: '血脂', result: '4.2 mmol/L' }
+    ]
+  },
+  { id: 'wearable',    label: '穿戴数据', icon: '⌚', dotX: 377, dotY: 530, boxX: 100, boxY: 498, side: 'left',  color: '#EC4899', ringR: 30, ringDur: 3.4, ringDelay: 2.0 },
+];
+
+const portraitTabMap: Record<string, { recordTab: string; lifecycleTab: string }> = {
+  outpatient: { recordTab: 'outpatient', lifecycleTab: 'op' },
+  inpatient:  { recordTab: 'inpatient',  lifecycleTab: 'ip' },
+  medicine:   { recordTab: 'medicine',   lifecycleTab: 'med' },
+  physical:   { recordTab: 'physical',   lifecycleTab: 'pe' },
+  exam:       { recordTab: 'exam',       lifecycleTab: 'exam' },
+  lab:         { recordTab: 'lab',         lifecycleTab: 'lab' },
+  wearable:    { recordTab: 'outpatient', lifecycleTab: 'op' },
+};
+
+function onPortraitButtonClick(id: string) {
+  const mapping = portraitTabMap[id];
+  if (mapping) {
+    recordTab.value = mapping.recordTab as any;
+    activeLifecycleTab.value = mapping.lifecycleTab as any;
+  }
+  activeView.value = 'health';
+}
+
 const activeModal = ref<ModalState>(null);
 const showDicom = ref(false);
 const isVizExpanded = ref(false);
@@ -149,10 +199,140 @@ function openModal(type: any, item: RecordType) {
   activeModal.value = { type, item } as any;
 }
 
+const commercialInsuranceData: Record<string, any> = {
+  yihuibao: {
+    name: '江苏医惠保1号',
+    shortName: '医惠保',
+    company: '江苏银保',
+    policyNo: 'PA202401000123',
+    color: '#ea580c',
+    colorLight: '#fb923c',
+    colorBg: 'from-orange-50 to-white',
+    colorBorder: 'border-orange-200',
+    colorHover: 'hover:border-orange-300',
+    insured: '陈志明',
+    period: '2024-01-01 至 2025-12-31',
+    premium: '¥1,280.00',
+    coverage: '¥10,000',
+    totalCoverage: '200万',
+    coverageTypes: [
+      { category: '住院医疗保障', items: [
+        { name: '床位费', limit: '每日限额500元', covered: true },
+        { name: '膳食费', limit: '每日限额100元', covered: true },
+        { name: '护理费', limit: '全额报销', covered: true },
+        { name: '检查检验费', limit: '全额报销', covered: true },
+        { name: '手术费', limit: '全额报销', covered: true },
+        { name: '药品费', limit: '全额报销（不含丙类）', covered: true },
+      ]},
+      { category: '特殊门诊保障', items: [
+        { name: '门诊手术', limit: '全额报销', covered: true },
+        { name: '门诊肾透析', limit: '全额报销', covered: true },
+        { name: '门诊恶性肿瘤治疗', limit: '全额报销', covered: true },
+        { name: '器官移植后抗排异治疗', limit: '全额报销', covered: true },
+      ]},
+      { category: '重疾保障', items: [
+        { name: '重大疾病医疗', limit: '额外200万', covered: true },
+        { name: '恶性肿瘤特药', limit: '全额报销', covered: true },
+        { name: '质子重离子医疗', limit: '全额报销', covered: true },
+      ]},
+    ],
+    exclusions: [
+      { name: '既往症', desc: '投保前已患疾病' },
+      { name: '生育相关', desc: '产检、分娩、流产等' },
+      { name: '整形美容', desc: '整容、美容、矫正等' },
+      { name: '体检保健', desc: '健康体检、预防保健等' },
+      { name: '牙科治疗', desc: '牙齿治疗、修复等' },
+      { name: '精神疾病', desc: '心理治疗、精神障碍等' },
+    ],
+    claims: [
+      { id: 'CL20240315001', date: '2024-03-15', type: '住院医疗', amount: '15,000', status: '已赔付' },
+      { id: 'CL20240120002', date: '2024-01-20', type: '门诊检查', amount: '2,800', status: '已赔付' },
+    ],
+  },
+  lexiang: {
+    name: '乐享健康重疾险',
+    shortName: '乐享',
+    company: '平安健康险',
+    policyNo: 'PA202401000123',
+    color: '#2563eb',
+    colorLight: '#60a5fa',
+    colorBg: 'from-blue-50 to-white',
+    colorBorder: 'border-blue-200',
+    colorHover: 'hover:border-blue-300',
+    insured: '陈志明',
+    period: '2024-05-20 至 2025-05-19',
+    premium: '¥3,200.00',
+    coverage: '¥0',
+    totalCoverage: '50万',
+    coverageTypes: [
+      { category: '重大疾病保障', items: [
+        { name: '恶性肿瘤', limit: '全额赔付50万', covered: true },
+        { name: '急性心肌梗塞', limit: '全额赔付50万', covered: true },
+        { name: '脑中风后遗症', limit: '全额赔付50万', covered: true },
+        { name: '重大器官移植', limit: '全额赔付50万', covered: true },
+        { name: '冠状动脉搭桥术', limit: '全额赔付50万', covered: true },
+        { name: '终末期肾病', limit: '全额赔付50万', covered: true },
+      ]},
+      { category: '特定疾病保障', items: [
+        { name: '轻症疾病', limit: '额外30%保额', covered: true },
+        { name: '中症疾病', limit: '额外50%保额', covered: true },
+        { name: '特定肿瘤', limit: '额外30%保额', covered: true },
+      ]},
+      { category: '身故/全残保障', items: [
+        { name: '疾病身故', limit: '全额赔付50万', covered: true },
+        { name: '意外身故', limit: '全额赔付50万', covered: true },
+        { name: '全残保障', limit: '全额赔付50万', covered: true },
+      ]},
+    ],
+    exclusions: [
+      { name: '等待期出险', desc: '等待期内发生的疾病' },
+      { name: '投保前未如实告知', desc: '故意隐瞒既往病史' },
+      { name: '违法行为', desc: '酒驾、吸毒等' },
+      { name: '高风险运动', desc: '潜水、攀岩等' },
+      { name: '战争暴乱', desc: '战争、军事冲突等' },
+      { name: '核辐射', desc: '核爆炸、核污染等' },
+    ],
+    claims: [
+      { id: 'CL20240620001', date: '2024-06-20', type: '轻症理赔', amount: '15,000', status: '已赔付' },
+    ],
+  },
+};
+
+function openCommercialInsuranceDetail(id: string) {
+  selectedCommercialInsurance.value = commercialInsuranceData[id];
+  showCommercialInsuranceDetail.value = true;
+}
+
+function closeCommercialInsuranceDetail() {
+  showCommercialInsuranceDetail.value = false;
+  selectedCommercialInsurance.value = null;
+}
+
+function openBasicInsuranceDetail() {
+  showBasicInsuranceDetail.value = true;
+}
+
+function closeBasicInsuranceDetail() {
+  showBasicInsuranceDetail.value = false;
+}
+
+function openAIAssistant() {
+  const url = new URL(window.location.href);
+  url.searchParams.set('view', 'ai-diagnosis');
+  window.open(url.toString(), '_blank');
+}
+
 onMounted(() => {
   timer = window.setInterval(() => {
     currentTime.value = new Date();
   }, 1000);
+
+  // 检查 URL 参数，如果存在 view 参数，则设置对应的视图
+  const urlParams = new URLSearchParams(window.location.search);
+  const viewParam = urlParams.get('view');
+  if (viewParam === 'ai-diagnosis') {
+    activeView.value = 'ai-diagnosis';
+  }
 });
 
 onBeforeUnmount(() => {
@@ -905,6 +1085,239 @@ const handleAction = (type: string, title: string, record?: any) => {
     </div>
   </div>
   <div v-else-if="activeView === 'logout'" style="width: 100vw; height: 100vh; background: url('/his.png') center / cover no-repeat;"></div>
+  
+  <!-- AI辅助诊断页面 -->
+  <div v-else-if="activeView === 'ai-diagnosis'" class="flex flex-col h-screen w-screen bg-white overflow-hidden">
+    <!-- 顶部导航栏 - 与主页面保持一致 -->
+    <header class="top-nav-bar">
+      <div class="top-nav-header flex items-center shrink-0 h-full">
+        <img src="/logo.png" class="h-12" alt="Logo" />
+        <span class="top-nav-title">健康数据共享平台</span>
+        <span class="top-nav-sep"></span>
+        <span class="top-nav-subtitle">AI辅助诊断</span>
+      </div>
+      <nav class="flex h-full items-center ant-header-menu">
+        <a class="ant-menu-item" :class="activeView === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeView = 'overview'"><i class="ant-menu-item-icon"><UserCircle :size="14" /></i><span>参保人画像</span></a>
+        <a class="ant-menu-item" :class="activeView === 'health' ? 'ant-menu-item-selected' : ''" @click="activeView = 'health'"><i class="ant-menu-item-icon"><Activity :size="14" /></i><span>医保健康档案</span></a>
+        <a class="ant-menu-item" :class="activeView === 'finance' ? 'ant-menu-item-selected' : ''" @click="activeView = 'finance'"><i class="ant-menu-item-icon"><CreditCard :size="14" /></i><span>医保财务档案</span></a>
+        <a class="ant-menu-item" :class="activeView === 'info' ? 'ant-menu-item-selected' : ''" @click="activeView = 'info'"><i class="ant-menu-item-icon"><Info :size="14" /></i><span>医保信息档案</span></a>
+      </nav>
+      <a-dropdown trigger="click">
+        <div class="top-nav-user"><span class="font-normal">张兮兮</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
+        <template #overlay>
+          <a-menu @click="({ key }) => { if (key === 'medintercept') { activeView = 'medintercept'; showMedInterceptPopup = true; showRulesAdaptPopup = false } else if (key === 'rulesadapt') { activeView = 'rulesadapt'; showRulesAdaptPopup = true; showMedInterceptPopup = false } }">
+            <a-menu-item key="medintercept">用药实时拦截</a-menu-item>
+            <a-menu-item key="rulesadapt">医保规则智能适配</a-menu-item>
+          </a-menu>
+        </template>
+      </a-dropdown>
+    </header>
+
+    <!-- 功能按钮栏 -->
+    <div style="padding: 12px 24px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px;">
+      <button class="px-4 py-2 bg-blue-600 text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2" style="color: #fff">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+        新增病例
+      </button>
+      <button class="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-medium rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+        导入病历
+      </button>
+      <button class="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-medium rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+        AI辅助诊断
+      </button>
+      <div class="flex-1"></div>
+      <div class="flex items-center gap-2">
+        <select class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option>全部状态</option>
+          <option>待诊断</option>
+          <option>诊断中</option>
+          <option>已完成</option>
+        </select>
+        <select class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option>全部科室</option>
+          <option>内科</option>
+          <option>外科</option>
+          <option>急诊科</option>
+        </select>
+        <button class="px-4 py-2 bg-blue-600 text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2" style="color: #fff">
+          查询
+        </button>
+        <button class="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-medium rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+          重置
+        </button>
+      </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <div style="flex: 1; padding: 20px; overflow-y: auto; background: #f1f5f9;">
+      <!-- AI诊断结果列表标题 -->
+      <div style="margin-bottom: 16px;">
+        <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+          <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+          AI诊断结果列表
+        </h3>
+      </div>
+
+      <!-- 表格 -->
+      <div style="background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+              <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">序号</th>
+              <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">诊断状态</th>
+              <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">诊断类型</th>
+              <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">AI诊断时间</th>
+              <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">姓名</th>
+              <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">身份证号</th>
+              <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">性别</th>
+              <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">年龄</th>
+              <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">就诊类型</th>
+              <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">诊断科室</th>
+              <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">影像评分</th>
+              <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">任务状态</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid #f1f5f9; hover: bg-slate-50;">
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">1</td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
+              </td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">AI辅助诊断报告</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-15 10:23:15</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">陈志明</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3204**********1263</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">男</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">42</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">门诊</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">CT</td>
+              <td style="padding: 12px 16px;">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-purple-600">89.5</span>
+                  <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+              </td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
+              </td>
+            </tr>
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2</td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-[11px] font-medium rounded-full">诊断中</span>
+              </td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">AI辅助诊断报告</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-15 09:45:22</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">王小红</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3205**********8741</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">女</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">35</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">门诊</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">CT</td>
+              <td style="padding: 12px 16px;">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-purple-600">82.3</span>
+                  <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+              </td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-[11px] font-medium rounded-full">进行中</span>
+              </td>
+            </tr>
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">3</td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
+              </td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">AI辅助诊断报告</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-15 08:30:12</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">李明华</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3206**********5628</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">男</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">58</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">门诊</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">MRI</td>
+              <td style="padding: 12px 16px;">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-purple-600">94.1</span>
+                  <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+              </td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
+              </td>
+            </tr>
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">4</td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-[11px] font-medium rounded-full">待审核</span>
+              </td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">AI辅助诊断报告</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-14 16:22:33</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">张丽华</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3207**********9834</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">女</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">62</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">门诊</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">CT</td>
+              <td style="padding: 12px 16px;">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-purple-600">87.8</span>
+                  <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+              </td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-[11px] font-medium rounded-full">待审核</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">5</td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
+              </td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">AI辅助诊断报告</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-14 14:15:47</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">刘海波</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3208**********6721</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">男</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">47</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">门诊</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">CT</td>
+              <td style="padding: 12px 16px;">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-purple-600">91.2</span>
+                  <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+              </td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- 分页 -->
+        <div style="padding: 16px; border-top: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: flex-end; gap: 12px;">
+          <span class="text-xs text-slate-500">显示 1-5 条，共 128 条记录</span>
+          <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
+            上一页
+          </button>
+          <button class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium">1</button>
+          <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:bg-slate-50">2</button>
+          <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:bg-slate-50">3</button>
+          <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:bg-slate-50">...</button>
+          <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:bg-slate-50">26</button>
+          <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:bg-slate-50">
+            下一页
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div v-else class="layout">
     <!-- ════ Top Navigation ════ -->
     <header class="top-nav-bar">
@@ -1200,7 +1613,10 @@ const handleAction = (type: string, title: string, record?: any) => {
                         <div class="mb-4 mt-1"><span class="text-slate-700 font-semibold tracking-widest text-xs uppercase">商业保险管理</span></div>
                         <div class="space-y-4">
                           <!-- 江苏医惠保1号 -->
-                          <div class="relative rounded-xl overflow-hidden bg-gradient-to-br from-orange-50 to-white border border-orange-200 p-4 shadow-sm">
+                          <div 
+                            class="relative rounded-xl overflow-hidden bg-gradient-to-br from-orange-50 to-white border border-orange-200 p-4 shadow-sm cursor-pointer hover:shadow-md hover:border-orange-300 transition-all duration-200"
+                            @click="openCommercialInsuranceDetail('yihuibao')"
+                          >
                             <div class="flex justify-between items-start mb-4">
                               <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center border border-orange-100 shadow-sm text-xl">
@@ -1211,7 +1627,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                                   <p class="text-[10px] text-slate-500">保单号：PASH20240312001</p>
                                 </div>
                               </div>
-                              <!-- 一键直赔按钮已隐藏，后续可能恢复 -->
+                              <svg class="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                             </div>
                             <div class="grid grid-cols-4 gap-2 border-t border-orange-100 pt-3">
                               <div>
@@ -1234,7 +1650,10 @@ const handleAction = (type: string, title: string, record?: any) => {
                           </div>
 
                           <!-- 乐享健康重疾险 -->
-                          <div class="relative rounded-xl overflow-hidden bg-gradient-to-br from-blue-50 to-white border border-blue-200 p-4 shadow-sm">
+                          <div 
+                            class="relative rounded-xl overflow-hidden bg-gradient-to-br from-blue-50 to-white border border-blue-200 p-4 shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all duration-200"
+                            @click="openCommercialInsuranceDetail('lexiang')"
+                          >
                             <div class="flex justify-between items-start mb-4">
                               <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center border border-blue-100 shadow-sm text-xl">
@@ -1245,7 +1664,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                                   <p class="text-[10px] text-slate-500">保单号：LXJK20240520008</p>
                                 </div>
                               </div>
-                              <!-- 一键直赔按钮已隐藏，后续可能恢复 -->
+                              <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                             </div>
                             <div class="grid grid-cols-4 gap-2 border-t border-blue-100 pt-3">
                               <div>
@@ -1310,7 +1729,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                   <div class="flex-1 min-h-0 relative standard-card !bg-white/80 overflow-hidden group">
                     <div class="w-full h-full flex items-center justify-center">
                       <div class="relative w-full h-full flex items-center justify-center p-3">
-                        <BodyAnnotation body-image-src="/body.png" />
+                        <BodyAnnotation body-image-src="/body.png" :buttons="portraitButtons" @button-click="onPortraitButtonClick" />
                       </div>
                     </div>
 
@@ -1340,6 +1759,22 @@ const handleAction = (type: string, title: string, record?: any) => {
                               <span class="font-mono font-bold">4.2</span> <span class="text-blue-600/50">mmol/L</span>
                             </div>
                           </div>
+                        </div>
+                      </div>
+
+                      <!-- AI辅助诊断入口 -->
+                      <div class="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-3 w-48 shadow-sm cursor-pointer hover:border-amber-400 hover:shadow-md transition-all" @click="openAIAssistant">
+                        <div class="flex items-center gap-2 mb-2">
+                          <div class="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
+                            <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
+                          </div>
+                          <span class="text-[10px] font-bold text-amber-700">AI辅助诊断</span>
+                        </div>
+                        <div class="text-[9px] text-amber-600 leading-relaxed">基于患者健康数据进行智能诊断分析</div>
+                        <div class="flex items-center justify-center mt-2">
+                          <span class="inline-block w-full text-center py-1.5 text-[10px] font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-md transition-colors">
+                            进入诊断
+                          </span>
                         </div>
                       </div>
 
@@ -1971,6 +2406,10 @@ const handleAction = (type: string, title: string, record?: any) => {
                       <span style="color: var(--ink4); font-size: 13px;">单位缴费</span>
                       <span style="font-size: 13px; font-weight: 600; color: var(--blue); text-align: right;">627.13 元</span>
                     </div>
+
+                    <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line2); cursor: pointer; display: flex; align-items: center; justify-content: flex-end;" @click="openBasicInsuranceDetail">
+                      <span style="font-size: 12px; color: var(--blue); display: flex; align-items: center; gap: 2px;">保单详情 <ChevronRight :size="12" /></span>
+                    </div>
                   </div>
                   
                   <!-- 居民医保展示信息 -->
@@ -2057,7 +2496,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                 <div class="cb">
                   <div style="font-size: 12px; color: var(--ink4); margin-bottom: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="已关联商业保险，支持一键理赔直付">已关联商业保险，支持一键理赔直付</div>
                   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div class="ins-card-v2" style="background: #FFF7ED; border: 1px solid #FFEDD5; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+                    <div class="ins-card-v2 cursor-pointer hover:shadow-lg transition-shadow" style="background: #FFF7ED; border: 1px solid #FFEDD5; box-shadow: 0 4px 20px rgba(0,0,0,0.05);" @click="openCommercialInsuranceDetail('yihuibao')">
                       <div class="ins-v2-top" style="border-bottom: 1px dashed #FFEDD5; padding-bottom: 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
                         <div style="display: flex; align-items: center; gap: 12px;">
                           <div class="ins-v2-logo" style="background: #fff; border: 1px solid #f1f5f9; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🛡️</div>
@@ -2066,7 +2505,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                             <div class="ins-v2-id" style="font-size: 12px; color: #94a3b8;" title="保单号：PASH20240312001">保单号：PASH20240312001</div>
                           </div>
                         </div>
-                        <!-- 一键直赔按钮已隐藏，后续可能恢复 -->
+                        <ChevronRight :size="18" class="text-orange-400 flex-shrink-0" />
                       </div>
                       <div class="ins-v2-body" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
                         <div class="ins-v2-item">
@@ -2088,10 +2527,16 @@ const handleAction = (type: string, title: string, record?: any) => {
                       </div>
                     </div>
 
-                    <div class="ins-card-v2" style="background: #EFF6FF; border: 1px solid #DBEAFE; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+                    <div class="ins-card-v2 cursor-pointer hover:shadow-lg transition-shadow" style="background: #EFF6FF; border: 1px solid #DBEAFE; box-shadow: 0 4px 20px rgba(0,0,0,0.05);" @click="openCommercialInsuranceDetail('lexiang')">
                       <div class="ins-v2-top" style="border-bottom: 1px dashed #DBEAFE; padding-bottom: 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
-                        <!-- AI 医保条款分析建议已隐藏，后续可能恢复 -->
-                        <!-- 一键直赔按钮已隐藏，后续可能恢复 -->
+                        <div style="display: flex; align-items: center; gap: 12px;">
+                          <div class="ins-v2-logo" style="background: #fff; border: 1px solid #f1f5f9; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🛡️</div>
+                          <div class="ins-v2-info">
+                            <div class="ins-v2-name" style="font-size: 16px; font-weight: 700; color: #1e293b;" title="乐享健康重疾险">乐享健康重疾险</div>
+                            <div class="ins-v2-id" style="font-size: 12px; color: #94a3b8;" title="保单号：LXJK20240520008">保单号：LXJK20240520008</div>
+                          </div>
+                        </div>
+                        <ChevronRight :size="18" class="text-blue-400 flex-shrink-0" />
                       </div>
                       <div class="ins-v2-body" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
                         <div class="ins-v2-item">
@@ -2798,10 +3243,299 @@ const handleAction = (type: string, title: string, record?: any) => {
       </div>
     </a-modal>
   </div>
+
+  <!-- 商保详情弹窗 -->
+  <a-modal
+    v-model:open="showCommercialInsuranceDetail"
+    :footer="null"
+    :width="900"
+    :mask-closable="true"
+    :destroy-on-close="true"
+    :centered="true"
+    :body-style="{ padding: 0, maxHeight: '85vh', overflow: 'hidden' }"
+    class="commercial-insurance-detail-modal"
+  >
+    <div v-if="selectedCommercialInsurance" style="background: #f8fafc; max-height: 85vh; overflow-y: auto;">
+      <!-- 顶部保单信息卡 -->
+      <div :style="`background: linear-gradient(135deg, ${selectedCommercialInsurance.color}25 0%, ${selectedCommercialInsurance.colorLight}15 100%); padding: 24px;`">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center text-lg" :style="`background: ${selectedCommercialInsurance.color}15`">
+              🛡️
+            </div>
+            <div>
+              <div class="text-lg font-bold text-slate-900">{{ selectedCommercialInsurance.name }}</div>
+            </div>
+          </div>
+          <button 
+            @click="closeCommercialInsuranceDetail"
+            class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
+          >
+            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+          </button>
+        </div>
+        <div class="text-[10px] text-slate-500 mb-4">保单号：{{ selectedCommercialInsurance.policyNo }}</div>
+        <div class="flex justify-between items-end">
+          <div class="grid grid-cols-4 gap-6 flex-1">
+            <div>
+              <div class="text-[10px] text-slate-500">保障状态</div>
+              <div class="text-sm font-bold mt-0.5 text-green-600">保障中</div>
+            </div>
+            <div>
+              <div class="text-[10px] text-slate-500">年度保额</div>
+              <div class="text-sm font-bold mt-0.5 text-slate-900">{{ selectedCommercialInsurance.totalCoverage }}</div>
+            </div>
+            <div>
+              <div class="text-[10px] text-slate-500">免赔额</div>
+              <div class="text-sm font-bold mt-0.5 text-slate-900">{{ selectedCommercialInsurance.coverage }}</div>
+            </div>
+            <div>
+              <div class="text-[10px] text-slate-500">到期日期</div>
+              <div class="text-sm font-bold mt-0.5 text-slate-900">{{ selectedCommercialInsurance.period.split('至')[1].trim() }}</div>
+            </div>
+          </div>
+          <div class="text-right ml-6">
+            <div class="text-[10px] text-slate-500">保额剩余</div>
+            <div class="text-2xl font-bold text-slate-900">{{ selectedCommercialInsurance.totalCoverage }}</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-5 space-y-4">
+        <!-- 商保直赔快捷操作 -->
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center gap-1.5 mb-1">
+            <svg class="w-4 h-4" :style="`color: ${selectedCommercialInsurance.color}`" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+            <span class="text-sm font-bold text-slate-900">商保直赔</span>
+          </div>
+          <p class="text-[10px] text-slate-500 mb-3">一键直赔，无需垫付医疗费用</p>
+          
+          <div class="grid grid-cols-3 gap-3">
+            <div class="border rounded-lg p-3 text-center cursor-pointer hover:shadow-md transition-shadow" :class="selectedCommercialInsurance.colorBorder">
+              <div class="w-10 h-10 mx-auto mb-2 rounded-full flex items-center justify-center" :style="`background: ${selectedCommercialInsurance.color}15`">
+                <svg class="w-5 h-5" :style="`color: ${selectedCommercialInsurance.color}`" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+              </div>
+              <div class="text-xs font-bold text-slate-900">申请直赔</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">住院时申请直赔</div>
+            </div>
+            <div class="border border-blue-200 bg-blue-50/30 rounded-lg p-3 text-center cursor-pointer hover:shadow-md transition-shadow">
+              <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-blue-100 flex items-center justify-center">
+                <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+              </div>
+              <div class="text-xs font-bold text-slate-900">医院直付</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">保险公司直接向医院支付</div>
+            </div>
+            <div class="border border-green-200 bg-green-50/30 rounded-lg p-3 text-center cursor-pointer hover:shadow-md transition-shadow">
+              <div class="w-10 h-10 mx-auto mb-2 rounded-full bg-green-100 flex items-center justify-center">
+                <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path></svg>
+              </div>
+              <div class="text-xs font-bold text-slate-900">无需垫付</div>
+              <div class="text-[10px] text-slate-500 mt-0.5">减轻患者经济压力</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 保障范围 -->
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center gap-1.5 mb-1">
+            <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            <span class="text-sm font-bold text-slate-900">保障范围</span>
+          </div>
+          <p class="text-[10px] text-slate-500 mb-3">高保额高保障范围，帮助医生和患者了解开药和治疗方案</p>
+          
+          <div v-for="(ctg, idx) in selectedCommercialInsurance.coverageTypes" :key="idx" class="mb-3 last:mb-0">
+            <div class="flex items-center gap-1.5 mb-2">
+              <span class="w-0.5 h-3 rounded-full" :style="`background: ${selectedCommercialInsurance.color}`"></span>
+              <span class="text-xs font-bold text-slate-700">{{ ctg.category }}</span>
+            </div>
+            <div class="grid grid-cols-3 gap-2">
+              <div 
+                v-for="(item, i) in ctg.items" 
+                :key="i"
+                class="border border-green-200 bg-green-50/30 rounded-lg p-2.5 relative"
+              >
+                <div class="flex items-start justify-between mb-1">
+                  <span class="text-xs font-bold text-slate-900">{{ item.name }}</span>
+                  <svg class="w-3.5 h-3.5 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <div class="flex items-center gap-1 text-[10px] text-slate-500">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                  <span>{{ item.limit }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 不保内容 -->
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center gap-1.5 mb-1">
+            <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+            <span class="text-sm font-bold text-slate-900">不保内容</span>
+          </div>
+          <p class="text-[10px] text-slate-500 mb-3">以下情况不在保障范围内</p>
+          
+          <div class="grid grid-cols-3 gap-2">
+            <div 
+              v-for="(item, i) in selectedCommercialInsurance.exclusions" 
+              :key="i"
+              class="border border-red-200 bg-red-50/30 rounded-lg p-2.5 relative"
+            >
+              <div class="flex items-start justify-between mb-1">
+                <span class="text-xs font-bold text-slate-900">{{ item.name }}</span>
+                <svg class="w-3.5 h-3.5 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+              </div>
+              <div class="text-[10px] text-slate-500">{{ item.desc }}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 理赔记录 -->
+        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+          <div class="flex items-center gap-1.5 mb-1">
+            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+            <span class="text-sm font-bold text-slate-900">理赔记录</span>
+          </div>
+          <p class="text-[10px] text-slate-500 mb-3">历史理赔情况</p>
+          
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs">
+              <thead>
+                <tr class="text-slate-500 border-b border-slate-200">
+                  <th class="text-left font-bold py-2 px-2">理赔单号</th>
+                  <th class="text-left font-bold py-2 px-2">申请日期</th>
+                  <th class="text-left font-bold py-2 px-2">理赔类型</th>
+                  <th class="text-left font-bold py-2 px-2">理赔金额</th>
+                  <th class="text-left font-bold py-2 px-2">状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="(claim, i) in selectedCommercialInsurance.claims" :key="i" class="border-b border-slate-100 last:border-0">
+                  <td class="py-2.5 px-2 font-mono text-slate-700">{{ claim.id }}</td>
+                  <td class="py-2.5 px-2 text-slate-600">{{ claim.date }}</td>
+                  <td class="py-2.5 px-2 text-slate-700">{{ claim.type }}</td>
+                  <td class="py-2.5 px-2 text-green-600 font-bold">¥{{ claim.amount }}</td>
+                  <td class="py-2.5 px-2">
+                    <span class="px-2 py-0.5 bg-green-100 text-green-700 text-[10px] font-bold rounded-full">{{ claim.status }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </a-modal>
+
+  <!-- 基本医保保单详情弹窗 -->
+  <a-modal
+    v-model:open="showBasicInsuranceDetail"
+    title="基本医保保单详情"
+    :footer="null"
+    :width="720"
+    :mask-closable="true"
+    :destroy-on-close="true"
+    :centered="true"
+    @cancel="closeBasicInsuranceDetail"
+  >
+    <div class="p-2">
+      <div class="flex items-center gap-3 mb-6">
+        <div class="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-slate-900">常州职工基本医疗保险</h3>
+          <p class="text-xs text-slate-500">保单号：ZB20230601001</p>
+        </div>
+        <span class="ml-auto text-xs font-bold text-green-600 bg-green-50 px-3 py-1 rounded-full">保障中</span>
+      </div>
+
+      <div class="grid grid-cols-4 gap-4 mb-6">
+        <div class="bg-slate-50 rounded-lg p-3 text-center">
+          <div class="text-lg font-bold text-slate-900">50万</div>
+          <div class="text-[10px] text-slate-500 mt-1">年度最高限额</div>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-3 text-center">
+          <div class="text-lg font-bold text-slate-900">1,300元</div>
+          <div class="text-[10px] text-slate-500 mt-1">起付线</div>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-3 text-center">
+          <div class="text-lg font-bold text-slate-900">85%</div>
+          <div class="text-[10px] text-slate-500 mt-1">报销比例</div>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-3 text-center">
+          <div class="text-lg font-bold text-slate-900">30万</div>
+          <div class="text-[10px] text-slate-500 mt-1">大病保险额度</div>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-100 pt-4">
+        <div class="text-sm font-bold text-slate-900 mb-3">参保信息</div>
+        <div class="grid grid-cols-2 gap-x-8 gap-y-3">
+          <div class="flex justify-between">
+            <span class="text-xs text-slate-500">参保类型</span>
+            <span class="text-xs font-semibold text-slate-800">职工基本医疗保险</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-xs text-slate-500">参保单位</span>
+            <span class="text-xs font-semibold text-slate-800">常州某科技有限公司</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-xs text-slate-500">参保时间</span>
+            <span class="text-xs font-semibold text-slate-800">2013年6月</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-xs text-slate-500">参保状态</span>
+            <span class="text-xs font-semibold text-green-600">正常参保（在缴）</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-xs text-slate-500">统筹区</span>
+            <span class="text-xs font-semibold text-slate-800">常州市（3204）</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-xs text-slate-500">月缴费基数</span>
+            <span class="text-xs font-semibold text-slate-800">7,378.00 元</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-xs text-slate-500">个人缴费</span>
+            <span class="text-xs font-semibold text-blue-600">147.56 元</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-xs text-slate-500">单位缴费</span>
+            <span class="text-xs font-semibold text-blue-600">627.13 元</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="border-t border-slate-100 pt-4 mt-4">
+        <div class="text-sm font-bold text-slate-900 mb-3">保障范围</div>
+        <div class="grid grid-cols-3 gap-2">
+          <div v-for="item in ['门诊统筹', '住院统筹', '大病保险', '门诊慢性病', '特殊病种门诊', '生育保险']" :key="item" class="bg-green-50 border border-green-100 rounded-lg p-2.5 text-center">
+            <svg class="w-3.5 h-3.5 text-green-500 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+            <span class="text-[10px] font-semibold text-slate-700">{{ item }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </a-modal>
   </a-config-provider>
 </template>
 
 <style>
+/* 商保详情弹窗样式 */
+.commercial-insurance-detail-modal .ant-modal-content {
+  padding: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+.commercial-insurance-detail-modal .ant-modal-close {
+  display: none;
+}
+.commercial-insurance-detail-modal .ant-modal-body {
+  padding: 0;
+}
+
 /* 优化 Ant Design Tabs 样式 */
 .ant-tabs-nav::before {
   border-bottom: 1px solid #f1f5f9 !important;
