@@ -594,7 +594,7 @@ const claimForm = ref({
   account: '6222 **** **** 8832'
 });
 
-type ViewType = "his" | "his1" | "his2" | "his3" | "overview" | "health" | "finance" | "info" | "logout" | "medintercept" | "rulesadapt";
+type ViewType = "his" | "his1" | "his2" | "his3" | "overview" | "health" | "finance" | "info" | "logout" | "medintercept" | "rulesadapt" | "ai-diagnosis";
 type LifecycleTab = "all" | "op" | "ip" | "lab" | "exam" | "med" | "pe";
 
 const activeView = ref<ViewType>("his");
