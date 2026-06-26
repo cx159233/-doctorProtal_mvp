@@ -41,6 +41,13 @@ const records = [
   { date: "2023-09-12", hosp: "南京益丰大药房", dept: "眼科", type: "med", diag: "眼药水", cost: "¥35", reimb: "¥25", tags: ["药耗"] },
   { id: "30", date: "2024-06-01", hosp: "常州爱康国宾体检中心", dept: "体检中心", type: "pe", diag: "年度员工健康体检", cost: "¥850", reimb: "¥0", tags: ["体检"], desc: "建议：1. 发现轻度脂肪肝，建议低脂饮食。2. 尿酸指标偏高，需控制嘌呤摄入。", metrics: [{label: "甘油三酯", value: "2.45", flag: "high"}, {label: "血尿酸", value: "468", flag: "high"}] },
   { id: "31", date: "2024-05-15", hosp: "常州美年大健康体检中心", dept: "体检中心", type: "pe", diag: "专项防癌筛查体检", cost: "¥1200", reimb: "¥0", tags: ["体检"], desc: "诊断：各项指标在正常范围内，未见明显异常。" },
+  // 穿戴设备数据
+  { id: "wd1", date: "2026-06-25 08:32", hosp: "Apple Watch Series 9", dept: "个人穿戴", type: "wd", diag: "24h动态心电监测报告", cost: "—", reimb: "—", tags: ["穿戴"], desc: "窦性心律，平均心率72bpm，偶发室性早搏(2次/24h)，ST-T未见明显异常。最长RR间期1.42s(睡眠中)。", metrics: [{label: "平均心率", value: "72", unit: "bpm", flag: ""}, {label: "最低心率", value: "48", unit: "bpm", flag: ""}, {label: "最高心率", value: "128", unit: "bpm", flag: "high"}, {label: "室性早搏", value: "2", unit: "次/24h", flag: ""}, {label: "HRV(SDNN)", value: "86", unit: "ms", flag: ""}] },
+  { id: "wd2", date: "2026-06-24 22:15", hosp: "华为手环 9", dept: "个人穿戴", type: "wd", diag: "睡眠呼吸监测", cost: "—", reimb: "—", tags: ["穿戴"], desc: "总睡眠7h12m，深睡1h48m(25%)，浅睡4h20m，REM 1h4m。AHI指数3.2(正常<5)，SpO2最低93%，平均97%。鼾声时长占比8%。", metrics: [{label: "睡眠时长", value: "7h12m", flag: ""}, {label: "深睡占比", value: "25", unit: "%", flag: ""}, {label: "AHI指数", value: "3.2", flag: ""}, {label: "最低血氧", value: "93", unit: "%", flag: "high"}, {label: "鼾声占比", value: "8", unit: "%", flag: ""}] },
+  { id: "wd3", date: "2026-06-23 18:45", hosp: "欧姆龙电子血压计", dept: "居家监测", type: "wd", diag: "家庭血压日志·本周汇总", cost: "—", reimb: "—", tags: ["穿戴"], desc: "本周测量14次，收缩压均值138mmHg，舒张压均值88mmHg。晨峰血压偏高(152/95)，下午时段控制良好(128/82)。服药依从率100%。", metrics: [{label: "收缩压均值", value: "138", unit: "mmHg", flag: "high"}, {label: "舒张压均值", value: "88", unit: "mmHg", flag: ""}, {label: "晨峰收缩压", value: "152", unit: "mmHg", flag: "high"}, {label: "服药依从率", value: "100", unit: "%", flag: ""}] },
+  { id: "wd4", date: "2026-06-22 07:15", hosp: "鱼跃血糖仪", dept: "居家监测", type: "wd", diag: "空腹及餐后血糖监测周报", cost: "—", reimb: "—", tags: ["穿戴"], desc: "空腹血糖均值5.6mmol/L，餐后2h血糖均值7.8mmol/L。1次餐后偏高(9.2mmol/L，对应晚餐)，其余在目标范围内。连续葡萄糖监测(CGM)显示血糖变异系数22%。", metrics: [{label: "空腹血糖均值", value: "5.6", unit: "mmol/L", flag: ""}, {label: "餐后2h均值", value: "7.8", unit: "mmol/L", flag: ""}, {label: "血糖CV", value: "22", unit: "%", flag: ""}, {label: "TIR(3.9-10)", value: "92", unit: "%", flag: ""}] },
+  { id: "wd5", date: "2026-06-21 14:00", hosp: "康泰心电贴(CM-X)", dept: "远程医疗", type: "wd", diag: "72h连续心电贴片监测终评", cost: "—", reimb: "—", tags: ["穿戴"], desc: "总记录71.5h，窦性心律为主，偶发房性早搏(15次)，室性早搏(3次)。最长停搏1.8s(睡眠中)。心率变异性正常。QTc间期正常范围。结论：未见明显恶性心律失常。", metrics: [{label: "总记录时长", value: "71.5h", flag: ""}, {label: "房性早搏", value: "15", unit: "次", flag: ""}, {label: "最长停搏", value: "1.8", unit: "s", flag: "high"}, {label: "QTc间期", value: "428", unit: "ms", flag: ""}] },
+  { id: "wd6", date: "2026-06-20 09:30", hosp: "小米体脂秤 2", dept: "居家监测", type: "wd", diag: "体成分分析月报", cost: "—", reimb: "—", tags: ["穿戴"], desc: "体重78.5kg，BMI 27.8(超重)，体脂率26.2%(偏高)，肌肉量54.3kg，内脏脂肪等级12(偏高)，基础代谢1720kcal，身体年龄58岁。建议：增加有氧运动，控制饮食热量。", metrics: [{label: "体重", value: "78.5", unit: "kg", flag: "high"}, {label: "BMI", value: "27.8", flag: "high"}, {label: "体脂率", value: "26.2", unit: "%", flag: "high"}, {label: "内脏脂肪", value: "12", unit: "级", flag: "high"}, {label: "基础代谢", value: "1720", unit: "kcal", flag: ""}] },
 ];
 
 const currentPage = ref(1);
@@ -55,7 +62,8 @@ const filteredRecords = computed(() => {
       lab: "检验",
       exam: "检查",
       med: "药耗",
-      pe: "体检"
+      pe: "体检",
+      wd: "穿戴"
     };
     const targetTag = map[props.filter];
     data = records.filter(r => r.tags.includes(targetTag));
@@ -112,6 +120,7 @@ const handleAction = (type: string, title: string, record: any) => {
                 rec.tags[0] === '检查' ? 't-cyan pointer' :
                 rec.tags[0] === '药耗' ? 't-purple' :
                 rec.tags[0] === '体检' ? 't-blue' :
+                rec.tags[0] === '穿戴' ? 't-green' :
                 't-slate']"
             >
               {{ rec.tags[0] }}
@@ -143,6 +152,9 @@ const handleAction = (type: string, title: string, record: any) => {
               </template>
               <template v-else-if="rec.type === 'pe'">
                 <button class="tbl-link-btn" @click="handleAction('pe', '体检报告', rec)">体检报告</button>
+              </template>
+              <template v-else-if="rec.type === 'wd'">
+                <button class="tbl-link-btn" @click="handleAction('wd', '查看详情', rec)">查看详情</button>
               </template>
             </div>
           </td>

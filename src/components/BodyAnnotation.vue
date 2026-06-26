@@ -18,7 +18,7 @@
       />
 
       <!-- 标注层 -->
-      <g v-for="btn in buttons" :key="btn.id" style="cursor: pointer;" @click="$emit('button-click', btn.id)">
+      <g v-for="btn in buttons" :key="btn.id" :style="{ cursor: btn.disabled ? 'not-allowed' : 'pointer', opacity: btn.disabled ? 0.4 : 1 }" @click="!btn.disabled && $emit('button-click', btn.id)">
         <!-- 呼吸灯动效层 -->
         <circle :cx="btn.dotX" :cy="btn.dotY" r="4" fill="none" :stroke="btn.color" stroke-width="2" style="opacity: 0">
           <animate attributeName="r" from="4" :to="String(btn.ringR ?? 26)" :dur="`${btn.ringDur ?? 3.5}s`" :begin="`${btn.ringDelay ?? 0}s`" repeatCount="indefinite" />
@@ -46,7 +46,7 @@
         <!-- 标题和点击查看在同一行 -->
         <g :transform="`translate(${btn.boxX + 10}, ${btn.boxY + BOX_H * 0.45})`">
           <text dominant-baseline="central" style="font-size: 11px; font-weight: bold; fill: #1e293b;">{{ btn.label }}</text>
-          <text :x="BOX_W - 55" dominant-baseline="central" style="font-size: 9px; fill: #64748b; font-weight: 500;">点击查看</text>
+          <text :x="BOX_W - 55" dominant-baseline="central" :style="{ fontSize: '9px', fill: btn.disabled ? '#cbd5e1' : '#64748b', fontWeight: 500 }">{{ btn.disabled ? '暂不可用' : '点击查看' }}</text>
         </g>
 
         <!-- 近三次记录 - 往左移动 -->
@@ -78,6 +78,7 @@ export interface PortraitButton {
   ringR?: number;
   ringDur?: number;
   ringDelay?: number;
+  disabled?: boolean;
   recentRecords?: {
     date: string;
     type: string;

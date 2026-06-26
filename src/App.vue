@@ -55,7 +55,8 @@ import {
   Move,
   Droplets,
   FlaskConical,
-  AlertTriangle
+  AlertTriangle,
+  Tags
 } from 'lucide-vue-next';
 
 const patients = [
@@ -88,7 +89,8 @@ const antdTheme = computed<ConfigProviderProps['theme']>(() => ({
 }));
 
 const isPatientPanelCollapsed = ref(true);
-const searchQuery = ref('');
+const searchPatientName = ref('');
+const searchPatientId = ref('');
 const showOutpatientDetail = ref(false);
 const selectedRecordForDetail = ref<any>(null);
 const showInsuranceClaimModal = ref(false);
@@ -99,18 +101,25 @@ const selectedMetricRange = ref('近三月');
 const showCommercialInsuranceDetail = ref(false);
 const selectedCommercialInsurance = ref<any>(null);
 const showBasicInsuranceDetail = ref(false);
-const aiSearchQuery = ref('');
+const warningItems = [
+  { level: 'red', label: '药物相互作用', text: '阿司匹林 + 布洛芬，GI 出血高风险' },
+  { level: 'red', label: '检验危急值', text: '血钾 5.8 mmol/L ↑，高于正常上限' },
+  { level: 'amber', label: '过敏警示', text: '青霉素过敏史，避免 β-内酰胺类' },
+  { level: 'amber', label: '共病风险', text: '冠心病+糖尿病+高血压，CVD 复合风险极高危' },
+  { level: 'amber', label: '重复检查', text: '胸部 CT 30天内重复，建议评估必要性' },
+];
+
 const aiSearchType = ref<'name' | 'id'>('name');
 
 // --- New State from doctorDashboard ---
-const recordTab = ref<'outpatient' | 'inpatient' | 'exam' | 'lab' | 'medicine' | 'physical'>('outpatient');
+const recordTab = ref<'outpatient' | 'inpatient' | 'exam' | 'lab' | 'medicine' | 'wearable'>('outpatient');
 const recordTabOptions = [
   { id: 'outpatient', label: '门诊' },
   { id: 'inpatient', label: '住院' },
   { id: 'exam', label: '检查' },
   { id: 'lab', label: '检验' },
   { id: 'medicine', label: '药耗' },
-  { id: 'physical', label: '体检' },
+  { id: 'wearable', label: '穿戴' },
 ] as const;
 
 const portraitButtons: PortraitButton[] = [
@@ -118,7 +127,7 @@ const portraitButtons: PortraitButton[] = [
   { id: 'outpatient', label: '门诊记录', icon: '🏥', dotX: 428, dotY: 115, boxX: 540, boxY: 83,  side: 'right', color: '#3B82F6', ringR: 28, ringDur: 3.2, ringDelay: 0.0 },
   { id: 'inpatient',  label: '住院记录', icon: '🛏️', dotX: 435, dotY: 225, boxX: 540, boxY: 193, side: 'right', color: '#8B5CF6', ringR: 32, ringDur: 3.8, ringDelay: 0.8 },
   { id: 'medicine',   label: '药耗记录', icon: '💊', dotX: 435, dotY: 345, boxX: 540, boxY: 313, side: 'right', color: '#F59E0B', ringR: 26, ringDur: 3.0, ringDelay: 1.6 },
-  { id: 'physical',   label: '体检记录', icon: '🩺', dotX: 428, dotY: 460, boxX: 540, boxY: 428, side: 'right', color: '#10B981', ringR: 30, ringDur: 3.5, ringDelay: 2.4 },
+  { id: 'physical',   label: '体检记录', icon: '🩺', dotX: 428, dotY: 460, boxX: 540, boxY: 428, side: 'right', color: '#10B981', ringR: 30, ringDur: 3.5, ringDelay: 2.4, disabled: true },
   // 左侧按钮 - 下移避免与AI辅助诊断重叠
   { id: 'exam',       label: '检查记录', icon: '🔍', dotX: 372, dotY: 250, boxX: 100, boxY: 218, side: 'left',  color: '#06B6D4', ringR: 28, ringDur: 3.6, ringDelay: 0.4, 
     recentRecords: [
@@ -129,7 +138,7 @@ const portraitButtons: PortraitButton[] = [
   },
   { id: 'lab',         label: '检验记录', icon: '🧪', dotX: 377, dotY: 390, boxX: 100, boxY: 358, side: 'left',  color: '#EF4444', ringR: 34, ringDur: 4.0, ringDelay: 1.2,
     recentRecords: [
-      { date: '2024-01-15', type: '血常规', result: '白细胞: 7.2×10^9/L' },
+      { date: '2024-01-15', type: '血常规', result: 'WBC 7.2' },
       { date: '2023-12-20', type: '血糖', result: '5.8 mmol/L' },
       { date: '2023-11-05', type: '血脂', result: '4.2 mmol/L' }
     ]
@@ -141,7 +150,7 @@ const portraitTabMap: Record<string, { recordTab: string; lifecycleTab: string }
   outpatient: { recordTab: 'outpatient', lifecycleTab: 'op' },
   inpatient:  { recordTab: 'inpatient',  lifecycleTab: 'ip' },
   medicine:   { recordTab: 'medicine',   lifecycleTab: 'med' },
-  physical:   { recordTab: 'physical',   lifecycleTab: 'pe' },
+  physical:   { recordTab: 'wearable',   lifecycleTab: 'wd' },
   exam:       { recordTab: 'exam',       lifecycleTab: 'exam' },
   lab:         { recordTab: 'lab',         lifecycleTab: 'lab' },
   wearable:    { recordTab: 'outpatient', lifecycleTab: 'op' },
@@ -172,7 +181,8 @@ const tabLabelMap: Record<string, string> = {
   exam: '检查',
   lab: '检验',
   medicine: '药耗',
-  physical: '体检'
+  physical: '体检',
+  wearable: '穿戴'
 };
 
 const recordTabLabel = computed(() => tabLabelMap[recordTab.value] || recordTab.value);
@@ -346,7 +356,7 @@ const filteredRecords = computed(() => {
     lab: "检验",
     exam: "检查",
     medicine: "药耗",
-    physical: "体检"
+    wearable: "穿戴"
   };
   const targetTag = map[recordTab.value];
   
@@ -357,7 +367,7 @@ const filteredRecords = computed(() => {
     lab: "lab",
     exam: "exam",
     medicine: "med",
-    physical: "pe"
+    wearable: "wd"
   };
   const currentType = typeMap[recordTab.value];
 
@@ -365,7 +375,7 @@ const filteredRecords = computed(() => {
   const lifecycleRecords = [
     { id: "1", date: "2024-05-15", hosp: "常州市第一人民医院", dept: "心内科", type: "op", diag: "冠心病常规复诊", cost: "¥386", reimb: "¥268", tags: ["门诊"], desc: "1. 冠状动脉粥样硬化性心脏病 2. 高血压病3级（极高危）" },
     { id: "2", date: "2024-03-22", hosp: "常州市第一人民医院", dept: "骨科", type: "op", diag: "腰椎间盘突出治疗", cost: "¥50", reimb: "¥45", tags: ["门诊"], desc: "腰椎间盘突出症 (L4/L5)" },
-    
+
     { id: "6", date: "2024-03-10", dateEnd: "2024-03-20", hosp: "常州市第一人民医院", dept: "心内科", type: "ip", diag: "急性心肌梗死住院记录", cost: "¥12,450", reimb: "¥9,800", tags: ["住院"], desc: "主要诊断：入院后急诊PCI术，于前降支植入支架一枚。术后予以抗血小板、调脂、改善心肌重构等治疗。", status: "已出院" },
     { id: "7", date: "2021-08-05", dateEnd: "2021-08-12", hosp: "常州市第一人民医院", dept: "内分泌科", type: "ip", diag: "血糖平衡调节", cost: "¥8,420", reimb: "¥6,230", tags: ["住院"], desc: "主要诊断：II型糖尿病，血糖控制不佳", status: "已出院" },
     
@@ -379,8 +389,8 @@ const filteredRecords = computed(() => {
     { id: "21", date: "2024-05-17", hosp: "常州德仁堂药店", dept: "心内科", type: "med", diag: "长期用药处方", cost: "¥158", reimb: "¥120", tags: ["药耗"], items: [{name: "阿司匹林肠溶片", count: "1盒"}, {name: "阿托伐他汀钙片", count: "2盒"}], moreCount: 1 },
     { id: "22", date: "2024-04-15", hosp: "常州万民药店", dept: "门诊部", type: "med", diag: "门诊处方详单", cost: "¥85", reimb: "¥65", tags: ["药耗"], items: [{name: "一次性使用无菌注射器 5ml", count: "1具"}] },
 
-    { id: "30", date: "2024-06-01", hosp: "常州爱康国宾体检中心", dept: "体检中心", type: "pe", diag: "年度员工健康体检", tags: ["体检"], desc: "建议：1. 发现轻度脂肪肝，建议低脂饮食。2. 尿酸指标偏高，需控制嘌呤摄入。", metrics: [{label: "甘油三酯", value: "2.45", flag: "high"}, {label: "血尿酸", value: "468", flag: "high"}] },
-    { id: "31", date: "2024-05-15", hosp: "常州美年大健康体检中心", dept: "体检中心", type: "pe", diag: "专项防癌筛查体检", tags: ["体检"], desc: "诊断：各项指标在正常范围内，未见明显异常。" },
+    { id: "wd1", date: "2026-06-25", hosp: "Apple Watch S9", dept: "个人穿戴", type: "wd", diag: "24h动态心电监测", tags: ["穿戴"], desc: "窦性心律，平均心率72bpm，偶发室性早搏(2次/24h)。", metrics: [{label: "平均心率", value: "72", unit: "bpm", flag: ""}, {label: "HRV(SDNN)", value: "86", unit: "ms", flag: ""}] },
+    { id: "wd2", date: "2026-06-24", hosp: "华为手环 9", dept: "个人穿戴", type: "wd", diag: "睡眠呼吸监测", tags: ["穿戴"], desc: "AHI指数3.2，SpO2最低93%，鼾声时长占比8%。", metrics: [{label: "AHI指数", value: "3.2", flag: ""}, {label: "最低血氧", value: "93", unit: "%", flag: "high"}] },
   ];
 
   return lifecycleRecords.filter(r => r.type === currentType);
@@ -392,6 +402,15 @@ const familyMembers = ref([
   { name: "陈 **", rel: "子女", id: "3204**********5678", status: "已激活", balance: true, av: "👦", color: "var(--blue-l)" },
   { name: "陈 ** 华", rel: "父亲", id: "3204**********9012", status: "待确认", balance: false, av: "👴", color: "var(--purple-l)" },
 ]);
+
+const familyTreeMembers = [
+  { id: 'ft1', name: '张德厚', relation: '父亲', age: 78, gender: '男', avatar: '父', health: '高血压', healthColor: '#F59E0B', generation: 0 },
+  { id: 'ft2', name: '李秀兰', relation: '母亲', age: 75, gender: '女', avatar: '母', health: '糖尿病', healthColor: '#F59E0B', generation: 0 },
+  { id: 'ft3', name: '王国强', relation: '本人', age: 54, gender: '男', avatar: '本', health: '冠心病', healthColor: '#EF4444', generation: 1, isSelf: true },
+  { id: 'ft4', name: '陈美玲', relation: '配偶', age: 52, gender: '女', avatar: '妻', health: '健康', healthColor: '#10B981', generation: 1 },
+  { id: 'ft5', name: '王小明', relation: '儿子', age: 28, gender: '男', avatar: '子', health: '健康', healthColor: '#10B981', generation: 2 },
+  { id: 'ft6', name: '王小丽', relation: '女儿', age: 25, gender: '女', avatar: '女', health: '过敏性鼻炎', healthColor: '#8B5CF6', generation: 2 },
+];
 
 const authorizedMeMembers = ref([
   { name: "陈 ** 强", rel: "兄弟", id: "3204**********4321", status: "已激活", av: "👨", color: "var(--cyan-l)" },
@@ -595,7 +614,7 @@ const claimForm = ref({
 });
 
 type ViewType = "his" | "his1" | "his2" | "his3" | "overview" | "health" | "finance" | "info" | "logout" | "medintercept" | "rulesadapt" | "ai-diagnosis";
-type LifecycleTab = "all" | "op" | "ip" | "lab" | "exam" | "med" | "pe";
+type LifecycleTab = "all" | "op" | "ip" | "lab" | "exam" | "med" | "wd";
 
 const activeView = ref<ViewType>("his");
 function isActiveView(v: ViewType) { return activeView.value === v; }
@@ -614,6 +633,7 @@ const showRefillModal = ref(false);
 const showHealthRefillModal = ref(false);
 const showReimbursementModal = ref(false);
 const showFamilyManagementModal = ref(false);
+const showAccountFlowModal = ref(false);
 const showDicomViewer = ref(false);
 const selectedCity = ref("changzhou");
 const selectedYear = ref("2026");
@@ -678,7 +698,19 @@ const updateFinancialData = () => {
 };
 
 const activeFamilyTab = ref(0);
+const activeFlowTab = ref('全部');
 const activeInsuranceType = ref<"职工" | "居民">("职工");
+
+const accountFlows = [
+  { date: '2026-06-25', type: '支出', desc: '配偶门诊统筹支付', target: '常州市第一人民医院·心内科', amount: '186.00', balance: '12,264.00' },
+  { date: '2026-06-20', type: '划拨', desc: '个人账户资金划拨', target: '医保中心·年度注入', amount: '2,400.00', balance: '12,450.00' },
+  { date: '2026-06-12', type: '支出', desc: '子女门诊购药', target: '常州德仁堂药店', amount: '85.00', balance: '10,050.00' },
+  { date: '2026-06-05', type: '退款', desc: '门诊结算退费', target: '常州市第一人民医院', amount: '32.50', balance: '10,135.00' },
+  { date: '2026-05-28', type: '支出', desc: '配偶检查费统筹支付', target: '南京鼓楼医院·超声科', amount: '140.00', balance: '10,102.50' },
+  { date: '2026-05-15', type: '支出', desc: '父亲慢病用药', target: '常州万民药店', amount: '210.00', balance: '10,242.50' },
+  { date: '2026-05-01', type: '划拨', desc: '个人账户资金划拨', target: '医保中心·月度注入', amount: '200.00', balance: '10,452.50' },
+  { date: '2026-04-22', type: '支出', desc: '配偶门诊治疗费', target: '常州市第一人民医院·内分泌科', amount: '320.00', balance: '10,252.50' },
+];
 
 const recordTabs = [
   { id: "op", label: "门诊", icon: Stethoscope },
@@ -694,7 +726,7 @@ const lifecycleTabs = [
   { id: "lab", label: "检验" },
   { id: "exam", label: "检查" },
   { id: "med", label: "药耗" },
-  { id: "pe", label: "体检" },
+  { id: "wd", label: "穿戴" },
 ] as const;
 
 const viewTitle = computed(() => {
@@ -710,14 +742,11 @@ const viewTitle = computed(() => {
   }
 });
 
-const filteredPatients = computed(() => {
-  if (!searchQuery.value) return patients;
-  const q = searchQuery.value.toLowerCase();
-  return patients.filter(p => 
-    p.name.toLowerCase().includes(q) || 
-    p.id.toString().includes(q)
-  );
-});
+const handlePatientSearch = () => {
+  if (searchPatientName.value && searchPatientId.value) {
+    // TODO: implement search
+  }
+};
 
 const showToast = ref(false);
 const toastMessage = ref('');
@@ -1183,19 +1212,19 @@ const handleAction = (type: string, title: string, record?: any) => {
             </tr>
           </thead>
           <tbody>
-            <tr style="border-bottom: 1px solid #f1f5f9; hover: bg-slate-50;">
+            <tr style="border-bottom: 1px solid #f1f5f9;">
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">1</td>
               <td style="padding: 12px 16px;">
                 <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
               </td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">AI辅助诊断报告</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">CT肺结节AI筛查</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-15 10:23:15</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #334155;">陈志明</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3204**********1263</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">男</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">42</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">门诊</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">CT</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">放射科</td>
               <td style="padding: 12px 16px;">
                 <div class="flex items-center gap-2">
                   <span class="text-xs font-bold text-purple-600">89.5</span>
@@ -1211,14 +1240,14 @@ const handleAction = (type: string, title: string, record?: any) => {
               <td style="padding: 12px 16px;">
                 <span class="px-2 py-1 bg-blue-100 text-blue-700 text-[11px] font-medium rounded-full">诊断中</span>
               </td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">AI辅助诊断报告</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">心电图AI智能分析</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-15 09:45:22</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #334155;">王小红</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3205**********8741</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">女</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">35</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">门诊</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">CT</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">心内科</td>
               <td style="padding: 12px 16px;">
                 <div class="flex items-center gap-2">
                   <span class="text-xs font-bold text-purple-600">82.3</span>
@@ -1234,14 +1263,14 @@ const handleAction = (type: string, title: string, record?: any) => {
               <td style="padding: 12px 16px;">
                 <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
               </td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">AI辅助诊断报告</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">病理切片AI筛查</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-15 08:30:12</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #334155;">李明华</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3206**********5628</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">男</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">58</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">门诊</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">MRI</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">住院</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">病理科</td>
               <td style="padding: 12px 16px;">
                 <div class="flex items-center gap-2">
                   <span class="text-xs font-bold text-purple-600">94.1</span>
@@ -1255,16 +1284,16 @@ const handleAction = (type: string, title: string, record?: any) => {
             <tr style="border-bottom: 1px solid #f1f5f9;">
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">4</td>
               <td style="padding: 12px 16px;">
-                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-[11px] font-medium rounded-full">待审核</span>
+                <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
               </td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">AI辅助诊断报告</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">临床决策支持</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-14 16:22:33</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #334155;">张丽华</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3207**********9834</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">女</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">62</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">门诊</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">CT</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">住院</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">内科</td>
               <td style="padding: 12px 16px;">
                 <div class="flex items-center gap-2">
                   <span class="text-xs font-bold text-purple-600">87.8</span>
@@ -1272,22 +1301,22 @@ const handleAction = (type: string, title: string, record?: any) => {
                 </div>
               </td>
               <td style="padding: 12px 16px;">
-                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-[11px] font-medium rounded-full">待审核</span>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">5</td>
-              <td style="padding: 12px 16px;">
                 <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
               </td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">AI辅助诊断报告</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">5</td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-[11px] font-medium rounded-full">待审核</span>
+              </td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">用药风险AI评估</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-14 14:15:47</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #334155;">刘海波</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3208**********6721</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">男</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">47</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">门诊</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">CT</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">药剂科</td>
               <td style="padding: 12px 16px;">
                 <div class="flex items-center gap-2">
                   <span class="text-xs font-bold text-purple-600">91.2</span>
@@ -1295,7 +1324,76 @@ const handleAction = (type: string, title: string, record?: any) => {
                 </div>
               </td>
               <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-[11px] font-medium rounded-full">待审核</span>
+              </td>
+            </tr>
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">6</td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-[11px] font-medium rounded-full">诊断中</span>
+              </td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">慢病风险预测</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-14 11:05:30</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">赵云龙</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3209**********3451</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">男</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">56</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">体检</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">内分泌科</td>
+              <td style="padding: 12px 16px;">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-purple-600">76.4</span>
+                  <span style="font-size: 10px; color: #94a3b8;">—</span>
+                </div>
+              </td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-[11px] font-medium rounded-full">进行中</span>
+              </td>
+            </tr>
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">7</td>
+              <td style="padding: 12px 16px;">
                 <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
+              </td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">检验结果智能解读</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-13 09:20:18</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">孙晓芬</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3210**********7294</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">女</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">51</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">门诊</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">检验科</td>
+              <td style="padding: 12px 16px;">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-purple-600">95.8</span>
+                  <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+              </td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">8</td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-[11px] font-medium rounded-full">待审核</span>
+              </td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">手术风险评估</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-13 15:42:05</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">周国强</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3211**********5083</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">男</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">68</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">住院</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">普外科</td>
+              <td style="padding: 12px 16px;">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-purple-600">73.6</span>
+                  <span style="font-size: 10px; color: #f59e0b;">⚠</span>
+                </div>
+              </td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-[11px] font-medium rounded-full">待审核</span>
               </td>
             </tr>
           </tbody>
@@ -1335,6 +1433,14 @@ const handleAction = (type: string, title: string, record?: any) => {
         <a class="ant-menu-item" :class="activeView === 'finance' ? 'ant-menu-item-selected' : ''" @click="activeView = 'finance'"><i class="ant-menu-item-icon"><CreditCard :size="14" /></i><span>医保财务档案</span></a>
         <a class="ant-menu-item" :class="activeView === 'info' ? 'ant-menu-item-selected' : ''" @click="activeView = 'info'"><i class="ant-menu-item-icon"><Info :size="14" /></i><span>医保信息档案</span></a>
       </nav>
+      <div class="flex-1"></div>
+      <div class="flex items-center gap-1.5 mr-3">
+        <input v-model="searchPatientName" type="text" placeholder="患者姓名" class="border border-slate-200 rounded-xl px-3 py-1.5 text-xs w-24 outline-none focus:border-blue-400 transition-colors" />
+        <input v-model="searchPatientId" type="text" placeholder="证件号码" class="border border-slate-200 rounded-xl px-3 py-1.5 text-xs w-36 outline-none focus:border-blue-400 transition-colors" />
+        <button @click="handlePatientSearch" class="bg-blue-600 text-xs px-3 py-1.5 rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-1 whitespace-nowrap font-medium" style="color: #fff;">
+          <Search :size="12" /> 查询
+        </button>
+      </div>
       <a-dropdown trigger="click">
         <div class="top-nav-user"><span class="font-normal">陈**明</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
         <template #overlay>
@@ -1349,49 +1455,6 @@ const handleAction = (type: string, title: string, record?: any) => {
     <!-- ════ Main ════ -->
     <main class="main">
       <div class="main-container">
-        <!-- ── 患者选择器 ── -->
-        <div :class="['pt-panel', isPatientPanelCollapsed ? 'collapsed' : '']">
-          <div class="pt-hd">
-            <div class="pt-hd-l">
-              <UserCircle v-if="!isPatientPanelCollapsed" :size="20" class="pt-hd-ico" /> 
-              <span v-if="!isPatientPanelCollapsed">今日待诊患者</span>
-            </div>
-            <div class="pt-hd-r-toggle" @click="isPatientPanelCollapsed = !isPatientPanelCollapsed">
-              <Menu :size="18" />
-            </div>
-          </div>
-          <div v-if="!isPatientPanelCollapsed" class="pt-search">
-            <div class="pt-search-box">
-              <Search :size="14" class="pt-search-ico" />
-              <input type="text" v-model="searchQuery" placeholder="搜索患者姓名/身份证号" />
-            </div>
-          </div>
-          <div v-if="!isPatientPanelCollapsed" class="pt-stats-bar">
-            共 12 位 · 已诊 4 位
-          </div>
-          <div class="pt-list">
-            <div
-              v-for="pt in filteredPatients"
-              :key="pt.id"
-              :class="['pt-card', selectedPatientId === pt.id ? 'on' : '']"
-              @click="selectedPatientId = pt.id"
-            >
-              <template v-if="!isPatientPanelCollapsed">
-                <div class="pt-av" :style="{ background: pt.avBg }">{{ pt.av }}</div>
-                <div class="pt-info">
-                  <div class="pt-name">{{ pt.name }}</div>
-                  <div class="pt-meta">{{ pt.gender }} · {{ pt.age }}岁</div>
-                </div>
-                <div v-if="pt.status" :class="['pt-status', pt.status === '就诊中' ? 'active' : '']">
-                  {{ pt.status }}
-                </div>
-              </template>
-              <template v-else>
-                <div class="pt-name-collapsed">{{ pt.name }}</div>
-              </template>
-            </div>
-          </div>
-        </div>
 
         <!-- Content -->
         <div :class="['content', activeView === 'overview' ? 'overflow-hidden flex flex-col' : '']" style="height: calc(100vh - 64px);">
@@ -1406,10 +1469,9 @@ const handleAction = (type: string, title: string, record?: any) => {
             <!-- Overview View (New 3-Column Layout) -->
             <div v-if="activeView === 'overview'" class="v on flex-layout flex-1 flex gap-4 overflow-hidden">
               <!-- Left Column: Profile + Insurance -->
-              <aside class="w-[320px] flex flex-col shrink-0 h-full overflow-hidden">
-                <div class="flex-1 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
+              <aside class="w-[320px] flex flex-col shrink-0">
                   <!-- Profile Card -->
-                  <div class="standard-card p-5 relative overflow-hidden flex-shrink-0">
+                  <div class="standard-card p-5 relative overflow-y-auto custom-scrollbar flex-1 flex flex-col">
                     <p class="absolute top-5 right-5 text-[10px] font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
                       P88001235
                     </p>
@@ -1424,118 +1486,531 @@ const handleAction = (type: string, title: string, record?: any) => {
                       </div>
                     </div>
 
-                    <div class="grid grid-cols-4 gap-2 mb-6">
-                      <div class="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-gradient-to-b from-red-50 to-white border border-red-100 shadow-sm group hover:shadow-md transition-all cursor-default">
-                        <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform shadow-inner">
-                          <HeartPulse :size="16" />
+                    <div class="grid grid-cols-4 gap-1 mb-5">
+                      <div class="flex flex-col items-center justify-center gap-0.5 p-1.5 rounded-lg bg-gradient-to-b from-amber-50 to-white border border-amber-100 shadow-sm group hover:shadow-md transition-all cursor-default">
+                        <div class="w-6 h-6 rounded-lg bg-amber-100 flex items-center justify-center text-amber-600 group-hover:scale-110 transition-transform shadow-inner">
+                          <ClipboardCheck :size="12" />
                         </div>
-                        <span class="text-[9px] font-bold text-slate-700 mt-1">高血压 II级</span>
-                        <span class="text-[8px] text-slate-400 scale-[0.85] origin-top">慢病档案：建档</span>
+                        <span class="text-[8px] font-bold text-slate-700">门慢特病</span>
+                        <span class="text-[7px] text-slate-400 leading-none">门诊慢特病备案</span>
                       </div>
-                      <div class="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-gradient-to-b from-emerald-50 to-white border border-emerald-100 shadow-sm group hover:shadow-md transition-all cursor-default">
-                        <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform shadow-inner">
-                          <ShieldCheck :size="16" />
+                      <div class="flex flex-col items-center justify-center gap-0.5 p-1.5 rounded-lg bg-gradient-to-b from-emerald-50 to-white border border-emerald-100 shadow-sm group hover:shadow-md transition-all cursor-default">
+                        <div class="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center text-emerald-600 group-hover:scale-110 transition-transform shadow-inner">
+                          <ShieldCheck :size="12" />
                         </div>
-                        <span class="text-[9px] font-bold text-slate-700 mt-1">信用就医</span>
-                        <span class="text-[8px] text-emerald-600 scale-[0.8] origin-top font-medium line-clamp-1 text-center" title="信用就医白名单 (可免押金入院)">信用就医白名单...</span>
+                        <span class="text-[8px] font-bold text-slate-700">信用就医</span>
+                        <span class="text-[7px] text-slate-400 leading-none">信用就医白名单</span>
                       </div>
-                      <div class="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-gradient-to-b from-blue-50 to-white border border-blue-100 shadow-sm group hover:shadow-md transition-all cursor-default">
-                        <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform shadow-inner">
-                          <Plane :size="16" />
+                      <div class="flex flex-col items-center justify-center gap-0.5 p-1.5 rounded-lg bg-gradient-to-b from-blue-50 to-white border border-blue-100 shadow-sm group hover:shadow-md transition-all cursor-default">
+                        <div class="w-6 h-6 rounded-lg bg-blue-100 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform shadow-inner">
+                          <Plane :size="12" />
                         </div>
-                        <span class="text-[9px] font-bold text-slate-700 mt-1">异地就医</span>
-                        <span class="text-[8px] text-slate-400 scale-[0.85] origin-top">备案地：上海</span>
+                        <span class="text-[8px] font-bold text-slate-700">异地就医</span>
+                        <span class="text-[7px] text-slate-400 leading-none">备案地：上海</span>
                       </div>
-                      <div class="flex flex-col items-center justify-center gap-1 p-2 rounded-xl bg-gradient-to-b from-purple-50 to-white border border-purple-100 shadow-sm group hover:shadow-md transition-all cursor-default">
-                        <div class="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform shadow-inner">
-                          <UserCheck :size="16" />
+                      <div class="flex flex-col items-center justify-center gap-0.5 p-1.5 rounded-lg bg-gradient-to-b from-purple-50 to-white border border-purple-100 shadow-sm group hover:shadow-md transition-all cursor-default">
+                        <div class="w-6 h-6 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform shadow-inner">
+                          <UserCheck :size="12" />
                         </div>
-                        <span class="text-[9px] font-bold text-slate-700 mt-1">签约医生</span>
-                        <span class="text-[8px] text-slate-400 scale-[0.85] origin-top">李华 (家医)</span>
+                        <span class="text-[8px] font-bold text-slate-700">签约医生</span>
+                        <span class="text-[7px] text-slate-400 leading-none">李华 (家医)</span>
                       </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3 mb-5">
-                      <div class="relative bg-gradient-to-br from-blue-500 to-blue-600 border border-blue-400 rounded-2xl p-4 shadow-md group hover:scale-[1.02] transition-all overflow-hidden">
-                        <div class="absolute -right-2 -top-2 opacity-10 group-hover:scale-110 transition-transform">
-                          <CreditCardIcon :size="64" />
-                        </div>
-                        <p class="text-[10px] text-blue-100 uppercase tracking-wider mb-2 font-bold flex items-center gap-1.5">
-                          <CircleDot :size="10" />
+                    <div class="grid grid-cols-2 gap-1 mb-1.5">
+                      <div class="bg-gradient-to-br from-blue-500 to-blue-600 border border-blue-400 rounded-lg py-1.5 px-2.5 shadow-md hover:scale-[1.02] transition-all relative overflow-hidden group">
+                        <p class="text-[10px] text-blue-100 font-medium flex items-center gap-1 mb-0.5 relative z-10">
+                          <CircleDot :size="5" class="text-blue-200" />
                           个人账户余额
                         </p>
-                        <p class="flex items-baseline gap-0.5 font-bold font-mono leading-none text-white">
-                          <span class="text-2xl">5,240</span>
-                          <span class="text-blue-100/80 text-xs">.50</span>
-                        </p>
+                        <p class="flex items-baseline gap-0.5 font-bold font-mono leading-none text-white relative z-10"><span class="text-base">5,240</span><span class="text-blue-100/80 text-[9px]">.50</span></p>
                       </div>
-                      <div class="relative bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600 rounded-2xl p-4 shadow-md group hover:scale-[1.02] transition-all overflow-hidden">
-                        <div class="absolute -right-2 -top-2 opacity-10 group-hover:scale-110 transition-transform">
-                          <Briefcase :size="64" />
-                        </div>
-                        <p class="text-[10px] text-slate-300 uppercase tracking-wider mb-2 font-bold flex items-center gap-1.5">
-                          <Target :size="10" />
+                      <div class="bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600 rounded-lg py-1.5 px-2.5 shadow-md hover:scale-[1.02] transition-all relative overflow-hidden group">
+                        <p class="text-[10px] text-slate-300 font-medium flex items-center gap-1 mb-0.5 relative z-10">
+                          <Target :size="5" class="text-slate-400" />
                           本年统筹支付
                         </p>
-                        <p class="flex items-baseline gap-0.5 font-bold font-mono leading-none text-white">
-                          <span class="text-2xl">1,850</span>
-                          <span class="text-slate-400 text-xs">.00</span>
-                        </p>
+                        <p class="flex items-baseline gap-0.5 font-bold font-mono leading-none text-white relative z-10"><span class="text-base">1,850</span><span class="text-slate-400 text-[9px]">.00</span></p>
                       </div>
                     </div>
 
                     <!-- Family Mutual Aid Account -->
-                    <div class="pt-4 border-t border-slate-100 mb-5">
-                      <div class="flex items-center gap-2 mb-4 text-blue-600">
-                        <Users :size="14" />
-                        <span class="text-[11px] font-bold tracking-widest uppercase">家庭共济账户</span>
+                    <div class="pt-4 border-t border-slate-100 mt-3 pb-2">
+                      <div class="flex items-center gap-2 mb-3">
+                        <Users :size="13" class="text-blue-600" />
+                        <span class="text-[11px] font-bold text-blue-600 tracking-widest uppercase">家庭共济账户</span>
                       </div>
                       <div class="flex items-center justify-between px-1">
                         <div class="flex -space-x-2">
-                          <div class="w-8 h-8 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-blue-600 shadow-sm relative z-30">本</div>
-                          <div class="w-8 h-8 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-500 shadow-sm relative z-20">妻</div>
-                          <div class="w-8 h-8 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-500 shadow-sm relative z-10">子</div>
+                          <div class="w-7 h-7 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-[9px] font-bold text-blue-600 shadow-sm relative z-30">本</div>
+                          <div class="w-7 h-7 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[9px] font-bold text-slate-500 shadow-sm relative z-20">妻</div>
+                          <div class="w-7 h-7 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[9px] font-bold text-slate-500 shadow-sm relative z-10">子</div>
                         </div>
                         <div class="text-right">
-                          <p class="text-[9px] text-slate-400 font-bold mb-1">家庭账户余额</p>
-                          <p class="text-lg font-bold font-mono text-slate-900 leading-none">
-                            <span class="text-xs mr-0.5 text-slate-500 font-normal">¥</span>12,450<span class="text-xs text-slate-400">.00</span>
+                          <p class="text-[9px] text-slate-400 font-bold mb-0.5">家庭账户余额</p>
+                          <p class="text-base font-bold font-mono text-slate-900 leading-none">
+                            <span class="text-[10px] mr-0.5 text-slate-500 font-normal">¥</span>12,450<span class="text-[10px] text-slate-400">.00</span>
                           </p>
                         </div>
                       </div>
+                      <div class="mt-3 space-y-2">
+                        <div class="px-2.5 py-2 bg-amber-50 rounded-lg space-y-2 border border-amber-200">
+                          <div class="text-[10px] font-bold text-amber-700 flex items-center gap-1"><Cpu :size="11" /> 智能支付评估</div>
+                          <div class="space-y-1.5">
+                            <div class="flex items-center justify-between">
+                              <span class="text-[9px] text-amber-600">共济使用率</span>
+                              <span class="text-[9px] font-bold text-amber-700">34%<span class="text-amber-500 font-normal"> / 已用 ¥4,230</span></span>
+                            </div>
+                            <div class="w-full h-1 bg-amber-200 rounded-full overflow-hidden">
+                              <div class="h-full bg-amber-500 rounded-full" style="width: 34%;"></div>
+                            </div>
+                            <div class="flex items-center justify-between mt-1">
+                              <span class="text-[9px] text-amber-600">本月预估支出</span>
+                              <span class="text-[9px] font-bold text-amber-700">¥800-1,200</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                              <span class="text-[9px] text-amber-600">慢病用药覆盖</span>
+                              <span class="text-[9px] font-bold text-green-600">可覆盖</span>
+                            </div>
+                          </div>
+                        </div>
+                        <a-button
+                          type="primary"
+                          block
+                          class="rounded-xl h-10 text-xs font-bold shadow-sm"
+                          @click="showAccountFlowModal = true"
+                        >
+                          查看家庭账户明细
+                        </a-button>
+                      </div>
                     </div>
 
-                    <div class="pt-4 border-t border-slate-100">
-                      <div class="flex items-center gap-2 mb-4 text-slate-700">
-                        <HeartPulse :size="14" />
-                        <span class="text-[11px] font-bold tracking-widest uppercase">健康摘要</span>
+                    <div class="pt-4 border-t border-slate-100 mt-3 pb-1">
+                      <div class="flex items-center gap-2 mb-3">
+                        <Tags :size="13" class="text-blue-600" />
+                        <span class="text-[11px] font-bold text-blue-600 tracking-widest uppercase">标签画像</span>
                       </div>
-                      <div class="px-1">
-                        <div class="space-y-2.5 text-[11px]">
-                          <div class="flex items-center">
-                            <span class="text-slate-500 mr-2 w-10 shrink-0">家族史</span>
-                            <span class="text-slate-700 font-medium">高血压家族史</span>
+                      <div class="px-0.5 space-y-4">
+                        <!-- 智能标签（智能体打标） -->
+                        <div>
+                          <p class="text-[11px] text-slate-700 font-semibold tracking-widest uppercase mb-1.5">智能标签 · AI打标</p>
+                          <div class="flex flex-wrap gap-1.5">
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #EFF6FF; color: #2563EB;">高依从性</span>
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #FEFCE8; color: #CA8A04;">复诊规律</span>
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #F0FDF4; color: #16A34A;">健康素养良好</span>
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #FEF2F2; color: #DC2626;">用药风险·中</span>
                           </div>
-                          <div class="flex items-center">
-                            <span class="text-slate-500 mr-2 w-10 shrink-0">过敏史</span>
-                            <span class="text-red-600 font-bold">青霉素过敏</span>
+                        </div>
+                        <!-- 既往史 -->
+                        <div>
+                          <p class="text-[11px] text-slate-700 font-semibold tracking-widest uppercase mb-1.5">既往史</p>
+                          <div class="flex flex-wrap gap-1.5">
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #FFF7ED; color: #EA580C;">家族史 · 高血压家族史</span>
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #FEF2F2; color: #DC2626;">过敏史 · 青霉素过敏</span>
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #F8FAFC; color: #64748B;">手术史 · 结肠息肉切除术</span>
                           </div>
-                          <div class="flex items-center">
-                            <span class="text-slate-500 mr-2 w-10 shrink-0">手术史</span>
-                            <span class="text-slate-700 font-medium">2023 结肠息肉切除术</span>
+                        </div>
+                        <!-- 疾病标签 -->
+                        <div>
+                          <p class="text-[11px] text-slate-700 font-semibold tracking-widest uppercase mb-1.5">疾病标签</p>
+                          <div class="flex flex-wrap gap-1.5">
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #FEF2F2; color: #DC2626;">冠心病</span>
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #FFF7ED; color: #EA580C;">高血压3级</span>
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #FEFCE8; color: #CA8A04;">2型糖尿病</span>
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #F0FDF4; color: #16A34A;">高脂血症</span>
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #F8FAFC; color: #64748B;">腰椎间盘突出</span>
+                          </div>
+                        </div>
+                        <!-- 风险分层 -->
+                        <div>
+                          <p class="text-[11px] text-slate-700 font-semibold tracking-widest uppercase mb-1.5">风险分层</p>
+                          <div class="flex flex-wrap gap-1.5">
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #FEF2F2; color: #DC2626;">心血管：极高危</span>
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #FFF7ED; color: #EA580C;">脑卒中：中危</span>
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #F0FDF4; color: #16A34A;">肾脏：低危</span>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div class="mt-6">
-                      <a-button type="primary" block class="rounded-xl h-10 text-xs font-bold shadow-sm" @click="activeView = 'finance'">
-                        <span class="inline-flex items-center justify-center gap-2">
-                          查看报销记录
-                        </span>
-                      </a-button>
+                    <div class="flex-1 min-h-0"></div>
+                  </div>
+              </aside>
+
+              <!-- Center Column: Visualization + AI -->
+              <section class="flex-1 flex flex-col gap-4 overflow-hidden relative">
+                  <div class="flex-1 min-h-0 relative standard-card !bg-white/80 overflow-hidden group">
+                    <div class="w-full h-full flex items-center justify-center">
+                      <div class="relative w-full h-full flex items-center justify-center p-3">
+                        <BodyAnnotation body-image-src="/body.png" :buttons="portraitButtons" @button-click="onPortraitButtonClick" />
+                      </div>
+                    </div>
+
+                    <div class="absolute top-4 left-4 z-10 flex flex-col gap-4">
+                      <!-- Real-time Metrics -->
+                      <div class="bg-white/80 backdrop-blur-md border border-slate-200 rounded-lg p-3 shadow-sm cursor-pointer hover:border-blue-300 hover:shadow-md transition-all" @click="showMetricDetailModal = true">
+                        <h3 class="text-[10px] font-bold text-blue-700 uppercase tracking-widest" style="margin-bottom: 12px;">健康体征数据</h3>
+                        <div class="flex items-start justify-between gap-1">
+                          <div class="flex flex-col items-center gap-0.5 flex-1">
+                            <HeartPulse :size="14" class="text-red-400" />
+                            <span class="text-slate-500 text-[8px]">血压</span>
+                            <span class="font-mono font-bold text-[11px] text-slate-800">128/82</span>
+                            <span class="text-[7px] text-slate-400">mmHg</span>
+                          </div>
+                          <span class="w-px h-4 bg-slate-100 self-center"></span>
+                          <div class="flex flex-col items-center gap-0.5 flex-1">
+                            <Droplets :size="14" class="text-green-400" />
+                            <span class="text-slate-500 text-[8px]">血糖</span>
+                            <span class="font-mono font-bold text-[11px] text-slate-800">5.8</span>
+                            <span class="text-[7px] text-slate-400">mmol/L</span>
+                          </div>
+                          <span class="w-px h-4 bg-slate-100 self-center"></span>
+                          <div class="flex flex-col items-center gap-0.5 flex-1">
+                            <FlaskConical :size="14" class="text-yellow-400" />
+                            <span class="text-slate-500 text-[8px]">血脂</span>
+                            <span class="font-mono font-bold text-[11px] text-slate-800">4.2</span>
+                            <span class="text-[7px] text-slate-400">mmol/L</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- 影像AI辅助分析 -->
+                      <div class="w-full bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-200 rounded-lg p-2.5 shadow-sm cursor-pointer hover:border-violet-400 hover:shadow-md transition-all" @click="openAIAssistant">
+                        <div class="flex items-center gap-2 mb-1.5">
+                          <div class="w-5 h-5 rounded-full bg-violet-100 flex items-center justify-center">
+                            <svg class="w-3 h-3 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                          </div>
+                          <span class="text-[10px] font-bold text-violet-700">影像AI辅助分析</span>
+                          <span class="text-[8px] font-bold text-violet-500 px-1.5 py-0.5 rounded-full bg-violet-100">新</span>
+                        </div>
+                        <div class="text-[9px] text-violet-600 font-medium mb-1.5">胸部CT（06-10）· 发现2项可疑异常</div>
+                        <div class="flex items-center gap-1 text-[8px] text-violet-400">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                          <span>影像一扫多筛智能体</span>
+                          <span class="mx-1">·</span>
+                          <span>刚刚</span>
+                        </div>
+                      </div>
+
+                      <!-- 体征数据AI辅助分析 -->
+                      <div class="w-full bg-gradient-to-br from-cyan-50 to-teal-50 border border-cyan-200 rounded-lg p-2.5 shadow-sm cursor-pointer hover:border-cyan-400 hover:shadow-md transition-all" @click="openAIAssistant">
+                        <div class="flex items-center gap-2 mb-1.5">
+                          <div class="w-5 h-5 rounded-full bg-cyan-100 flex items-center justify-center">
+                            <svg class="w-3 h-3 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                          </div>
+                          <span class="text-[10px] font-bold text-cyan-700">体征数据AI辅助分析</span>
+                          <span class="text-[8px] font-bold text-cyan-500 px-1.5 py-0.5 rounded-full bg-cyan-100">4项异常</span>
+                        </div>
+                        <div class="text-[9px] text-cyan-600 font-medium mb-1.5">心率过快112次/分 · 血压偏高162/95mmHg</div>
+                        <div class="flex items-center gap-1 text-[8px] text-cyan-400">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                          <span>穿戴健康监测智能体</span>
+                          <span class="mx-1">·</span>
+                          <span>2小时前</span>
+                        </div>
+                      </div>
+
+                      <!-- 智能用药辅助分析 -->
+                      <div class="w-full bg-gradient-to-br from-orange-50 to-red-50 border border-orange-200 rounded-lg p-2.5 shadow-sm cursor-pointer hover:border-orange-400 hover:shadow-md transition-all" @click="openAIAssistant">
+                        <div class="flex items-center gap-2 mb-1.5">
+                          <div class="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center">
+                            <svg class="w-3 h-3 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                          </div>
+                          <span class="text-[10px] font-bold text-orange-700">智能用药辅助分析</span>
+                          <span class="text-[8px] font-bold text-orange-500 px-1.5 py-0.5 rounded-full bg-orange-100">3项风险</span>
+                        </div>
+                        <div class="text-[9px] text-orange-600 font-medium mb-1.5">阿司匹林+华法林出血风险 · 建议调整</div>
+                        <div class="flex items-center gap-1 text-[8px] text-orange-400">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                          <span>临床用药安全智能体</span>
+                          <span class="mx-1">·</span>
+                          <span>今日</span>
+                        </div>
+                      </div>
+
+                      <!-- 患者健康预警已隐藏，后续可能恢复 -->
+                    </div>
+
+                    <div class="absolute bottom-2 left-4 right-4 z-10">
+                      <div class="flex items-center gap-x-3" style="font-size: 10px;">
+                        <div class="text-slate-500 font-medium shrink-0">
+                          归集自以下系统，实时清洗入档：
+                        </div>
+                        <div class="chips flex-1 min-w-0">
+                          <div class="chip"><div class="cdot" style="background: var(--blue)"></div>HIS 门急诊</div>
+                          <div class="chip"><div class="cdot" style="background: var(--green)"></div>PACS 影像</div>
+                          <div class="chip"><div class="cdot" style="background: var(--amber)"></div>LIS 检验</div>
+                          <div class="chip"><div class="cdot" style="background: var(--purple)"></div>EMR 病历</div>
+                          <div class="chip"><div class="cdot" style="background: #EC4899"></div>公卫档案</div>
+                          <div class="chip"><div class="cdot" style="background: var(--cyan)"></div>可穿戴设备</div>
+                          <div class="chip"><div class="cdot" style="background: #6B7280"></div>药店购药</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
+
+                <!-- 智能服务快捷入口 -->
+                <div class="standard-card p-3 bg-white">
+                  <div class="flex items-center mb-2">
+                    <h3 class="text-[13px] font-bold text-[#2563eb] uppercase tracking-widest flex items-center gap-2">
+                      <Cpu class="w-4 h-4" />
+                      智能服务快捷入口
+                    </h3>
+                  </div>
+
+                  <div class="flex gap-2">
+                    <!-- 左侧：历史病历快读（蓝色背景） -->
+                    <div class="w-80 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-3 shadow-md flex flex-col cursor-pointer hover:shadow-lg transition-all" @click="setActiveView('ai-diagnosis')">
+                      <div class="flex items-center gap-1.5 mb-3">
+                        <span class="w-5 h-5 rounded-md bg-white/20 flex items-center justify-center text-white text-[9px] font-bold">AI</span>
+                        <span class="text-[11px] font-bold text-white">历史病历快读</span>
+                      </div>
+                      <div class="space-y-2 flex-1">
+                        <div class="bg-white/15 rounded-lg px-2.5 py-1.5">
+                          <span class="text-[8px] text-blue-100">近期诊断</span>
+                          <div class="flex items-center gap-2 mt-0.5">
+                            <span class="text-[12px] font-bold text-white">高血压II级</span>
+                            <span class="text-[8px] px-1.5 py-0.5 rounded bg-white/20 text-white font-bold">慢病</span>
+                          </div>
+                        </div>
+                        <div class="bg-white/15 rounded-lg px-2.5 py-1.5">
+                          <span class="text-[8px] text-blue-100">用药情况</span>
+                          <div class="flex flex-wrap gap-1 mt-0.5">
+                            <span class="text-[9px] px-2 py-0.5 rounded bg-white/20 text-white">阿司匹林</span>
+                            <span class="text-[9px] px-2 py-0.5 rounded bg-white/20 text-white">阿托伐他汀</span>
+                            <span class="text-[9px] px-2 py-0.5 rounded bg-white/20 text-white">缬沙坦</span>
+                          </div>
+                        </div>
+                        <div class="bg-white/15 rounded-lg px-2.5 py-1.5">
+                          <span class="text-[8px] text-blue-100">就诊频次</span>
+                          <div class="text-[10px] text-white mt-0.5">门诊 <span class="font-bold">8次</span> · 住院 <span class="font-bold">2次</span></div>
+                        </div>
+                        <div class="bg-white/15 rounded-lg px-2.5 py-1.5">
+                          <span class="text-[8px] text-blue-100">检查检验</span>
+                          <div class="text-[10px] text-white mt-0.5">CT×2 | 血常规×4 | 血脂×3</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 右侧：服务卡片 -->
+                    <div class="flex-1 grid grid-cols-5 grid-rows-2 gap-2">
+                      <div class="col-span-3 bg-gradient-to-br from-red-50 to-red-100/50 rounded-xl p-3 cursor-pointer hover:shadow-sm transition-all" @click="setActiveView('ai-diagnosis')">
+                        <div class="flex items-center gap-2 mb-2">
+                          <div class="w-5 h-5 rounded-md bg-red-100 flex items-center justify-center shrink-0">
+                            <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.66 1.732-3L13.732 4c-.77-1.34-2.694-1.34-3.464 0L3.34 16c-.77 1.34.192 3 1.732 3z"></path></svg>
+                          </div>
+                          <span class="text-sm font-bold text-slate-700">预警冲突</span>
+                          <span class="text-[10px] font-bold text-red-600 px-1.5 py-0.5 rounded-full bg-red-200 ml-auto">5</span>
+                        </div>
+                        <div class="space-y-1">
+                          <div v-for="(item, i) in warningItems.slice(0, 3)" :key="i" class="flex items-start gap-2">
+                            <span class="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" :class="item.level === 'red' ? 'bg-red-400' : 'bg-amber-400'"></span>
+                            <div>
+                              <span class="text-xs font-bold" :class="item.level === 'red' ? 'text-red-600' : 'text-amber-600'">{{ item.label }}</span>
+                              <span class="text-[11px] text-slate-500 ml-1.5">{{ item.text }}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="bg-gradient-to-br from-cyan-50 to-cyan-100/50 rounded-xl p-3 cursor-pointer hover:shadow-sm transition-all flex items-center gap-3 relative overflow-hidden group" @click="setActiveView('ai-diagnosis')">
+                        <div class="w-1/4 aspect-square rounded-lg bg-cyan-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                          <svg class="w-1/2 h-1/2 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        </div>
+                        <span class="text-sm font-bold text-slate-700">影像AI</span>
+                        <svg class="w-12 h-12 text-cyan-300/15 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                      </div>
+                      <div class="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl p-3 cursor-pointer hover:shadow-sm transition-all flex items-center gap-3 relative overflow-hidden group" @click="setActiveView('ai-diagnosis')">
+                        <div class="w-1/4 aspect-square rounded-lg bg-amber-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                          <svg class="w-1/2 h-1/2 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        </div>
+                        <span class="text-sm font-bold text-slate-700">临床路径</span>
+                        <svg class="w-12 h-12 text-amber-300/15 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                      </div>
+                      <div class="bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-xl p-3 cursor-pointer hover:shadow-sm transition-all flex items-center gap-3 relative overflow-hidden group" @click="setActiveView('ai-diagnosis')">
+                        <div class="w-1/4 aspect-square rounded-lg bg-indigo-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                          <svg class="w-1/2 h-1/2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        </div>
+                        <span class="text-sm font-bold text-slate-700">远程诊断</span>
+                        <svg class="w-12 h-12 text-indigo-300/15 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                      </div>
+                      <div class="bg-gradient-to-br from-teal-50 to-teal-100/50 rounded-xl p-3 cursor-pointer hover:shadow-sm transition-all flex items-center gap-3 relative overflow-hidden group" @click="setActiveView('ai-diagnosis')">
+                        <div class="w-1/4 aspect-square rounded-lg bg-teal-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                          <svg class="w-1/2 h-1/2 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        </div>
+                        <span class="text-sm font-bold text-slate-700">随访计划</span>
+                        <svg class="w-12 h-12 text-teal-300/15 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                      </div>
+                      <div class="bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl p-3 cursor-pointer hover:shadow-sm transition-all flex items-center gap-3 relative overflow-hidden group" @click="setActiveView('ai-diagnosis')">
+                        <div class="w-1/4 aspect-square rounded-lg bg-green-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                          <svg class="w-1/2 h-1/2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        </div>
+                        <span class="text-sm font-bold text-slate-700">智能质控</span>
+                        <svg class="w-12 h-12 text-green-300/15 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                      </div>
+                      <div class="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl p-3 cursor-pointer hover:shadow-sm transition-all flex items-center gap-3 relative overflow-hidden group" @click="setActiveView('ai-diagnosis')">
+                        <div class="w-1/4 aspect-square rounded-lg bg-purple-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                          <svg class="w-1/2 h-1/2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h6v6H3zM15 3h6v6h-6zM9 9h6v6H9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15h18v6H3z"/></svg>
+                        </div>
+                        <span class="text-sm font-bold text-slate-700">智能用药</span>
+                        <svg class="w-12 h-12 text-purple-300/15 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h6v6H3zM15 3h6v6h-6zM9 9h6v6H9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 15h18v6H3z"/></svg>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- DRG/DIP智能反馈已隐藏，后续可能恢复 -->
+              </section>
+
+              <!-- Right Column: Clinical Records -->
+              <aside class="w-[450px] flex flex-col gap-4 shrink-0 overflow-y-auto custom-scrollbar transition-all duration-500 ease-in-out" :class="isRecordsExpanded ? 'flex-1' : 'w-[450px]'">
+                <div class="flex-1 standard-card flex flex-col overflow-hidden relative min-h-[540px]">
+                  <div class="flex items-center justify-between p-4 pb-0 mb-4">
+                    <h3 class="text-[13px] font-bold text-[#2563eb] uppercase tracking-widest flex items-center gap-2">
+                      <Database class="w-4 h-4" />
+                      医保健康档案
+                    </h3>
+                    <button type="button" class="text-[13px] font-normal text-[#2563EB] flex items-center gap-1 transition-colors hover:opacity-80" style="color: #2563EB !important; font-size: 13px; font-weight: 400;" @click="activeView = 'health'">
+                      查看更多
+                      <ChevronRight :size="12" />
+                    </button>
+                  </div>
+
+                  <div class="flex p-1 bg-slate-100 rounded-xl mx-4 mb-4 border border-slate-200/50 shadow-inner">
+                    <button 
+                      v-for="t in recordTabOptions" 
+                      :key="t.id"
+                      class="flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all duration-300"
+                      :class="recordTab === t.id ? 'bg-white text-blue-600 shadow-sm transform scale-[1.02]' : 'text-slate-500 hover:text-slate-700'"
+                      @click="recordTab = t.id"
+                    >
+                      {{ t.label }}
+                    </button>
+                  </div>
+
+                  <div class="flex items-center justify-between px-4 mb-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2">
+                    <span>近三月 {{ recordTabLabel }} 记录</span>
+                    <span class="bg-slate-100 px-2 py-0.5 rounded text-slate-600">数量: {{ filteredRecords.length }}</span>
+                  </div>
+
+                  <div class="flex-1 overflow-y-auto px-4 pb-3 custom-scrollbar">
+                    <div v-if="filteredRecords.length === 0" class="h-full flex flex-col items-center justify-center opacity-40 py-10">
+                      <Database class="w-8 h-8 mb-2" />
+                      <span class="text-[10px] font-bold uppercase tracking-widest">暂无记录</span>
+                    </div>
+
+                    <div v-else class="relative pl-4 ml-2 border-l-2 border-slate-100 space-y-6 pt-2 pb-4">
+                      <div
+                        v-for="record in filteredRecords"
+                        :key="record.id"
+                        class="relative"
+                      >
+                        <!-- Timeline Dot -->
+                        <div class="absolute -left-[25px] top-1.5 w-4 h-4 rounded-full border-2 border-white shadow-sm z-10"
+                             :class="{
+                               'bg-blue-500': record.type === 'op',
+                               'bg-purple-500': record.type === 'ip',
+                               'bg-emerald-500': record.type === 'exam',
+                               'bg-orange-500': record.type === 'lab',
+                               'bg-rose-500': record.type === 'med',
+                               'bg-indigo-500': record.type === 'wd'
+                             }">
+                        </div>
+
+                        <!-- Date & Hospital Header -->
+                        <div class="flex items-center gap-2 mb-2">
+                          <span class="text-[10px] font-bold font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
+                            <span v-if="record.dateEnd">{{ record.date }} ~ {{ record.dateEnd }}</span>
+                            <span v-else>{{ record.date }}</span>
+                          </span>
+                          <span class="text-[10px] font-bold text-slate-400 truncate">{{ record.hosp }}</span>
+                        </div>
+
+                        <!-- Record Card -->
+                        <div 
+                          class="bg-white border border-slate-200 rounded-xl p-3 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group relative overflow-hidden"
+                          @click="handleAction(record.type === 'med' ? 'op' : (record.type === 'lab' ? 'lab_detail' : (record.type === 'exam' ? 'exam_detail' : (record.type === 'ip' ? 'ip_detail' : 'op'))), record.diag, record)"
+                        >
+                          <div class="flex items-start justify-between gap-3 mb-2">
+                            <div class="flex items-center gap-2">
+                              <div class="w-6 h-6 rounded-lg flex items-center justify-center"
+                                   :class="{
+                                     'bg-blue-50 text-blue-500': record.type === 'op',
+                                     'bg-purple-50 text-purple-500': record.type === 'ip',
+                                     'bg-emerald-50 text-emerald-500': record.type === 'exam',
+                                     'bg-orange-50 text-orange-500': record.type === 'lab',
+                                     'bg-rose-50 text-rose-500': record.type === 'med',
+                                     'bg-indigo-50 text-indigo-500': record.type === 'wd'
+                                   }">
+                                <Stethoscope v-if="record.type === 'op'" :size="14" />
+                                <Hospital v-else-if="record.type === 'ip'" :size="14" />
+                                <Scan v-else-if="record.type === 'exam'" :size="14" />
+                                <Microscope v-else-if="record.type === 'lab'" :size="14" />
+                                <Pill v-else-if="record.type === 'med'" :size="14" />
+                                <Cpu v-else-if="record.type === 'wd'" :size="14" />
+                              </div>
+                              <div class="text-sm font-bold text-slate-900 truncate">{{ record.diag }}</div>
+                            </div>
+                            <span v-if="record.type === 'ip'" class="text-[9px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100 font-bold">{{ record.status || '住院' }}</span>
+                            <span v-else-if="record.type === 'exam'" class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 font-bold">{{ record.tags[0] }}</span>
+                          </div>
+
+                          <div class="border-t border-slate-100 pt-2 text-xs text-slate-700">
+                            <div v-if="record.type === 'op'" class="space-y-1">
+                              <div class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">诊断：{{ record.desc }}</div>
+                            </div>
+                            <div v-else-if="record.type === 'ip'" class="space-y-2">
+                              <div class="text-[11px] text-slate-600 leading-relaxed">{{ record.desc }}</div>
+                              <div class="flex items-center gap-2 pt-1">
+                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('ip_detail', '入院记录', record)">入院记录</button>
+                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('ip_detail', '首次病程', record)">首次病程</button>
+                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('ip_detail', '出院小结', record)">出院小结</button>
+                              </div>
+                            </div>
+                            <div v-else-if="record.type === 'exam'" class="space-y-2">
+                              <div class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">{{ record.desc }}</div>
+                              <div class="flex items-center gap-2 pt-1">
+                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('exam_detail', '查看报告', record)">查看报告</button>
+                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('dicom', '调阅影像', record)">调阅影像</button>
+                              </div>
+                            </div>
+                            <div v-else-if="record.type === 'lab'" class="space-y-1">
+                              <div class="flex flex-col gap-1 mt-1">
+                                <div v-for="(m, i) in record.metrics" :key="i" class="flex justify-between items-center p-1.5 rounded-lg text-[11px] bg-slate-50 group-hover:bg-blue-50/30 transition-colors">
+                                  <span class="text-slate-600">{{ m.label }}</span>
+                                  <span class="font-mono font-bold" :class="m.flag === 'high' ? 'text-red-600' : m.flag === 'low' ? 'text-yellow-600' : 'text-slate-700'">
+                                    {{ m.value }} {{ 'unit' in m ? m.unit : '' }} {{ m.flag === 'high' ? '↑' : m.flag === 'low' ? '↓' : '' }}
+                                  </span>
+                                </div>
+                              </div>
+                              <div v-if="record.moreCount" class="text-center pt-1.5 text-[10px] text-slate-400 font-bold group-hover:text-blue-500 transition-colors flex items-center justify-center gap-1">
+                                展开剩余 {{ record.moreCount }} 项指标 <ChevronDown :size="10" />
+                              </div>
+                            </div>
+                            <div v-else-if="record.type === 'wd'" class="space-y-1">
+                              <div class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">{{ record.desc }}</div>
+                              <div class="flex flex-wrap gap-2 mt-2">
+                                <div v-for="metric in record.metrics" :key="metric.label" class="warning-tag flex items-center">
+                                    {{ metric.label }} {{ metric.value }} ↑
+                                </div>
+                              </div>
+                            </div>
+                            <div v-else class="space-y-1">
+                              <div class="flex flex-col gap-1 mt-1">
+                                <div v-for="(it, i) in record.items" :key="i" class="flex justify-between items-center p-1.5 rounded-lg text-[11px] bg-slate-50 group-hover:bg-blue-50/30 transition-colors">
+                                  <span class="text-slate-600">{{ it.name }}</span>
+                                  <span class="font-mono font-bold text-slate-700">x{{ it.count }}</span>
+                                </div>
+                              </div>
+                              <div v-if="record.moreCount" class="text-center pt-1.5 text-[10px] text-slate-400 font-bold group-hover:text-blue-500 transition-colors flex items-center justify-center gap-1">
+                                展开剩余 {{ record.moreCount }} 项 <ChevronDown :size="10" />
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                   <!-- Insurance Archive Center -->
                   <div class="standard-card p-5 relative flex-shrink-0">
@@ -1583,7 +2058,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                             </div>
                           </div>
                           <div class="pt-2">
-                            <p class="text-[11px] text-slate-500 uppercase mb-4 font-bold tracking-widest">医保年度累计</p>
+                            <p class="text-slate-700 font-semibold tracking-widest text-xs uppercase mb-4">医保年度累计</p>
                             <div class="space-y-4 pb-2">
                               <div>
                                 <div class="flex justify-between text-[11px] mb-1.5 font-mono">
@@ -1605,9 +2080,6 @@ const handleAction = (type: string, title: string, record?: any) => {
                               </div>
                             </div>
                             
-                            <!-- Family Mutual Aid Account -->
-                            <div class="pt-4 border-t border-slate-100">
-                            </div>
                           </div>
                         </div>
                       </div>
@@ -1723,238 +2195,6 @@ const handleAction = (type: string, title: string, record?: any) => {
                       </div>
                     </div>
                   </div>
-                </div>
-              </aside>
-
-              <!-- Center Column: Visualization + AI -->
-              <section class="flex-1 flex flex-col gap-4 overflow-hidden relative">
-                  <div class="flex-1 min-h-0 relative standard-card !bg-white/80 overflow-hidden group">
-                    <div class="w-full h-full flex items-center justify-center">
-                      <div class="relative w-full h-full flex items-center justify-center p-3">
-                        <BodyAnnotation body-image-src="/body.png" :buttons="portraitButtons" @button-click="onPortraitButtonClick" />
-                      </div>
-                    </div>
-
-                    <div class="absolute top-4 left-4 z-10 flex flex-col gap-3">
-                      <!-- Real-time Metrics -->
-                      <div class="bg-white/80 backdrop-blur-md border border-slate-200 rounded-lg p-3 w-48 shadow-sm cursor-pointer hover:border-blue-300 hover:shadow-md transition-all" @click="showMetricDetailModal = true">
-                        <h3 class="text-[10px] font-bold text-blue-700 uppercase tracking-widest mb-3">健康体征数据</h3>
-                        <div class="space-y-3">
-                          <div class="flex items-center gap-2">
-                            <HeartPulse :size="14" class="text-red-400/70 shrink-0" />
-                            <div class="text-xs text-slate-800 leading-tight">
-                              <span class="text-slate-500 text-[9px]">血压</span><br />
-                              <span class="font-mono font-bold">128/82</span> <span class="text-blue-600/50">mmHg</span>
-                            </div>
-                          </div>
-                          <div class="flex items-center gap-2">
-                            <Droplets :size="14" class="text-green-400/70 shrink-0" />
-                            <div class="text-xs text-slate-800 leading-tight">
-                              <span class="text-slate-500 text-[9px]">血糖</span><br />
-                              <span class="font-mono font-bold">5.8</span> <span class="text-blue-600/50">mmol/L</span>
-                            </div>
-                          </div>
-                          <div class="flex items-center gap-2">
-                            <FlaskConical :size="14" class="text-yellow-400/70 shrink-0" />
-                            <div class="text-xs text-slate-800 leading-tight">
-                              <span class="text-slate-500 text-[9px]">血脂</span><br />
-                              <span class="font-mono font-bold">4.2</span> <span class="text-blue-600/50">mmol/L</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      <!-- AI辅助诊断入口 -->
-                      <div class="bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 rounded-lg p-3 w-48 shadow-sm cursor-pointer hover:border-amber-400 hover:shadow-md transition-all" @click="openAIAssistant">
-                        <div class="flex items-center gap-2 mb-2">
-                          <div class="w-6 h-6 rounded-full bg-amber-100 flex items-center justify-center">
-                            <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
-                          </div>
-                          <span class="text-[10px] font-bold text-amber-700">AI辅助诊断</span>
-                        </div>
-                        <div class="text-[9px] text-amber-600 leading-relaxed">基于患者健康数据进行智能诊断分析</div>
-                        <div class="flex items-center justify-center mt-2">
-                          <span class="inline-block w-full text-center py-1.5 text-[10px] font-bold text-white bg-amber-500 hover:bg-amber-600 rounded-md transition-colors">
-                            进入诊断
-                          </span>
-                        </div>
-                      </div>
-
-                      <!-- 患者健康预警已隐藏，后续可能恢复 -->
-                    </div>
-
-                    <div class="absolute bottom-2 left-4 right-4 z-10">
-                      <div class="flex items-center gap-x-3" style="font-size: 10px;">
-                        <div class="text-slate-500 font-medium shrink-0">
-                          归集自以下系统，实时清洗入档：
-                        </div>
-                        <div class="chips flex-1 min-w-0">
-                          <div class="chip"><div class="cdot" style="background: var(--blue)"></div>HIS 门急诊</div>
-                          <div class="chip"><div class="cdot" style="background: var(--green)"></div>PACS 影像</div>
-                          <div class="chip"><div class="cdot" style="background: var(--amber)"></div>LIS 检验</div>
-                          <div class="chip"><div class="cdot" style="background: var(--purple)"></div>EMR 病历</div>
-                          <div class="chip"><div class="cdot" style="background: #EC4899"></div>公卫档案</div>
-                          <div class="chip"><div class="cdot" style="background: var(--cyan)"></div>可穿戴设备</div>
-                          <div class="chip"><div class="cdot" style="background: #F97316"></div>体检机构</div>
-                          <div class="chip"><div class="cdot" style="background: #6B7280"></div>药店购药</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                <!-- DRG/DIP智能反馈已隐藏，后续可能恢复 -->
-              </section>
-
-              <!-- Right Column: Clinical Records -->
-              <aside class="w-[450px] flex flex-col gap-4 shrink-0 transition-all duration-500 ease-in-out" :class="isRecordsExpanded ? 'flex-1' : 'w-[450px]'">
-                <div class="flex-1 standard-card flex flex-col overflow-hidden relative">
-                  <div class="flex items-center justify-between p-4 pb-0 mb-4">
-                    <h3 class="text-[13px] font-bold text-[#2563eb] uppercase tracking-widest flex items-center gap-2">
-                      <Database class="w-4 h-4" />
-                      医保健康档案
-                    </h3>
-                    <button type="button" class="text-[13px] font-normal text-[#2563EB] flex items-center gap-1 transition-colors hover:opacity-80" style="color: #2563EB !important; font-size: 13px; font-weight: 400;" @click="activeView = 'health'">
-                      查看更多
-                      <ChevronRight :size="12" />
-                    </button>
-                  </div>
-
-                  <div class="flex p-1 bg-slate-100 rounded-xl mx-4 mb-4 border border-slate-200/50 shadow-inner">
-                    <button 
-                      v-for="t in recordTabOptions" 
-                      :key="t.id"
-                      class="flex-1 py-1.5 text-[10px] font-bold rounded-lg transition-all duration-300"
-                      :class="recordTab === t.id ? 'bg-white text-blue-600 shadow-sm transform scale-[1.02]' : 'text-slate-500 hover:text-slate-700'"
-                      @click="recordTab = t.id"
-                    >
-                      {{ t.label }}
-                    </button>
-                  </div>
-
-                  <div class="flex items-center justify-between px-4 mb-2 text-slate-400 font-bold text-[10px] uppercase tracking-widest mt-2">
-                    <span>近三月 {{ recordTabLabel }} 记录</span>
-                    <span class="bg-slate-100 px-2 py-0.5 rounded text-slate-600">数量: {{ filteredRecords.length }}</span>
-                  </div>
-
-                  <div class="flex-1 overflow-y-auto px-4 pb-3 custom-scrollbar">
-                    <div v-if="filteredRecords.length === 0" class="h-full flex flex-col items-center justify-center opacity-40 py-10">
-                      <Database class="w-8 h-8 mb-2" />
-                      <span class="text-[10px] font-bold uppercase tracking-widest">暂无记录</span>
-                    </div>
-
-                    <div v-else class="relative pl-4 ml-2 border-l-2 border-slate-100 space-y-6 pt-2 pb-4">
-                      <div
-                        v-for="record in filteredRecords"
-                        :key="record.id"
-                        class="relative"
-                      >
-                        <!-- Timeline Dot -->
-                        <div class="absolute -left-[25px] top-1.5 w-4 h-4 rounded-full border-2 border-white shadow-sm z-10"
-                             :class="{
-                               'bg-blue-500': record.type === 'op',
-                               'bg-purple-500': record.type === 'ip',
-                               'bg-emerald-500': record.type === 'exam',
-                               'bg-orange-500': record.type === 'lab',
-                               'bg-rose-500': record.type === 'med',
-                               'bg-indigo-500': record.type === 'pe'
-                             }">
-                        </div>
-
-                        <!-- Date & Hospital Header -->
-                        <div class="flex items-center gap-2 mb-2">
-                          <span class="text-[10px] font-bold font-mono text-slate-500 bg-slate-100 px-2 py-0.5 rounded">
-                            <span v-if="record.dateEnd">{{ record.date }} ~ {{ record.dateEnd }}</span>
-                            <span v-else>{{ record.date }}</span>
-                          </span>
-                          <span class="text-[10px] font-bold text-slate-400 truncate">{{ record.hosp }}</span>
-                        </div>
-
-                        <!-- Record Card -->
-                        <div 
-                          class="bg-white border border-slate-200 rounded-xl p-3 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group relative overflow-hidden"
-                          @click="handleAction(record.type === 'med' ? 'op' : (record.type === 'lab' ? 'lab_detail' : (record.type === 'exam' ? 'exam_detail' : (record.type === 'ip' ? 'ip_detail' : 'op'))), record.diag, record)"
-                        >
-                          <div class="flex items-start justify-between gap-3 mb-2">
-                            <div class="flex items-center gap-2">
-                              <div class="w-6 h-6 rounded-lg flex items-center justify-center"
-                                   :class="{
-                                     'bg-blue-50 text-blue-500': record.type === 'op',
-                                     'bg-purple-50 text-purple-500': record.type === 'ip',
-                                     'bg-emerald-50 text-emerald-500': record.type === 'exam',
-                                     'bg-orange-50 text-orange-500': record.type === 'lab',
-                                     'bg-rose-50 text-rose-500': record.type === 'med',
-                                     'bg-indigo-50 text-indigo-500': record.type === 'pe'
-                                   }">
-                                <Stethoscope v-if="record.type === 'op'" :size="14" />
-                                <Hospital v-else-if="record.type === 'ip'" :size="14" />
-                                <Scan v-else-if="record.type === 'exam'" :size="14" />
-                                <Microscope v-else-if="record.type === 'lab'" :size="14" />
-                                <Pill v-else-if="record.type === 'med'" :size="14" />
-                                <Activity v-else-if="record.type === 'pe'" :size="14" />
-                              </div>
-                              <div class="text-sm font-bold text-slate-900 truncate">{{ record.diag }}</div>
-                            </div>
-                            <span v-if="record.type === 'ip'" class="text-[9px] px-2 py-0.5 rounded-full bg-green-50 text-green-700 border border-green-100 font-bold">{{ record.status || '住院' }}</span>
-                            <span v-else-if="record.type === 'exam'" class="text-[9px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100 font-bold">{{ record.tags[0] }}</span>
-                          </div>
-
-                          <div class="border-t border-slate-100 pt-2 text-xs text-slate-700">
-                            <div v-if="record.type === 'op'" class="space-y-1">
-                              <div class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">诊断：{{ record.desc }}</div>
-                            </div>
-                            <div v-else-if="record.type === 'ip'" class="space-y-2">
-                              <div class="text-[11px] text-slate-600 leading-relaxed">{{ record.desc }}</div>
-                              <div class="flex items-center gap-2 pt-1">
-                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('ip_detail', '入院记录', record)">入院记录</button>
-                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('ip_detail', '首次病程', record)">首次病程</button>
-                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('ip_detail', '出院小结', record)">出院小结</button>
-                              </div>
-                            </div>
-                            <div v-else-if="record.type === 'exam'" class="space-y-2">
-                              <div class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">{{ record.desc }}</div>
-                              <div class="flex items-center gap-2 pt-1">
-                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('exam_detail', '查看报告', record)">查看报告</button>
-                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('dicom', '调阅影像', record)">调阅影像</button>
-                              </div>
-                            </div>
-                            <div v-else-if="record.type === 'lab'" class="space-y-1">
-                              <div class="flex flex-col gap-1 mt-1">
-                                <div v-for="(m, i) in record.metrics" :key="i" class="flex justify-between items-center p-1.5 rounded-lg text-[11px] bg-slate-50 group-hover:bg-blue-50/30 transition-colors">
-                                  <span class="text-slate-600">{{ m.label }}</span>
-                                  <span class="font-mono font-bold" :class="m.flag === 'high' ? 'text-red-600' : m.flag === 'low' ? 'text-yellow-600' : 'text-slate-700'">
-                                    {{ m.value }} {{ 'unit' in m ? m.unit : '' }} {{ m.flag === 'high' ? '↑' : m.flag === 'low' ? '↓' : '' }}
-                                  </span>
-                                </div>
-                              </div>
-                              <div v-if="record.moreCount" class="text-center pt-1.5 text-[10px] text-slate-400 font-bold group-hover:text-blue-500 transition-colors flex items-center justify-center gap-1">
-                                展开剩余 {{ record.moreCount }} 项指标 <ChevronDown :size="10" />
-                              </div>
-                            </div>
-                            <div v-else-if="record.type === 'pe'" class="space-y-1">
-                              <div class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">{{ record.desc }}</div>
-                              <div class="flex flex-wrap gap-2 mt-2">
-                                <div v-for="metric in record.metrics" :key="metric.label" class="warning-tag flex items-center">
-                                    {{ metric.label }} {{ metric.value }} ↑
-                                </div>
-                              </div>
-                            </div>
-                            <div v-else class="space-y-1">
-                              <div class="flex flex-col gap-1 mt-1">
-                                <div v-for="(it, i) in record.items" :key="i" class="flex justify-between items-center p-1.5 rounded-lg text-[11px] bg-slate-50 group-hover:bg-blue-50/30 transition-colors">
-                                  <span class="text-slate-600">{{ it.name }}</span>
-                                  <span class="font-mono font-bold text-slate-700">x{{ it.count }}</span>
-                                </div>
-                              </div>
-                              <div v-if="record.moreCount" class="text-center pt-1.5 text-[10px] text-slate-400 font-bold group-hover:text-blue-500 transition-colors flex items-center justify-center gap-1">
-                                展开剩余 {{ record.moreCount }} 项 <ChevronDown :size="10" />
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </aside>
             </div>
 
@@ -1970,9 +2210,10 @@ const handleAction = (type: string, title: string, record?: any) => {
             <div class="filter-header" style="display: flex; justify-content: flex-start; gap: 16px; padding: 12px 16px; border-bottom: 1px solid var(--line); align-items: center; background: #fff;">
               <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="font-size: 13px; color: var(--ink3); font-weight: 500;">机构：</span>
-                <select class="ch-sel" style="width: 140px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; background: #f8fafc; outline: none; cursor: pointer;">
+                <select class="ch-sel" style="width: 140px; max-width: 140px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; background: #f8fafc; outline: none; cursor: pointer; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
                   <option>常州市第一人民医院</option>
                   <option>市第二人民医院</option>
+                  <option>南京大学医学院附属鼓楼医院</option>
                 </select>
               </div>
               <div style="display: flex; align-items: center; gap: 8px;">
@@ -2323,12 +2564,6 @@ const handleAction = (type: string, title: string, record?: any) => {
               <div class="mc-val" style="color: var(--blue)">888.59</div>
               <div class="mc-sub">最近一次划拨时间</div>
               <div class="mc-trend tr-flat">→ 2026-03-01</div>
-            </div>
-            <div class="mc">
-              <div class="mc-lbl">👨‍👩‍👧‍👦 家庭共济账户余额</div>
-              <div class="mc-val" style="color: var(--blue)">2,350.00</div>
-              <div class="mc-sub">包含配偶及父母</div>
-              <div class="mc-trend tr-up">↑ 可用于门诊/药店</div>
             </div>
             <div class="mc">
               <div class="mc-lbl">🌍 异地就医备案</div>
@@ -2894,6 +3129,75 @@ const handleAction = (type: string, title: string, record?: any) => {
       </div>
     </a-modal>
 
+    <!-- Account Flow Modal -->
+    <a-modal
+      v-model:open="showAccountFlowModal"
+      title="家庭共济账户流水"
+      :footer="null"
+      width="620px"
+      @cancel="showAccountFlowModal = false"
+    >
+      <div class="modal-body fam-mgmt-v2">
+        <div class="fam-v2-header">
+          <div class="fam-v2-user">
+            <div class="fam-v2-av">👨‍⚕️</div>
+            <div class="fam-v2-info">
+              <div class="fam-v2-name">陈 ** 明 <span class="fam-v2-tag">主授权人</span></div>
+              <div class="fam-v2-id">共济账户号：GJ3204********1234</div>
+            </div>
+          </div>
+          <div class="fam-v2-balance">
+            <div class="fam-v2-bal-lbl">共济余额</div>
+            <div class="fam-v2-bal-val">¥ 12,450.00</div>
+          </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; margin-top: 16px;">
+          <div style="display: flex; gap: 8px;">
+            <button v-for="tab in ['全部', '支出', '划拨', '退款']" :key="tab"
+              :style="{
+                padding: '4px 12px', borderRadius: '14px', border: '1px solid var(--line)', fontSize: '12px',
+                background: activeFlowTab === tab ? 'var(--blue)' : '#fff',
+                color: activeFlowTab === tab ? '#fff' : 'var(--ink3)',
+                cursor: 'pointer'
+              }"
+              @click="activeFlowTab = tab"
+            >{{ tab }}</button>
+          </div>
+          <span style="font-size: 11px; color: var(--ink4);">共 {{ accountFlows.length }} 笔</span>
+        </div>
+
+        <div style="max-height: 360px; overflow-y: auto;">
+          <div v-for="(flow, i) in accountFlows" :key="i"
+            style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line2);"
+          >
+            <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
+              <div :style="{
+                width: '34px', height: '34px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                background: flow.type === '支出' ? 'rgba(239,68,68,0.1)' : flow.type === '划拨' ? 'rgba(37,99,235,0.1)' : 'rgba(34,197,94,0.1)',
+                color: flow.type === '支出' ? 'var(--red)' : flow.type === '划拨' ? 'var(--blue)' : 'var(--green)',
+                fontSize: '12px', fontWeight: 700
+              }">
+                {{ flow.type === '支出' ? '↙' : flow.type === '划拨' ? '↘' : '↖' }}
+              </div>
+              <div>
+                <div style="font-size: 13px; font-weight: 600; color: var(--ink);">{{ flow.desc }}</div>
+                <div style="font-size: 11px; color: var(--ink4); margin-top: 2px;">{{ flow.date }} · {{ flow.target }}</div>
+              </div>
+            </div>
+            <div style="text-align: right;">
+              <div :style="{ fontSize: '14px', fontWeight: 700, fontFamily: 'monospace',
+                color: flow.type === '支出' ? 'var(--red)' : flow.type === '划拨' ? 'var(--blue)' : 'var(--green)'
+              }">
+                {{ flow.type === '退款' ? '+' : '-' }}¥{{ flow.amount }}
+              </div>
+              <div style="font-size: 10px; color: var(--ink4); margin-top: 2px;">余额 ¥{{ flow.balance }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </a-modal>
+
     <!-- Family Management Modal -->
     <a-modal
       v-model:open="showFamilyManagementModal"
@@ -3069,7 +3373,7 @@ const handleAction = (type: string, title: string, record?: any) => {
           <div class="flex items-center gap-4">
             <div class="flex items-center gap-2">
               <Radar :size="18" class="text-blue-600" />
-              <span class="text-slate-900 font-black text-sm tracking-tighter">健康数据共享中心</span>
+              <span class="text-slate-900 font-black text-sm tracking-tighter">个人医保云数据共享</span>
               <div class="h-3.5 w-[1px] bg-slate-300 mx-0.5"></div>
               <span class="text-blue-700/70 text-xs font-light tracking-widest uppercase">参保人全息视图</span>
             </div>
