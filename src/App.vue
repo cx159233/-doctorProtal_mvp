@@ -125,9 +125,9 @@ const recordTabOptions = [
 const portraitButtons: PortraitButton[] = [
   // 右侧按钮
   { id: 'outpatient', label: '门诊记录', icon: '🏥', dotX: 428, dotY: 115, boxX: 540, boxY: 83,  side: 'right', color: '#3B82F6', ringR: 28, ringDur: 3.2, ringDelay: 0.0 },
-  { id: 'inpatient',  label: '住院记录', icon: '🛏️', dotX: 435, dotY: 225, boxX: 540, boxY: 193, side: 'right', color: '#8B5CF6', ringR: 32, ringDur: 3.8, ringDelay: 0.8 },
+  { id: 'inpatient',  label: '住院记录', icon: '🛏️', dotX: 435, dotY: 225, boxX: 540, boxY: 193, side: 'right', color: '#2563EB', ringR: 32, ringDur: 3.8, ringDelay: 0.8 },
   { id: 'medicine',   label: '药耗记录', icon: '💊', dotX: 435, dotY: 345, boxX: 540, boxY: 313, side: 'right', color: '#F59E0B', ringR: 26, ringDur: 3.0, ringDelay: 1.6 },
-  { id: 'physical',   label: '体检记录', icon: '🩺', dotX: 428, dotY: 460, boxX: 540, boxY: 428, side: 'right', color: '#10B981', ringR: 30, ringDur: 3.5, ringDelay: 2.4, disabled: true },
+  { id: 'physical',   label: '体检记录', icon: '🩺', dotX: 428, dotY: 460, boxX: 540, boxY: 428, side: 'right', color: '#94A3B8', ringR: 30, ringDur: 3.5, ringDelay: 2.4, disabled: true },
   // 左侧按钮 - 下移避免与AI辅助诊断重叠
   { id: 'exam',       label: '检查记录', icon: '🔍', dotX: 372, dotY: 250, boxX: 100, boxY: 218, side: 'left',  color: '#06B6D4', ringR: 28, ringDur: 3.6, ringDelay: 0.4, 
     recentRecords: [
@@ -977,7 +977,7 @@ const handleAction = (type: string, title: string, record?: any) => {
         <a class="ant-menu-item" :class="activeNavTab === 'inspection' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'inspection'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>检验查询</span></a>
         <a class="ant-menu-item" :class="activeNavTab === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'overview'; activeView = 'overview'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>参保人画像</span></a>
       </nav>
-      <div class="top-nav-user"><span class="font-normal">陈**明</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
+      <div class="top-nav-user"><span class="font-normal">陈**鑫</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
     </header>
     <div class="flex-1 relative" style="background: url('/his1.png') top center / 100% 100% no-repeat;">
       <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 360px; height: 280px; cursor: pointer;" @click="activeView = 'his2'"></div>
@@ -997,7 +997,7 @@ const handleAction = (type: string, title: string, record?: any) => {
         <a class="ant-menu-item" :class="activeNavTab === 'inspection' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'inspection'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>检验查询</span></a>
         <a class="ant-menu-item" :class="activeNavTab === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'overview'; activeView = 'overview'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>参保人画像</span></a>
       </nav>
-      <div class="top-nav-user"><span class="font-normal">陈**明</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
+      <div class="top-nav-user"><span class="font-normal">陈**鑫</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
     </header>
     <div class="flex-1 relative" style="background: url('/his2.png') top center / 100% 100% no-repeat;">
       <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 360px; height: 280px; cursor: pointer;" @click="activeView = 'his3'"></div>
@@ -1017,7 +1017,7 @@ const handleAction = (type: string, title: string, record?: any) => {
         <a class="ant-menu-item" :class="activeNavTab === 'inspection' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'inspection'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>检验查询</span></a>
         <a class="ant-menu-item" :class="activeNavTab === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'overview'; activeView = 'overview'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>参保人画像</span></a>
       </nav>
-      <div class="top-nav-user"><span class="font-normal">陈**明</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
+      <div class="top-nav-user"><span class="font-normal">陈**鑫</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
     </header>
     <div class="flex-1 overflow-hidden" style="background: url('/his3.png') top center / 100% 100% no-repeat;"></div>
   </div>
@@ -1150,23 +1150,23 @@ const handleAction = (type: string, title: string, record?: any) => {
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
         新增病例
       </button>
-      <button class="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-medium rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">
+      <button class="px-4 py-2 bg-white shadow-sm text-slate-700 text-xs font-medium rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
         导入病历
       </button>
-      <button class="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-medium rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">
+      <button class="px-4 py-2 bg-white shadow-sm text-slate-700 text-xs font-medium rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
         AI辅助诊断
       </button>
       <div class="flex-1"></div>
       <div class="flex items-center gap-2">
-        <select class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <select class="px-3 py-2 bg-white shadow-sm rounded-lg text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option>全部状态</option>
           <option>待诊断</option>
           <option>诊断中</option>
           <option>已完成</option>
         </select>
-        <select class="px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <select class="px-3 py-2 bg-white shadow-sm rounded-lg text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option>全部科室</option>
           <option>内科</option>
           <option>外科</option>
@@ -1175,7 +1175,7 @@ const handleAction = (type: string, title: string, record?: any) => {
         <button class="px-4 py-2 bg-blue-600 text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2" style="color: #fff">
           查询
         </button>
-        <button class="px-4 py-2 bg-white border border-slate-200 text-slate-700 text-xs font-medium rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">
+        <button class="px-4 py-2 bg-white shadow-sm text-slate-700 text-xs font-medium rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
           重置
         </button>
@@ -1402,15 +1402,15 @@ const handleAction = (type: string, title: string, record?: any) => {
         <!-- 分页 -->
         <div style="padding: 16px; border-top: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: flex-end; gap: 12px;">
           <span class="text-xs text-slate-500">显示 1-5 条，共 128 条记录</span>
-          <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
+          <button class="px-3 py-1.5 bg-white shadow-sm rounded-lg text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed">
             上一页
           </button>
           <button class="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium">1</button>
-          <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:bg-slate-50">2</button>
-          <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:bg-slate-50">3</button>
-          <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:bg-slate-50">...</button>
-          <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:bg-slate-50">26</button>
-          <button class="px-3 py-1.5 bg-white border border-slate-200 rounded-lg text-xs text-slate-600 hover:bg-slate-50">
+          <button class="px-3 py-1.5 bg-white shadow-sm rounded-lg text-xs text-slate-600 hover:bg-slate-50">2</button>
+          <button class="px-3 py-1.5 bg-white shadow-sm rounded-lg text-xs text-slate-600 hover:bg-slate-50">3</button>
+          <button class="px-3 py-1.5 bg-white shadow-sm rounded-lg text-xs text-slate-600 hover:bg-slate-50">...</button>
+          <button class="px-3 py-1.5 bg-white shadow-sm rounded-lg text-xs text-slate-600 hover:bg-slate-50">26</button>
+          <button class="px-3 py-1.5 bg-white shadow-sm rounded-lg text-xs text-slate-600 hover:bg-slate-50">
             下一页
           </button>
         </div>
@@ -1435,14 +1435,14 @@ const handleAction = (type: string, title: string, record?: any) => {
       </nav>
       <div class="flex-1"></div>
       <div class="flex items-center gap-1.5 mr-3">
-        <input v-model="searchPatientName" type="text" placeholder="患者姓名" class="border border-slate-200 rounded-xl px-3 py-1.5 text-xs w-24 outline-none focus:border-blue-400 transition-colors" />
-        <input v-model="searchPatientId" type="text" placeholder="证件号码" class="border border-slate-200 rounded-xl px-3 py-1.5 text-xs w-36 outline-none focus:border-blue-400 transition-colors" />
+        <input v-model="searchPatientName" type="text" placeholder="患者姓名" class="shadow-sm rounded-xl px-3 py-1.5 text-xs w-24 outline-none focus:border-blue-400 transition-colors" />
+        <input v-model="searchPatientId" type="text" placeholder="证件号码" class="shadow-sm rounded-xl px-3 py-1.5 text-xs w-36 outline-none focus:border-blue-400 transition-colors" />
         <button @click="handlePatientSearch" class="bg-blue-600 text-xs px-3 py-1.5 rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-1 whitespace-nowrap font-medium" style="color: #fff;">
           <Search :size="12" /> 查询
         </button>
       </div>
       <a-dropdown trigger="click">
-        <div class="top-nav-user"><span class="font-normal">陈**明</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
+        <div class="top-nav-user"><span class="font-normal">陈**鑫</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
         <template #overlay>
           <a-menu @click="({ key }) => { if (key === 'medintercept') { activeView = 'medintercept'; showMedInterceptPopup = true; showRulesAdaptPopup = false } else if (key === 'rulesadapt') { activeView = 'rulesadapt'; showRulesAdaptPopup = true; showMedInterceptPopup = false } }">
             <a-menu-item key="medintercept">用药实时拦截</a-menu-item>
@@ -1472,7 +1472,7 @@ const handleAction = (type: string, title: string, record?: any) => {
               <aside class="w-[320px] flex flex-col shrink-0">
                   <!-- Profile Card -->
                   <div class="standard-card p-5 relative overflow-y-auto custom-scrollbar flex-1 flex flex-col">
-                    <p class="absolute top-5 right-5 text-[10px] font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded-md border border-slate-100">
+                    <p class="absolute top-5 right-5 text-[10px] font-mono text-slate-400 bg-slate-50 px-2 py-1 rounded-md shadow-sm">
                       P88001235
                     </p>
                     
@@ -1508,8 +1508,8 @@ const handleAction = (type: string, title: string, record?: any) => {
                         <span class="text-[8px] font-bold text-slate-700">异地就医</span>
                         <span class="text-[7px] text-slate-400 leading-none">备案地：上海</span>
                       </div>
-                      <div class="flex flex-col items-center justify-center gap-0.5 p-1.5 rounded-lg bg-gradient-to-b from-purple-50 to-white border border-purple-100 shadow-sm group hover:shadow-md transition-all cursor-default">
-                        <div class="w-6 h-6 rounded-lg bg-purple-100 flex items-center justify-center text-purple-600 group-hover:scale-110 transition-transform shadow-inner">
+                      <div class="flex flex-col items-center justify-center gap-0.5 p-1.5 rounded-lg bg-gradient-to-b from-slate-100 to-white shadow-sm shadow-sm group hover:shadow-md transition-all cursor-default">
+                        <div class="w-6 h-6 rounded-lg bg-slate-200 flex items-center justify-center text-slate-600 group-hover:scale-110 transition-transform shadow-inner">
                           <UserCheck :size="12" />
                         </div>
                         <span class="text-[8px] font-bold text-slate-700">签约医生</span>
@@ -1554,7 +1554,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                         </div>
                       </div>
                       <div class="mt-3 space-y-2">
-                        <div class="px-2.5 py-2 bg-amber-50 rounded-lg space-y-2 border border-amber-200">
+                        <div class="px-2.5 py-2 bg-amber-50 rounded-lg space-y-2">
                           <div class="text-[10px] font-bold text-amber-700 flex items-center gap-1"><Cpu :size="11" /> 智能支付评估</div>
                           <div class="space-y-1.5">
                             <div class="flex items-center justify-between">
@@ -1570,7 +1570,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                             </div>
                             <div class="flex items-center justify-between">
                               <span class="text-[9px] text-amber-600">慢病用药覆盖</span>
-                              <span class="text-[9px] font-bold text-green-600">可覆盖</span>
+                              <span class="text-[9px] font-bold text-amber-700">可覆盖</span>
                             </div>
                           </div>
                         </div>
@@ -1593,11 +1593,11 @@ const handleAction = (type: string, title: string, record?: any) => {
                       <div class="px-0.5 space-y-4">
                         <!-- 智能标签（智能体打标） -->
                         <div>
-                          <p class="text-[11px] text-slate-700 font-semibold tracking-widest uppercase mb-1.5">智能标签 · AI打标</p>
+                          <p class="text-[11px] text-slate-700 font-semibold tracking-widest uppercase mb-1.5">智能标签</p>
                           <div class="flex flex-wrap gap-1.5">
-                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #EFF6FF; color: #2563EB;">高依从性</span>
-                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #FEFCE8; color: #CA8A04;">复诊规律</span>
-                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #F0FDF4; color: #16A34A;">健康素养良好</span>
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #F8FAFC; color: #64748B;">高依从性</span>
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #F8FAFC; color: #64748B;">复诊规律</span>
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #F8FAFC; color: #64748B;">健康素养良好</span>
                             <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #FEF2F2; color: #DC2626;">用药风险·中</span>
                           </div>
                         </div>
@@ -1616,8 +1616,8 @@ const handleAction = (type: string, title: string, record?: any) => {
                           <div class="flex flex-wrap gap-1.5">
                             <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #FEF2F2; color: #DC2626;">冠心病</span>
                             <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #FFF7ED; color: #EA580C;">高血压3级</span>
-                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #FEFCE8; color: #CA8A04;">2型糖尿病</span>
-                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #F0FDF4; color: #16A34A;">高脂血症</span>
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #F8FAFC; color: #64748B;">2型糖尿病</span>
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #F8FAFC; color: #64748B;">高脂血症</span>
                             <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #F8FAFC; color: #64748B;">腰椎间盘突出</span>
                           </div>
                         </div>
@@ -1626,8 +1626,8 @@ const handleAction = (type: string, title: string, record?: any) => {
                           <p class="text-[11px] text-slate-700 font-semibold tracking-widest uppercase mb-1.5">风险分层</p>
                           <div class="flex flex-wrap gap-1.5">
                             <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #FEF2F2; color: #DC2626;">心血管：极高危</span>
-                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #FFF7ED; color: #EA580C;">脑卒中：中危</span>
-                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #F0FDF4; color: #16A34A;">肾脏：低危</span>
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #F8FAFC; color: #64748B;">脑卒中：中危</span>
+                            <span class="text-[10px] px-2.5 py-1 rounded-full font-bold" style="background: #F8FAFC; color: #64748B;">肾脏：低危</span>
                           </div>
                         </div>
                       </div>
@@ -1641,32 +1641,29 @@ const handleAction = (type: string, title: string, record?: any) => {
               <section class="flex-1 flex flex-col gap-4 overflow-hidden relative">
                   <div class="flex-1 min-h-0 relative standard-card !bg-white/80 overflow-hidden group">
                     <div class="w-full h-full flex items-center justify-center">
-                      <div class="relative w-full h-full flex items-center justify-center p-3">
+                      <div class="relative w-full h-full flex items-center justify-center p-3" style="margin-left: 40px;">
                         <BodyAnnotation body-image-src="/body.png" :buttons="portraitButtons" @button-click="onPortraitButtonClick" />
                       </div>
                     </div>
 
                     <div class="absolute top-4 left-4 z-10 flex flex-col gap-4">
                       <!-- Real-time Metrics -->
-                      <div class="bg-white/80 backdrop-blur-md border border-slate-200 rounded-lg p-3 shadow-sm cursor-pointer hover:border-blue-300 hover:shadow-md transition-all" @click="showMetricDetailModal = true">
-                        <h3 class="text-[10px] font-bold text-blue-700 uppercase tracking-widest" style="margin-bottom: 12px;">健康体征数据</h3>
+                      <div class="bg-white/80 backdrop-blur-md shadow-sm rounded-lg p-3 cursor-pointer hover:shadow-md transition-all" @click="showMetricDetailModal = true">
+                        <h3 class="text-[10px] font-bold text-blue-700 uppercase tracking-widest" style="margin-bottom: 14px;">健康体征数据</h3>
                         <div class="flex items-start justify-between gap-1">
-                          <div class="flex flex-col items-center gap-0.5 flex-1">
-                            <HeartPulse :size="14" class="text-red-400" />
+                          <div class="flex flex-col items-center gap-1.5 flex-1">
                             <span class="text-slate-500 text-[8px]">血压</span>
                             <span class="font-mono font-bold text-[11px] text-slate-800">128/82</span>
                             <span class="text-[7px] text-slate-400">mmHg</span>
                           </div>
                           <span class="w-px h-4 bg-slate-100 self-center"></span>
-                          <div class="flex flex-col items-center gap-0.5 flex-1">
-                            <Droplets :size="14" class="text-green-400" />
+                          <div class="flex flex-col items-center gap-1.5 flex-1">
                             <span class="text-slate-500 text-[8px]">血糖</span>
                             <span class="font-mono font-bold text-[11px] text-slate-800">5.8</span>
                             <span class="text-[7px] text-slate-400">mmol/L</span>
                           </div>
                           <span class="w-px h-4 bg-slate-100 self-center"></span>
-                          <div class="flex flex-col items-center gap-0.5 flex-1">
-                            <FlaskConical :size="14" class="text-yellow-400" />
+                          <div class="flex flex-col items-center gap-1.5 flex-1">
                             <span class="text-slate-500 text-[8px]">血脂</span>
                             <span class="font-mono font-bold text-[11px] text-slate-800">4.2</span>
                             <span class="text-[7px] text-slate-400">mmol/L</span>
@@ -1674,57 +1671,72 @@ const handleAction = (type: string, title: string, record?: any) => {
                         </div>
                       </div>
 
-                      <!-- 影像AI辅助分析 -->
-                      <div class="w-full bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-200 rounded-lg p-2.5 shadow-sm cursor-pointer hover:border-violet-400 hover:shadow-md transition-all" @click="openAIAssistant">
-                        <div class="flex items-center gap-2 mb-1.5">
-                          <div class="w-5 h-5 rounded-full bg-violet-100 flex items-center justify-center">
-                            <svg class="w-3 h-3 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                      <!-- AI辅助结果 -->
+                      <div class="bg-white/90 backdrop-blur-md rounded-xl p-3 shadow-sm border border-slate-100/80 overflow-hidden relative">
+                        <div class="flex items-center justify-between mb-2.5">
+                          <h3 class="text-[10px] font-bold text-blue-600 uppercase tracking-widest">AI辅助结果</h3>
+                          <span class="text-[8px] font-medium text-blue-600 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-blue-600 animate-pulse"></span>
+                            进行中
+                          </span>
+                        </div>
+                        <div class="space-y-2">
+                          <!-- 影像AI辅助分析 -->
+                          <div class="bg-gradient-to-br from-red-50/70 to-red-50/20 rounded-lg p-2.5 cursor-pointer hover:shadow-sm transition-all border border-red-200/50" @click="openAIAssistant">
+                            <div class="flex items-start justify-between">
+                              <div class="flex-1">
+                                <div class="flex items-center gap-1.5 mb-1">
+                                  <span class="text-[10px] font-bold text-red-800">影像AI辅助分析</span>
+                                  <span class="text-[7px] font-bold text-red-600 px-1.5 py-0.5 rounded-full bg-red-100">新</span>
+                                </div>
+                                <div class="text-[8px] text-red-700/70">胸部CT（06-10）· 发现2项可疑异常</div>
+                                <div class="flex items-center gap-1 mt-1.5 text-[7px] text-red-700/70">
+                                  <span>影像一扫多筛智能体</span>
+                                  <span class="mx-1">·</span>
+                                  <span>刚刚</span>
+                                </div>
+                              </div>
+                              <span class="text-[8px] font-medium text-red-700 px-2 py-1 rounded-lg bg-red-100/60 hover:bg-red-100">查看</span>
+                            </div>
                           </div>
-                          <span class="text-[10px] font-bold text-violet-700">影像AI辅助分析</span>
-                          <span class="text-[8px] font-bold text-violet-500 px-1.5 py-0.5 rounded-full bg-violet-100">新</span>
-                        </div>
-                        <div class="text-[9px] text-violet-600 font-medium mb-1.5">胸部CT（06-10）· 发现2项可疑异常</div>
-                        <div class="flex items-center gap-1 text-[8px] text-violet-400">
-                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                          <span>影像一扫多筛智能体</span>
-                          <span class="mx-1">·</span>
-                          <span>刚刚</span>
-                        </div>
-                      </div>
 
-                      <!-- 体征数据AI辅助分析 -->
-                      <div class="w-full bg-gradient-to-br from-cyan-50 to-teal-50 border border-cyan-200 rounded-lg p-2.5 shadow-sm cursor-pointer hover:border-cyan-400 hover:shadow-md transition-all" @click="openAIAssistant">
-                        <div class="flex items-center gap-2 mb-1.5">
-                          <div class="w-5 h-5 rounded-full bg-cyan-100 flex items-center justify-center">
-                            <svg class="w-3 h-3 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                          <!-- 体征数据AI辅助分析 -->
+                          <div class="bg-gradient-to-br from-blue-50/70 to-sky-50/20 rounded-lg p-2.5 cursor-pointer hover:shadow-sm transition-all border border-blue-200/50" @click="openAIAssistant">
+                            <div class="flex items-start justify-between">
+                              <div class="flex-1">
+                                <div class="flex items-center gap-1.5 mb-1">
+                                  <span class="text-[10px] font-bold text-blue-800">体征数据AI辅助分析</span>
+                                  <span class="text-[7px] font-bold text-blue-600 px-1.5 py-0.5 rounded-full bg-blue-100">4项异常</span>
+                                </div>
+                                <div class="text-[8px] text-blue-700/70">心率过快112次/分 · 血压偏高162/95mmHg</div>
+                                <div class="flex items-center gap-1 mt-1.5 text-[7px] text-blue-700/70">
+                                  <span>穿戴健康监测智能体</span>
+                                  <span class="mx-1">·</span>
+                                  <span>2小时前</span>
+                                </div>
+                              </div>
+                              <span class="text-[8px] font-medium text-blue-700 px-2 py-1 rounded-lg bg-blue-100/60 hover:bg-blue-100">查看</span>
+                            </div>
                           </div>
-                          <span class="text-[10px] font-bold text-cyan-700">体征数据AI辅助分析</span>
-                          <span class="text-[8px] font-bold text-cyan-500 px-1.5 py-0.5 rounded-full bg-cyan-100">4项异常</span>
-                        </div>
-                        <div class="text-[9px] text-cyan-600 font-medium mb-1.5">心率过快112次/分 · 血压偏高162/95mmHg</div>
-                        <div class="flex items-center gap-1 text-[8px] text-cyan-400">
-                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                          <span>穿戴健康监测智能体</span>
-                          <span class="mx-1">·</span>
-                          <span>2小时前</span>
-                        </div>
-                      </div>
 
-                      <!-- 智能用药辅助分析 -->
-                      <div class="w-full bg-gradient-to-br from-orange-50 to-red-50 border border-orange-200 rounded-lg p-2.5 shadow-sm cursor-pointer hover:border-orange-400 hover:shadow-md transition-all" @click="openAIAssistant">
-                        <div class="flex items-center gap-2 mb-1.5">
-                          <div class="w-5 h-5 rounded-full bg-orange-100 flex items-center justify-center">
-                            <svg class="w-3 h-3 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                          <!-- 智能用药辅助分析 -->
+                          <div class="bg-gradient-to-br from-orange-50/70 to-red-50/20 rounded-lg p-2.5 cursor-pointer hover:shadow-sm transition-all border border-orange-200/50" @click="openAIAssistant">
+                            <div class="flex items-start justify-between">
+                              <div class="flex-1">
+                                <div class="flex items-center gap-1.5 mb-1">
+                                  <span class="text-[10px] font-bold text-orange-800">智能用药辅助分析</span>
+                                  <span class="text-[7px] font-bold text-orange-600 px-1.5 py-0.5 rounded-full bg-orange-100">3项风险</span>
+                                </div>
+                                <div class="text-[8px] text-orange-700/70">阿司匹林+华法林出血风险 · 建议调整</div>
+                                <div class="flex items-center gap-1 mt-1.5 text-[7px] text-orange-700/70">
+                                  <span>临床用药安全智能体</span>
+                                  <span class="mx-1">·</span>
+                                  <span>今日</span>
+                                </div>
+                              </div>
+                              <span class="text-[8px] font-medium text-orange-700 px-2 py-1 rounded-lg bg-orange-100/60 hover:bg-orange-100">查看</span>
+                            </div>
                           </div>
-                          <span class="text-[10px] font-bold text-orange-700">智能用药辅助分析</span>
-                          <span class="text-[8px] font-bold text-orange-500 px-1.5 py-0.5 rounded-full bg-orange-100">3项风险</span>
-                        </div>
-                        <div class="text-[9px] text-orange-600 font-medium mb-1.5">阿司匹林+华法林出血风险 · 建议调整</div>
-                        <div class="flex items-center gap-1 text-[8px] text-orange-400">
-                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                          <span>临床用药安全智能体</span>
-                          <span class="mx-1">·</span>
-                          <span>今日</span>
                         </div>
                       </div>
 
@@ -1750,8 +1762,8 @@ const handleAction = (type: string, title: string, record?: any) => {
                   </div>
 
                 <!-- 智能服务快捷入口 -->
-                <div class="standard-card p-3 bg-white">
-                  <div class="flex items-center mb-2">
+                <div class="standard-card p-2.5 bg-white">
+                  <div class="flex items-center mb-1.5">
                     <h3 class="text-[13px] font-bold text-[#2563eb] uppercase tracking-widest flex items-center gap-2">
                       <Cpu class="w-4 h-4" />
                       智能服务快捷入口
@@ -1760,20 +1772,20 @@ const handleAction = (type: string, title: string, record?: any) => {
 
                   <div class="flex gap-2">
                     <!-- 左侧：历史病历快读（蓝色背景） -->
-                    <div class="w-80 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-3 shadow-md flex flex-col cursor-pointer hover:shadow-lg transition-all" @click="setActiveView('ai-diagnosis')">
-                      <div class="flex items-center gap-1.5 mb-3">
+                    <div class="w-80 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-2.5 shadow-md flex flex-col cursor-pointer hover:shadow-lg transition-all" @click="setActiveView('ai-diagnosis')">
+                      <div class="flex items-center gap-1.5 mb-2">
                         <span class="w-5 h-5 rounded-md bg-white/20 flex items-center justify-center text-white text-[9px] font-bold">AI</span>
                         <span class="text-[11px] font-bold text-white">历史病历快读</span>
                       </div>
-                      <div class="space-y-2 flex-1">
-                        <div class="bg-white/15 rounded-lg px-2.5 py-1.5">
+                      <div class="space-y-1.5 flex-1">
+                        <div class="bg-white/15 rounded-lg px-2 py-1">
                           <span class="text-[8px] text-blue-100">近期诊断</span>
                           <div class="flex items-center gap-2 mt-0.5">
                             <span class="text-[12px] font-bold text-white">高血压II级</span>
                             <span class="text-[8px] px-1.5 py-0.5 rounded bg-white/20 text-white font-bold">慢病</span>
                           </div>
                         </div>
-                        <div class="bg-white/15 rounded-lg px-2.5 py-1.5">
+                        <div class="bg-white/15 rounded-lg px-2 py-1">
                           <span class="text-[8px] text-blue-100">用药情况</span>
                           <div class="flex flex-wrap gap-1 mt-0.5">
                             <span class="text-[9px] px-2 py-0.5 rounded bg-white/20 text-white">阿司匹林</span>
@@ -1781,11 +1793,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                             <span class="text-[9px] px-2 py-0.5 rounded bg-white/20 text-white">缬沙坦</span>
                           </div>
                         </div>
-                        <div class="bg-white/15 rounded-lg px-2.5 py-1.5">
-                          <span class="text-[8px] text-blue-100">就诊频次</span>
-                          <div class="text-[10px] text-white mt-0.5">门诊 <span class="font-bold">8次</span> · 住院 <span class="font-bold">2次</span></div>
-                        </div>
-                        <div class="bg-white/15 rounded-lg px-2.5 py-1.5">
+                        <div class="bg-white/15 rounded-lg px-2 py-1">
                           <span class="text-[8px] text-blue-100">检查检验</span>
                           <div class="text-[10px] text-white mt-0.5">CT×2 | 血常规×4 | 血脂×3</div>
                         </div>
@@ -1794,65 +1802,65 @@ const handleAction = (type: string, title: string, record?: any) => {
 
                     <!-- 右侧：服务卡片 -->
                     <div class="flex-1 grid grid-cols-5 grid-rows-2 gap-2">
-                      <div class="col-span-3 bg-gradient-to-br from-red-50 to-red-100/50 rounded-xl p-3 cursor-pointer hover:shadow-sm transition-all" @click="setActiveView('ai-diagnosis')">
-                        <div class="flex items-center gap-2 mb-2">
+                      <div class="col-span-3 bg-gradient-to-br from-red-50 to-red-100/50 rounded-xl p-2.5 cursor-pointer hover:shadow-sm transition-all" @click="setActiveView('ai-diagnosis')">
+                        <div class="flex items-center gap-2 mb-1.5">
                           <div class="w-5 h-5 rounded-md bg-red-100 flex items-center justify-center shrink-0">
                             <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.66 1.732-3L13.732 4c-.77-1.34-2.694-1.34-3.464 0L3.34 16c-.77 1.34.192 3 1.732 3z"></path></svg>
                           </div>
                           <span class="text-sm font-bold text-slate-700">预警冲突</span>
                           <span class="text-[10px] font-bold text-red-600 px-1.5 py-0.5 rounded-full bg-red-200 ml-auto">5</span>
                         </div>
-                        <div class="space-y-1">
-                          <div v-for="(item, i) in warningItems.slice(0, 3)" :key="i" class="flex items-start gap-2">
+                        <div class="space-y-0.5">
+                          <div v-for="(item, i) in warningItems.slice(0, 2)" :key="i" class="flex items-start gap-2">
                             <span class="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" :class="item.level === 'red' ? 'bg-red-400' : 'bg-amber-400'"></span>
                             <div>
-                              <span class="text-xs font-bold" :class="item.level === 'red' ? 'text-red-600' : 'text-amber-600'">{{ item.label }}</span>
+                              <span class="text-[11px]" :class="item.level === 'red' ? 'text-red-600' : 'text-amber-600'">{{ item.label }}</span>
                               <span class="text-[11px] text-slate-500 ml-1.5">{{ item.text }}</span>
                             </div>
                           </div>
                         </div>
                       </div>
-                      <div class="bg-gradient-to-br from-cyan-50 to-cyan-100/50 rounded-xl p-3 cursor-pointer hover:shadow-sm transition-all flex items-center gap-3 relative overflow-hidden group" @click="setActiveView('ai-diagnosis')">
+                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="setActiveView('ai-diagnosis')">
                         <div class="w-1/4 aspect-square rounded-lg bg-cyan-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                           <svg class="w-1/2 h-1/2 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         </div>
                         <span class="text-sm font-bold text-slate-700">影像AI</span>
-                        <svg class="w-12 h-12 text-cyan-300/15 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        <svg class="w-12 h-12 text-slate-300/10 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                       </div>
-                      <div class="bg-gradient-to-br from-amber-50 to-amber-100/50 rounded-xl p-3 cursor-pointer hover:shadow-sm transition-all flex items-center gap-3 relative overflow-hidden group" @click="setActiveView('ai-diagnosis')">
+                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="setActiveView('ai-diagnosis')">
                         <div class="w-1/4 aspect-square rounded-lg bg-amber-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                           <svg class="w-1/2 h-1/2 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                         </div>
                         <span class="text-sm font-bold text-slate-700">临床路径</span>
-                        <svg class="w-12 h-12 text-amber-300/15 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <svg class="w-12 h-12 text-slate-300/10 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                       </div>
-                      <div class="bg-gradient-to-br from-indigo-50 to-indigo-100/50 rounded-xl p-3 cursor-pointer hover:shadow-sm transition-all flex items-center gap-3 relative overflow-hidden group" @click="setActiveView('ai-diagnosis')">
+                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="setActiveView('ai-diagnosis')">
                         <div class="w-1/4 aspect-square rounded-lg bg-indigo-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                           <svg class="w-1/2 h-1/2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                         </div>
                         <span class="text-sm font-bold text-slate-700">远程诊断</span>
-                        <svg class="w-12 h-12 text-indigo-300/15 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                        <svg class="w-12 h-12 text-slate-300/10 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                       </div>
-                      <div class="bg-gradient-to-br from-teal-50 to-teal-100/50 rounded-xl p-3 cursor-pointer hover:shadow-sm transition-all flex items-center gap-3 relative overflow-hidden group" @click="setActiveView('ai-diagnosis')">
+                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="setActiveView('ai-diagnosis')">
                         <div class="w-1/4 aspect-square rounded-lg bg-teal-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                           <svg class="w-1/2 h-1/2 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                         </div>
                         <span class="text-sm font-bold text-slate-700">随访计划</span>
-                        <svg class="w-12 h-12 text-teal-300/15 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                        <svg class="w-12 h-12 text-slate-300/10 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                       </div>
-                      <div class="bg-gradient-to-br from-green-50 to-green-100/50 rounded-xl p-3 cursor-pointer hover:shadow-sm transition-all flex items-center gap-3 relative overflow-hidden group" @click="setActiveView('ai-diagnosis')">
+                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="setActiveView('ai-diagnosis')">
                         <div class="w-1/4 aspect-square rounded-lg bg-green-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                           <svg class="w-1/2 h-1/2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                         </div>
                         <span class="text-sm font-bold text-slate-700">智能质控</span>
-                        <svg class="w-12 h-12 text-green-300/15 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+                        <svg class="w-12 h-12 text-slate-300/10 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                       </div>
-                      <div class="bg-gradient-to-br from-purple-50 to-purple-100/50 rounded-xl p-3 cursor-pointer hover:shadow-sm transition-all flex items-center gap-3 relative overflow-hidden group" @click="setActiveView('ai-diagnosis')">
-                        <div class="w-1/4 aspect-square rounded-lg bg-purple-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                          <svg class="w-1/2 h-1/2 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h6v6H3zM15 3h6v6h-6zM9 9h6v6H9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15h18v6H3z"/></svg>
+                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="setActiveView('ai-diagnosis')">
+                        <div class="w-1/4 aspect-square rounded-lg bg-teal-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                          <svg class="w-1/2 h-1/2 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h6v6H3zM15 3h6v6h-6zM9 9h6v6H9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15h18v6H3z"/></svg>
                         </div>
                         <span class="text-sm font-bold text-slate-700">智能用药</span>
-                        <svg class="w-12 h-12 text-purple-300/15 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h6v6H3zM15 3h6v6h-6zM9 9h6v6H9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 15h18v6H3z"/></svg>
+                        <svg class="w-12 h-12 text-slate-300/10 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h6v6H3zM15 3h6v6h-6zM9 9h6v6H9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 15h18v6H3z"/></svg>
                       </div>
                     </div>
                   </div>
@@ -1875,7 +1883,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                     </button>
                   </div>
 
-                  <div class="flex p-1 bg-slate-100 rounded-xl mx-4 mb-4 border border-slate-200/50 shadow-inner">
+                  <div class="flex p-1 bg-slate-100 rounded-xl mx-4 mb-4 shadow-sm/50 shadow-inner">
                     <button 
                       v-for="t in recordTabOptions" 
                       :key="t.id"
@@ -1927,7 +1935,7 @@ const handleAction = (type: string, title: string, record?: any) => {
 
                         <!-- Record Card -->
                         <div 
-                          class="bg-white border border-slate-200 rounded-xl p-3 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group relative overflow-hidden"
+                          class="bg-white shadow-sm rounded-xl p-3 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group relative overflow-hidden"
                           @click="handleAction(record.type === 'med' ? 'op' : (record.type === 'lab' ? 'lab_detail' : (record.type === 'exam' ? 'exam_detail' : (record.type === 'ip' ? 'ip_detail' : 'op'))), record.diag, record)"
                         >
                           <div class="flex items-start justify-between gap-3 mb-2">
@@ -1961,16 +1969,16 @@ const handleAction = (type: string, title: string, record?: any) => {
                             <div v-else-if="record.type === 'ip'" class="space-y-2">
                               <div class="text-[11px] text-slate-600 leading-relaxed">{{ record.desc }}</div>
                               <div class="flex items-center gap-2 pt-1">
-                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('ip_detail', '入院记录', record)">入院记录</button>
-                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('ip_detail', '首次病程', record)">首次病程</button>
-                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('ip_detail', '出院小结', record)">出院小结</button>
+                                <button class="px-2.5 py-1 bg-slate-50 shadow-sm rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('ip_detail', '入院记录', record)">入院记录</button>
+                                <button class="px-2.5 py-1 bg-slate-50 shadow-sm rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('ip_detail', '首次病程', record)">首次病程</button>
+                                <button class="px-2.5 py-1 bg-slate-50 shadow-sm rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('ip_detail', '出院小结', record)">出院小结</button>
                               </div>
                             </div>
                             <div v-else-if="record.type === 'exam'" class="space-y-2">
                               <div class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">{{ record.desc }}</div>
                               <div class="flex items-center gap-2 pt-1">
-                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('exam_detail', '查看报告', record)">查看报告</button>
-                                <button class="px-2.5 py-1 bg-slate-50 border border-slate-200 rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('dicom', '调阅影像', record)">调阅影像</button>
+                                <button class="px-2.5 py-1 bg-slate-50 shadow-sm rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('exam_detail', '查看报告', record)">查看报告</button>
+                                <button class="px-2.5 py-1 bg-slate-50 shadow-sm rounded-md text-[10px] font-bold text-slate-600 hover:bg-blue-50 hover:text-blue-600 hover:border-blue-200 transition-colors" @click.stop="handleAction('dicom', '调阅影像', record)">调阅影像</button>
                               </div>
                             </div>
                             <div v-else-if="record.type === 'lab'" class="space-y-1">
@@ -2025,7 +2033,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                       </button>
                     </div>
 
-                    <div class="flex p-1 bg-slate-100 rounded-xl mb-4 border border-slate-200/50 shadow-inner">
+                    <div class="flex p-1 bg-slate-100 rounded-xl mb-4 shadow-sm/50 shadow-inner">
                       <button 
                         v-for="t in insuranceTabs" 
                         :key="t.id"
@@ -3381,7 +3389,7 @@ const handleAction = (type: string, title: string, record?: any) => {
             <span class="text-[10px] text-slate-500 font-mono">DICOM · 张伟 · Head CT · 2024-05-10</span>
           </div>
           <div class="flex items-center gap-3">
-            <div class="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded border border-slate-200">
+            <div class="flex items-center gap-1 bg-slate-50 px-2 py-1 rounded shadow-sm">
               <button class="p-1 text-slate-500 hover:text-slate-900 transition-colors rounded hover:bg-slate-100" type="button">
                 <ZoomIn :size="13" />
               </button>
@@ -3609,7 +3617,7 @@ const handleAction = (type: string, title: string, record?: any) => {
 
       <div class="p-5 space-y-4">
         <!-- 商保直赔快捷操作 -->
-        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+        <div class="bg-white shadow-sm rounded-xl p-4 shadow-sm">
           <div class="flex items-center gap-1.5 mb-1">
             <svg class="w-4 h-4" :style="`color: ${selectedCommercialInsurance.color}`" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
             <span class="text-sm font-bold text-slate-900">商保直赔</span>
@@ -3642,7 +3650,7 @@ const handleAction = (type: string, title: string, record?: any) => {
         </div>
 
         <!-- 保障范围 -->
-        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+        <div class="bg-white shadow-sm rounded-xl p-4 shadow-sm">
           <div class="flex items-center gap-1.5 mb-1">
             <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             <span class="text-sm font-bold text-slate-900">保障范围</span>
@@ -3674,7 +3682,7 @@ const handleAction = (type: string, title: string, record?: any) => {
         </div>
 
         <!-- 不保内容 -->
-        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+        <div class="bg-white shadow-sm rounded-xl p-4 shadow-sm">
           <div class="flex items-center gap-1.5 mb-1">
             <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
             <span class="text-sm font-bold text-slate-900">不保内容</span>
@@ -3697,7 +3705,7 @@ const handleAction = (type: string, title: string, record?: any) => {
         </div>
 
         <!-- 理赔记录 -->
-        <div class="bg-white border border-slate-200 rounded-xl p-4 shadow-sm">
+        <div class="bg-white shadow-sm rounded-xl p-4 shadow-sm">
           <div class="flex items-center gap-1.5 mb-1">
             <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
             <span class="text-sm font-bold text-slate-900">理赔记录</span>
