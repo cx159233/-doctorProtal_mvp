@@ -1641,12 +1641,12 @@ const handleAction = (type: string, title: string, record?: any) => {
               <section class="flex-1 flex flex-col gap-4 overflow-hidden relative">
                   <div class="flex-1 min-h-0 relative standard-card !bg-white/80 overflow-hidden group">
                     <div class="w-full h-full flex items-center justify-center">
-                      <div class="relative w-full h-full flex items-center justify-center p-3" style="margin-left: 40px;">
+                      <div class="relative w-full h-full flex items-center justify-center p-3">
                         <BodyAnnotation body-image-src="/body.png" :buttons="portraitButtons" @button-click="onPortraitButtonClick" />
                       </div>
                     </div>
 
-                    <div class="absolute top-4 left-4 z-10 flex flex-col gap-4">
+                    <div class="absolute top-4 left-4 z-10 flex flex-col gap-4" style="max-width: 220px;">
                       <!-- Real-time Metrics -->
                       <div class="bg-white/80 backdrop-blur-md shadow-sm rounded-lg p-3 cursor-pointer hover:shadow-md transition-all" @click="showMetricDetailModal = true">
                         <h3 class="text-[10px] font-bold text-blue-700 uppercase tracking-widest" style="margin-bottom: 14px;">健康体征数据</h3>
