@@ -3,6 +3,7 @@ import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
 import LifecycleList from './components/LifecycleList.vue';
 import RecordList from './components/RecordList.vue';
 import MedicalDetail from './components/MedicalDetail.vue';
+import { healthRecords } from './data';
 import DicomViewer from './components/DicomViewer.vue';
 import BodyAnnotation from './components/BodyAnnotation.vue';
 import type { PortraitButton } from './components/BodyAnnotation.vue';
@@ -122,29 +123,36 @@ const recordTabOptions = [
   { id: 'wearable', label: '穿戴' },
 ] as const;
 
-const portraitButtons: PortraitButton[] = [
-  // 右侧按钮
+const portraitButtons = computed(() => {
+  const examRecent = healthRecords
+    .filter(r => r.type === 'exam')
+    .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+    .slice(0, 2)
+    .map(r => {
+      let result = (r.desc || '').replace(/^(诊断结论|结论)[：:]\s*/, '').replace(/[；;，,].*$/, '');
+      if (result.length > 8) result = result.substring(0, 8) + '...';
+      return { date: r.date, type: r.diag, result, record: r };
+    });
+  const labRecent = healthRecords
+    .filter(r => r.type === 'lab')
+    .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+    .slice(0, 2)
+    .map(r => {
+      const m = r.metrics?.[0];
+      let result = m ? `${m.label.replace(/\(.*?\)/, '').trim()} ${m.value}${m.unit || ''}` : '';
+      if (result.length > 8) result = result.substring(0, 8) + '...';
+      return { date: r.date, type: r.diag, result, record: r };
+    });
+  return [
   { id: 'outpatient', label: '门诊记录', icon: '🏥', dotX: 428, dotY: 115, boxX: 540, boxY: 83,  side: 'right', color: '#3B82F6', ringR: 28, ringDur: 3.2, ringDelay: 0.0 },
   { id: 'inpatient',  label: '住院记录', icon: '🛏️', dotX: 435, dotY: 225, boxX: 540, boxY: 193, side: 'right', color: '#2563EB', ringR: 32, ringDur: 3.8, ringDelay: 0.8 },
   { id: 'medicine',   label: '药耗记录', icon: '💊', dotX: 435, dotY: 345, boxX: 540, boxY: 313, side: 'right', color: '#F59E0B', ringR: 26, ringDur: 3.0, ringDelay: 1.6 },
   { id: 'physical',   label: '体检记录', icon: '🩺', dotX: 428, dotY: 460, boxX: 540, boxY: 428, side: 'right', color: '#94A3B8', ringR: 30, ringDur: 3.5, ringDelay: 2.4, disabled: true },
-  // 左侧按钮 - 下移避免与AI辅助诊断重叠
-  { id: 'exam',       label: '检查记录', icon: '🔍', dotX: 372, dotY: 250, boxX: 100, boxY: 218, side: 'left',  color: '#06B6D4', ringR: 28, ringDur: 3.6, ringDelay: 0.4, 
-    recentRecords: [
-      { date: '2024-01-15', type: 'CT平扫', result: '未见异常' },
-      { date: '2023-12-20', type: 'MRI', result: '轻度脑萎缩' },
-      { date: '2023-11-05', type: 'X光胸片', result: '双肺纹理增多' }
-    ]
-  },
-  { id: 'lab',         label: '检验记录', icon: '🧪', dotX: 377, dotY: 390, boxX: 100, boxY: 358, side: 'left',  color: '#EF4444', ringR: 34, ringDur: 4.0, ringDelay: 1.2,
-    recentRecords: [
-      { date: '2024-01-15', type: '血常规', result: 'WBC 7.2' },
-      { date: '2023-12-20', type: '血糖', result: '5.8 mmol/L' },
-      { date: '2023-11-05', type: '血脂', result: '4.2 mmol/L' }
-    ]
-  },
+  { id: 'exam',       label: '检查记录', icon: '🔍', dotX: 372, dotY: 250, boxX: 100, boxY: 218, side: 'left',  color: '#06B6D4', ringR: 28, ringDur: 3.6, ringDelay: 0.4, recentRecords: examRecent },
+  { id: 'lab',         label: '检验记录', icon: '🧪', dotX: 377, dotY: 390, boxX: 100, boxY: 358, side: 'left',  color: '#EF4444', ringR: 34, ringDur: 4.0, ringDelay: 1.2, recentRecords: labRecent },
   { id: 'wearable',    label: '穿戴数据', icon: '⌚', dotX: 377, dotY: 530, boxX: 100, boxY: 498, side: 'left',  color: '#EC4899', ringR: 30, ringDur: 3.4, ringDelay: 2.0 },
-];
+] as PortraitButton[];
+});
 
 const portraitTabMap: Record<string, { recordTab: string; lifecycleTab: string }> = {
   outpatient: { recordTab: 'outpatient', lifecycleTab: 'op' },
@@ -153,7 +161,7 @@ const portraitTabMap: Record<string, { recordTab: string; lifecycleTab: string }
   physical:   { recordTab: 'wearable',   lifecycleTab: 'wd' },
   exam:       { recordTab: 'exam',       lifecycleTab: 'exam' },
   lab:         { recordTab: 'lab',         lifecycleTab: 'lab' },
-  wearable:    { recordTab: 'outpatient', lifecycleTab: 'op' },
+  wearable:    { recordTab: 'wearable', lifecycleTab: 'wd' },
 };
 
 function onPortraitButtonClick(id: string) {
@@ -162,6 +170,25 @@ function onPortraitButtonClick(id: string) {
     recordTab.value = mapping.recordTab as any;
     activeLifecycleTab.value = mapping.lifecycleTab as any;
   }
+  activeView.value = 'health';
+}
+
+function onPortraitRecordClick(record: any) {
+  if (!record) return;
+  selectedRecordForDetail.value = record;
+  showOutpatientDetail.value = true;
+}
+
+function goToHealthFromOverview() {
+  const tabMap: Record<string, LifecycleTab> = {
+    outpatient: 'op',
+    inpatient: 'ip',
+    exam: 'exam',
+    lab: 'lab',
+    medicine: 'med',
+    wearable: 'wd',
+  };
+  activeLifecycleTab.value = tabMap[recordTab.value] || 'op';
   activeView.value = 'health';
 }
 
@@ -350,17 +377,6 @@ onBeforeUnmount(() => {
 });
 
 const filteredRecords = computed(() => {
-  const map: Record<string, string> = {
-    outpatient: "门诊",
-    inpatient: "住院",
-    lab: "检验",
-    exam: "检查",
-    medicine: "药耗",
-    wearable: "穿戴"
-  };
-  const targetTag = map[recordTab.value];
-  
-  // Define record types for clinical records
   const typeMap: Record<string, string> = {
     outpatient: "op",
     inpatient: "ip",
@@ -371,29 +387,10 @@ const filteredRecords = computed(() => {
   };
   const currentType = typeMap[recordTab.value];
 
-  // Map LifecycleList records to Clinical Center format
-  const lifecycleRecords = [
-    { id: "1", date: "2024-05-15", hosp: "常州市第一人民医院", dept: "心内科", type: "op", diag: "冠心病常规复诊", cost: "¥386", reimb: "¥268", tags: ["门诊"], desc: "1. 冠状动脉粥样硬化性心脏病 2. 高血压病3级（极高危）" },
-    { id: "2", date: "2024-03-22", hosp: "常州市第一人民医院", dept: "骨科", type: "op", diag: "腰椎间盘突出治疗", cost: "¥50", reimb: "¥45", tags: ["门诊"], desc: "腰椎间盘突出症 (L4/L5)" },
-
-    { id: "6", date: "2024-03-10", dateEnd: "2024-03-20", hosp: "常州市第一人民医院", dept: "心内科", type: "ip", diag: "急性心肌梗死住院记录", cost: "¥12,450", reimb: "¥9,800", tags: ["住院"], desc: "主要诊断：入院后急诊PCI术，于前降支植入支架一枚。术后予以抗血小板、调脂、改善心肌重构等治疗。", status: "已出院" },
-    { id: "7", date: "2021-08-05", dateEnd: "2021-08-12", hosp: "常州市第一人民医院", dept: "内分泌科", type: "ip", diag: "血糖平衡调节", cost: "¥8,420", reimb: "¥6,230", tags: ["住院"], desc: "主要诊断：II型糖尿病，血糖控制不佳", status: "已出院" },
-    
-    { id: "11", date: "2024-05-16", hosp: "常州市第一人民医院", dept: "检验科", type: "lab", diag: "生化常规检查", cost: "¥120", reimb: "¥100", tags: ["检验"], metrics: [{label: "谷丙转氨酶 (ALT)", value: "45", unit: "U/L", flag: "high"}, {label: "总胆固醇 (TC)", value: "6.2", unit: "mmol/L", flag: "high"}], moreCount: 3 },
-    { id: "12", date: "2024-04-12", hosp: "南京大学医学院附属鼓楼医院", dept: "检验科", type: "lab", diag: "糖化血红蛋白", cost: "¥80", reimb: "¥60", tags: ["检验"], metrics: [{label: "糖化血红蛋白", value: "5.8", unit: "%", flag: ""}] },
-    
-    { id: "16", date: "2024-05-16", hosp: "常州市第一人民医院", dept: "放射科", type: "exam", diag: "胸部CT平扫", cost: "¥240", reimb: "¥180", tags: ["放射科"], desc: "诊断结论：双肺纹理增多；建议结合临床，必要时随访。" },
-    { id: "17", date: "2024-03-12", hosp: "南京大学医学院附属鼓楼医院", dept: "超声科", type: "exam", diag: "心脏彩超", cost: "¥60", reimb: "¥40", tags: ["超声科"], desc: "诊断结论：左房稍大，左室壁节段性运动异常，EF 52%。" },
-    { id: "18", date: "2024-04-12", hosp: "南京大学医学院附属鼓楼医院", dept: "超声科", type: "exam", diag: "彩色多普勒超声", cost: "¥180", reimb: "¥140", tags: ["超声科"], desc: "结论：颈动脉内膜毛糙，未见明显斑块。建议定期复查。" },
-    
-    { id: "21", date: "2024-05-17", hosp: "常州德仁堂药店", dept: "心内科", type: "med", diag: "长期用药处方", cost: "¥158", reimb: "¥120", tags: ["药耗"], items: [{name: "阿司匹林肠溶片", count: "1盒"}, {name: "阿托伐他汀钙片", count: "2盒"}], moreCount: 1 },
-    { id: "22", date: "2024-04-15", hosp: "常州万民药店", dept: "门诊部", type: "med", diag: "门诊处方详单", cost: "¥85", reimb: "¥65", tags: ["药耗"], items: [{name: "一次性使用无菌注射器 5ml", count: "1具"}] },
-
-    { id: "wd1", date: "2026-06-25", hosp: "Apple Watch S9", dept: "个人穿戴", type: "wd", diag: "24h动态心电监测", tags: ["穿戴"], desc: "窦性心律，平均心率72bpm，偶发室性早搏(2次/24h)。", metrics: [{label: "平均心率", value: "72", unit: "bpm", flag: ""}, {label: "HRV(SDNN)", value: "86", unit: "ms", flag: ""}] },
-    { id: "wd2", date: "2026-06-24", hosp: "华为手环 9", dept: "个人穿戴", type: "wd", diag: "睡眠呼吸监测", tags: ["穿戴"], desc: "AHI指数3.2，SpO2最低93%，鼾声时长占比8%。", metrics: [{label: "AHI指数", value: "3.2", flag: ""}, {label: "最低血氧", value: "93", unit: "%", flag: "high"}] },
-  ];
-
-  return lifecycleRecords.filter(r => r.type === currentType);
+  return healthRecords
+    .filter(r => r.type === currentType)
+    .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
+    .slice(0, 2);
 });
 // -------------------------------------
 
@@ -440,13 +437,19 @@ const expiredInsurancePolicies = ref([
 const metricData = computed(() => {
   const data = [];
   let count = 7;
-  if (selectedMetricRange.value === '近一周') count = 7;
-  else if (selectedMetricRange.value === '近一月') count = 15;
-  else if (selectedMetricRange.value === '近三月') count = 30;
-  else if (selectedMetricRange.value === '近一年') count = 50;
+  let daysBack = 7;
+  if (selectedMetricRange.value === '近一周') { count = 7; daysBack = 7; }
+  else if (selectedMetricRange.value === '近一月') { count = 15; daysBack = 30; }
+  else if (selectedMetricRange.value === '近三月') { count = 30; daysBack = 90; }
+  else if (selectedMetricRange.value === '近一年') { count = 50; daysBack = 365; }
 
-  for (let i = 1; i <= count; i++) {
-    const row: any = { date: `2022-06-${28 - i}` };
+  const today = new Date(2026, 5, 28); // 2026-06-28
+
+  for (let i = count - 1; i >= 0; i--) {
+    const d = new Date(today);
+    d.setDate(d.getDate() - Math.round((i / (count - 1)) * daysBack));
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const row: any = { date: dateStr };
     if (selectedMetric.value === '血压') {
       row.v1 = 120 + Math.floor(Math.random() * 20);
       row.v2 = 70 + Math.floor(Math.random() * 15);
@@ -465,7 +468,7 @@ const metricData = computed(() => {
     row.source = getRandomSource();
     data.push(row);
   }
-  return data.reverse(); 
+  return data;
 });
 
 const chartPaths = computed(() => {
@@ -699,6 +702,11 @@ const updateFinancialData = () => {
 
 const activeFamilyTab = ref(0);
 const activeFlowTab = ref('全部');
+
+const filteredAccountFlows = computed(() => {
+  if (activeFlowTab.value === '全部') return accountFlows;
+  return accountFlows.filter(f => f.type === activeFlowTab.value);
+});
 const activeInsuranceType = ref<"职工" | "居民">("职工");
 
 const accountFlows = [
@@ -761,12 +769,16 @@ const handleAction = (type: string, title: string, record?: any) => {
     return;
   }
   
-  if (type === 'op' || type === 'ip_detail' || type === 'lab_detail' || type === 'exam_detail') {
+  if (type === 'op' || type === 'ip_detail' || type === 'lab_detail' || type === 'exam_detail' || type === 'wd') {
     selectedRecordForDetail.value = record;
     showOutpatientDetail.value = true;
   } else if (type === 'dicom') {
     selectedRecordForDetail.value = record;
     showDicomViewer.value = true;
+  } else if (type === 'wd_detail') {
+    recordTab.value = 'wearable';
+    activeLifecycleTab.value = 'wd';
+    activeView.value = 'health';
   } else {
     showDetail.value = { type, title };
   }
@@ -1133,8 +1145,16 @@ const handleAction = (type: string, title: string, record?: any) => {
         <a class="ant-menu-item" :class="isActiveView('finance') ? 'ant-menu-item-selected' : ''" @click="setActiveView('finance')"><i class="ant-menu-item-icon"><CreditCard :size="14" /></i><span>医保财务档案</span></a>
         <a class="ant-menu-item" :class="isActiveView('info') ? 'ant-menu-item-selected' : ''" @click="setActiveView('info')"><i class="ant-menu-item-icon"><Info :size="14" /></i><span>医保信息档案</span></a>
       </nav>
+      <div class="flex-1"></div>
+      <div class="flex items-center gap-1.5 mr-3">
+        <input v-model="searchPatientName" type="text" placeholder="患者姓名" class="border border-slate-200 rounded-xl px-3 py-1.5 text-xs w-24 outline-none focus:border-blue-400 transition-colors" />
+        <input v-model="searchPatientId" type="text" placeholder="证件号码" class="border border-slate-200 rounded-xl px-3 py-1.5 text-xs w-36 outline-none focus:border-blue-400 transition-colors" />
+        <button @click="handlePatientSearch" class="bg-blue-600 text-xs px-3 py-1.5 rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-1 whitespace-nowrap font-medium" style="color: #fff;">
+          <Search :size="12" /> 查询
+        </button>
+      </div>
       <a-dropdown trigger="click">
-        <div class="top-nav-user"><span class="font-normal">张兮兮</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
+        <div class="top-nav-user"><span class="font-normal">陈xx鑫</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
         <template #overlay>
           <a-menu @click="({ key }) => { if (key === 'medintercept') { setActiveView('medintercept'); showMedInterceptPopup = true; showRulesAdaptPopup = false } else if (key === 'rulesadapt') { setActiveView('rulesadapt'); showRulesAdaptPopup = true; showMedInterceptPopup = false } }">
             <a-menu-item key="medintercept">用药实时拦截</a-menu-item>
@@ -1642,7 +1662,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                   <div class="flex-1 min-h-0 relative standard-card !bg-white/80 overflow-hidden group">
                     <div class="w-full h-full flex items-center justify-center">
                       <div class="relative w-full h-full flex items-center justify-center p-3">
-                        <BodyAnnotation body-image-src="/body.png" :buttons="portraitButtons" @button-click="onPortraitButtonClick" />
+                        <BodyAnnotation body-image-src="/body.png" :buttons="portraitButtons" @button-click="onPortraitButtonClick" @record-click="onPortraitRecordClick" />
                       </div>
                     </div>
 
@@ -1877,7 +1897,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                       <Database class="w-4 h-4" />
                       医保健康档案
                     </h3>
-                    <button type="button" class="text-[13px] font-normal text-[#2563EB] flex items-center gap-1 transition-colors hover:opacity-80" style="color: #2563EB !important; font-size: 13px; font-weight: 400;" @click="activeView = 'health'">
+                    <button type="button" class="text-[13px] font-normal text-[#2563EB] flex items-center gap-1 transition-colors hover:opacity-80" style="color: #2563EB !important; font-size: 13px; font-weight: 400;" @click="goToHealthFromOverview()">
                       查看更多
                       <ChevronRight :size="12" />
                     </button>
@@ -1936,7 +1956,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                         <!-- Record Card -->
                         <div 
                           class="bg-white shadow-sm rounded-xl p-3 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group relative overflow-hidden"
-                          @click="handleAction(record.type === 'med' ? 'op' : (record.type === 'lab' ? 'lab_detail' : (record.type === 'exam' ? 'exam_detail' : (record.type === 'ip' ? 'ip_detail' : 'op'))), record.diag, record)"
+                          @click="handleAction(record.type === 'med' ? 'op' : (record.type === 'lab' ? 'lab_detail' : (record.type === 'exam' ? 'exam_detail' : (record.type === 'ip' ? 'ip_detail' : (record.type === 'wd' ? 'wd' : 'op')))), record.diag, record)"
                         >
                           <div class="flex items-start justify-between gap-3 mb-2">
                             <div class="flex items-center gap-2">
@@ -1997,8 +2017,8 @@ const handleAction = (type: string, title: string, record?: any) => {
                             <div v-else-if="record.type === 'wd'" class="space-y-1">
                               <div class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">{{ record.desc }}</div>
                               <div class="flex flex-wrap gap-2 mt-2">
-                                <div v-for="metric in record.metrics" :key="metric.label" class="warning-tag flex items-center">
-                                    {{ metric.label }} {{ metric.value }} ↑
+                                <div v-for="metric in record.metrics?.slice(0, 1)" :key="metric.label" class="warning-tag flex items-center">
+                                    {{ metric.label }} {{ metric.value }}<span v-if="metric.unit">{{ metric.unit }}</span>
                                 </div>
                               </div>
                             </div>
@@ -2247,7 +2267,7 @@ const handleAction = (type: string, title: string, record?: any) => {
               </div>
             </div>
             <div class="cb scroll-x" style="padding: 0">
-              <LifecycleList :filter="activeLifecycleTab" @action="handleAction" />
+              <LifecycleList :filter="activeLifecycleTab" :records="healthRecords" @action="handleAction" />
             </div>
           </div>
           <div class="g2">
@@ -3172,11 +3192,11 @@ const handleAction = (type: string, title: string, record?: any) => {
               @click="activeFlowTab = tab"
             >{{ tab }}</button>
           </div>
-          <span style="font-size: 11px; color: var(--ink4);">共 {{ accountFlows.length }} 笔</span>
+          <span style="font-size: 11px; color: var(--ink4);">共 {{ filteredAccountFlows.length }} 笔</span>
         </div>
 
         <div style="max-height: 360px; overflow-y: auto;">
-          <div v-for="(flow, i) in accountFlows" :key="i"
+          <div v-for="(flow, i) in filteredAccountFlows" :key="i"
             style="display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line2);"
           >
             <div style="display: flex; align-items: center; gap: 10px; flex: 1;">
@@ -3492,7 +3512,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                 >{{ range }}</span>
               </div>
               <div class="md-date-picker">
-                <input type="text" :value="selectedMetricRange === '近三月' ? '2022-03-27 - 2022-06-27' : '自定义时间范围'" readonly />
+                <input type="text" :value="metricData.length ? metricData[0].date + ' - ' + metricData[metricData.length - 1].date : '自定义时间范围'" readonly />
                 <Calendar :size="14" />
               </div>
             </div>

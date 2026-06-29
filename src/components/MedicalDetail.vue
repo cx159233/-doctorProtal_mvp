@@ -10,49 +10,58 @@ const props = defineProps<{
 const emit = defineEmits(['back', 'show-dicom']);
 
 const opTimeline = [
-  { id: 1, date: '2024-03-15', time: '09:30', title: '原发性高血压', dept: '心内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'op' },
-  { id: 2, date: '2024-02-10', time: '14:20', title: '慢性胃炎', dept: '消化内科', hosp: '南京大学医学院附属鼓楼医院', level: '一级', type: 'op' },
-  { id: 3, date: '2024-01-05', time: '10:00', title: '上呼吸道感染', dept: '呼吸内科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'op' },
-  { id: 4, date: '2023-11-20', time: '11:15', title: '腰肌劳损', dept: '骨科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'op' },
-  { id: 5, date: '2023-09-12', time: '08:45', title: '结膜炎', dept: '眼科', hosp: '南京大学医学院附属鼓楼医院', level: '一级', type: 'op' },
-  { id: 6, date: '2023-07-20', time: '15:30', title: '高脂血症复查', dept: '内分泌科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'op' },
-  { id: 7, date: '2023-05-15', time: '10:20', title: '皮肤瘙痒症', dept: '皮肤科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'op' },
+  { id: 1, date: '2024-05-15', time: '09:30', title: '冠心病常规复诊', dept: '心内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'op' },
+  { id: 2, date: '2024-03-22', time: '14:20', title: '腰椎间盘突出治疗', dept: '骨科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'op' },
+  { id: 3, date: '2024-03-15', time: '10:30', title: '原发性高血压', dept: '心内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'op' },
+  { id: 4, date: '2024-02-10', time: '11:15', title: '慢性胃炎', dept: '消化内科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'op' },
+  { id: 5, date: '2024-01-05', time: '10:00', title: '上呼吸道感染', dept: '呼吸内科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'op' },
+  { id: 6, date: '2023-11-20', time: '15:30', title: '腰肌劳损', dept: '骨科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'op' },
+  { id: 7, date: '2023-09-12', time: '08:45', title: '结膜炎', dept: '眼科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'op' },
 ];
 
 const ipTimeline = [
-  { id: 101, date: '2024-03-10', time: '10:00', title: '急性下壁心肌梗死', dept: '心内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'ip' },
+  { id: 101, date: '2024-03-10', time: '10:00', title: '急性心肌梗死住院记录', dept: '心内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'ip' },
   { id: 102, date: '2023-05-10', time: '08:00', title: '阑尾炎住院', dept: '普外科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'ip' },
   { id: 103, date: '2022-12-01', time: '09:00', title: '大叶性肺炎', dept: '呼吸内科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'ip' },
   { id: 104, date: '2022-08-15', time: '14:30', title: '急性胃肠炎', dept: '消化内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'ip' },
   { id: 105, date: '2022-03-10', time: '11:00', title: '左桡骨远端骨折', dept: '骨伤科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'ip' },
-  { id: 106, date: '2021-11-25', time: '10:30', title: '冠心病介入治疗', dept: '心内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'ip' },
+  { id: 106, date: '2021-08-05', time: '10:30', title: '血糖平衡调节', dept: '内分泌科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'ip' },
 ];
 
 const labTimeline = [
-  { id: 201, date: '2024-03-15', time: '08:30', title: '生化常规检查', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
-  { id: 202, date: '2024-03-15', time: '08:35', title: '血常规 (五分类)', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
-  { id: 203, date: '2023-12-15', time: '09:00', title: '尿常规', dept: '检验科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'lab' },
-  { id: 204, date: '2023-10-10', time: '08:45', title: '凝血功能', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
-  { id: 205, date: '2023-05-20', time: '10:15', title: '糖化血红蛋白', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
-  { id: 206, date: '2023-03-12', time: '08:00', title: '血脂四项', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
+  { id: 201, date: '2024-05-16', time: '08:30', title: '生化常规检查', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
+  { id: 202, date: '2024-04-12', time: '09:15', title: '糖化血红蛋白', dept: '检验科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'lab' },
+  { id: 203, date: '2024-03-15', time: '08:35', title: '血常规 (五分类)', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
+  { id: 204, date: '2023-12-15', time: '09:00', title: '尿常规', dept: '检验科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'lab' },
+  { id: 205, date: '2023-10-10', time: '08:45', title: '凝血功能', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
+  { id: 206, date: '2023-05-20', time: '10:15', title: '糖化血红蛋白', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
 ];
 
 const examTimeline = [
-  { id: 301, date: '2024-03-16', time: '10:20', title: '胸部CT平扫', dept: '放射科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'exam' },
-  { id: 302, date: '2024-03-15', time: '15:00', title: '心电图检查', dept: '心功能室', hosp: '常州市第一人民医院', level: '三级甲等', type: 'exam' },
-  { id: 303, date: '2023-12-10', time: '09:00', title: '腹部超声', dept: '超声科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'exam' },
-  { id: 304, date: '2023-10-05', time: '14:30', title: '胃镜检查', dept: '内镜中心', hosp: '常州市第一人民医院', level: '三级甲等', type: 'exam' },
-  { id: 305, date: '2023-06-20', time: '11:00', title: '腰椎MRI', dept: '放射科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'exam' },
-  { id: 306, date: '2023-04-18', time: '09:40', title: '颈部超声', dept: '超声科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'exam' },
+  { id: 301, date: '2024-05-16', time: '10:20', title: '胸部CT平扫', dept: '放射科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'exam' },
+  { id: 302, date: '2024-04-12', time: '14:00', title: '彩色多普勒超声', dept: '超声科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'exam' },
+  { id: 303, date: '2024-03-16', time: '10:20', title: '胸部CT平扫', dept: '放射科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'exam' },
+  { id: 304, date: '2024-03-15', time: '15:00', title: '心电图检查', dept: '心功能室', hosp: '常州市第一人民医院', level: '三级甲等', type: 'exam' },
+  { id: 305, date: '2024-03-12', time: '11:30', title: '心脏彩超', dept: '超声科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'exam' },
+  { id: 306, date: '2023-12-10', time: '09:00', title: '腹部超声', dept: '超声科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'exam' },
 ];
 
 const medTimeline = [
-  { id: 401, date: '2024-03-15', time: '10:00', title: '高血压用药', dept: '心内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'med' },
-  { id: 402, date: '2024-02-10', time: '15:00', title: '胃病用药', dept: '消化内科', hosp: '南京大学医学院附属鼓楼医院', level: '一级', type: 'med' },
-  { id: 403, date: '2024-01-05', time: '11:00', title: '感冒用药', dept: '呼吸内科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'med' },
-  { id: 404, date: '2023-11-20', time: '12:00', title: '止痛用药', dept: '骨科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'med' },
-  { id: 405, date: '2023-09-12', time: '09:30', title: '眼药水', dept: '眼科', hosp: '南京大学医学院附属鼓楼医院', level: '一级', type: 'med' },
-  { id: 406, date: '2023-07-25', time: '14:00', title: '降脂用药', dept: '内分泌科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'med' },
+  { id: 401, date: '2024-05-17', time: '10:00', title: '长期用药处方', dept: '心内科', hosp: '常州德仁堂药店', level: '', type: 'med' },
+  { id: 402, date: '2024-04-15', time: '15:30', title: '门诊处方详单', dept: '门诊部', hosp: '常州万民药店', level: '', type: 'med' },
+  { id: 403, date: '2024-03-15', time: '10:00', title: '高血压用药', dept: '心内科', hosp: '常州德仁堂药店', level: '', type: 'med' },
+  { id: 404, date: '2024-02-10', time: '15:00', title: '胃病用药', dept: '消化内科', hosp: '南京益丰大药房', level: '', type: 'med' },
+  { id: 405, date: '2024-01-05', time: '11:00', title: '感冒用药', dept: '呼吸内科', hosp: '南京益丰大药房', level: '', type: 'med' },
+  { id: 406, date: '2023-11-20', time: '12:00', title: '止痛用药', dept: '骨科', hosp: '常州万民药店', level: '', type: 'med' },
+];
+
+const wdTimeline = [
+  { id: 501, date: '2026-06-25', time: '08:32', title: '24h动态心电监测报告', dept: '个人穿戴', hosp: 'Apple Watch Series 9', level: '', type: 'wd' },
+  { id: 502, date: '2026-06-24', time: '22:15', title: '睡眠呼吸监测', dept: '个人穿戴', hosp: '华为手环 9', level: '', type: 'wd' },
+  { id: 503, date: '2026-06-23', time: '18:45', title: '家庭血压日志·本周汇总', dept: '居家监测', hosp: '欧姆龙电子血压计', level: '', type: 'wd' },
+  { id: 504, date: '2026-06-22', time: '07:15', title: '空腹及餐后血糖监测周报', dept: '居家监测', hosp: '鱼跃血糖仪', level: '', type: 'wd' },
+  { id: 505, date: '2026-06-21', time: '14:00', title: '72h连续心电贴片监测终评', dept: '远程医疗', hosp: '康泰心电贴(CM-X)', level: '', type: 'wd' },
+  { id: 506, date: '2026-06-20', time: '09:30', title: '体成分分析月报', dept: '居家监测', hosp: '小米体脂秤 2', level: '', type: 'wd' },
 ];
 
 const currentTimeline = computed(() => {
@@ -60,6 +69,7 @@ const currentTimeline = computed(() => {
   if (props.record?.type === 'lab') return labTimeline;
   if (props.record?.type === 'exam') return examTimeline;
   if (props.record?.type === 'med') return medTimeline;
+  if (props.record?.type === 'wd') return wdTimeline;
   return opTimeline;
 });
 
@@ -68,14 +78,24 @@ const appliedSearchQuery = ref('');
 
 const filteredTimeline = computed(() => {
   if (!appliedSearchQuery.value) return currentTimeline.value;
-  return currentTimeline.value.filter(item => 
-    item.title.includes(appliedSearchQuery.value) || 
-    item.dept.includes(appliedSearchQuery.value) || 
+  return currentTimeline.value.filter(item =>
+    item.title.includes(appliedSearchQuery.value) ||
+    item.dept.includes(appliedSearchQuery.value) ||
     item.hosp.includes(appliedSearchQuery.value)
   );
 });
 
-const activeTimelineId = ref(currentTimeline.value[0]?.id);
+const activeTimelineId = ref(
+  (() => {
+    const tl = currentTimeline.value;
+    if (!props.record) return tl[0]?.id;
+    const match = tl.find(t =>
+      t.date === props.record.date &&
+      t.title === (props.record.diag || props.record.title)
+    );
+    return match?.id || tl[0]?.id;
+  })()
+);
 const activeRecord = computed(() => currentTimeline.value.find(t => t.id === activeTimelineId.value) || currentTimeline.value[0]);
 
 const selectTimeline = (id: number) => {
@@ -120,9 +140,9 @@ const handleSearch = () => {
 
           <div class="op-timeline scroll-y">
             <div class="tl-year">{{ activeRecord.date.split('-')[0] }}</div>
-            <div 
-              v-for="item in filteredTimeline" 
-              :key="item.id" 
+            <div
+              v-for="item in filteredTimeline"
+              :key="item.id"
               :class="['tl-item', item.id === activeTimelineId ? 'on' : '']"
               @click="selectTimeline(item.id)"
             >
@@ -151,7 +171,7 @@ const handleSearch = () => {
             <div class="report-title">住院病案首页</div>
             <div class="ip-meta-top">
               <span>医疗付费方式：职工医保</span>
-              <span>第 {{ activeRecord.id === 101 ? '2' : '1' }} 次住院</span>
+              <span>第 1 次住院</span>
               <span>病案号：IP{{ activeRecord.id }}99283</span>
             </div>
           </div>
@@ -193,10 +213,10 @@ const handleSearch = () => {
                 <div class="ip-item"><span class="ip-val">-</span></div>
               </div>
               <div class="ip-grid-row">
-                <div class="ip-item" style="grid-column: span 2"><span class="ip-lbl">出院：</span><span class="ip-val">{{ activeRecord.id === 101 ? '2024-03-20' : '2023-05-18' }} 09:30</span></div>
+                <div class="ip-item" style="grid-column: span 2"><span class="ip-lbl">出院：</span><span class="ip-val">{{ activeRecord.title.includes('心肌梗死') ? '2024-03-20' : activeRecord.title.includes('阑尾炎') ? '2023-05-18' : activeRecord.title.includes('肺炎') ? '2022-12-11' : activeRecord.title.includes('胃肠炎') ? '2022-08-23' : activeRecord.title.includes('骨折') ? '2022-03-25' : '2021-08-12' }} 09:30</span></div>
                 <div class="ip-item"><span class="ip-val">{{ activeRecord.dept }}</span></div>
                 <div class="ip-item"><span class="ip-val">1201 / 22床</span></div>
-                <div class="ip-item"><span class="ip-lbl">实际住院：</span><span class="ip-val" style="color: var(--blue);">{{ activeRecord.id === 101 ? '10' : '8' }}</span> 天</div>
+                <div class="ip-item"><span class="ip-lbl">实际住院：</span><span class="ip-val" style="color: var(--blue);">{{ activeRecord.title.includes('心肌梗死') ? '11' : activeRecord.title.includes('阑尾炎') ? '8' : activeRecord.title.includes('肺炎') ? '10' : activeRecord.title.includes('胃肠炎') ? '8' : activeRecord.title.includes('骨折') ? '15' : '7' }}</span> 天</div>
               </div>
             </div>
 
@@ -213,14 +233,14 @@ const handleSearch = () => {
               <tbody>
                 <tr>
                   <td class="ip-diag-type">主要诊断</td>
-                  <td style="font-weight: 700; color: var(--ink);">{{ activeRecord.id === 101 ? '急性下壁心肌梗死' : '急性阑尾炎' }}</td>
-                  <td>{{ activeRecord.id === 101 ? 'I21.100' : 'K35.900' }}</td>
+                  <td style="font-weight: 700; color: var(--ink);">{{ activeRecord.title.includes('心肌梗死') ? '急性心肌梗死' : activeRecord.title.includes('阑尾炎') ? '急性阑尾炎' : activeRecord.title.includes('肺炎') ? '大叶性肺炎' : activeRecord.title.includes('胃肠炎') ? '急性胃肠炎' : activeRecord.title.includes('骨折') ? '左桡骨远端骨折' : 'II型糖尿病' }}</td>
+                  <td>{{ activeRecord.title.includes('心肌梗死') ? 'I21.100' : activeRecord.title.includes('阑尾炎') ? 'K35.900' : activeRecord.title.includes('肺炎') ? 'J15.200' : activeRecord.title.includes('胃肠炎') ? 'K52.900' : activeRecord.title.includes('骨折') ? 'S52.500' : 'E11.900' }}</td>
                   <td>有</td>
                 </tr>
                 <tr v-for="i in 3" :key="i">
                   <td class="ip-diag-type">其他诊断</td>
-                  <td>{{ i === 1 ? (activeRecord.id === 101 ? '原发性高血压 3级' : '腹膜炎') : '-' }}</td>
-                  <td>{{ i === 1 ? (activeRecord.id === 101 ? 'I10.x00' : 'K65.900') : '-' }}</td>
+                  <td>{{ i === 1 ? (activeRecord.title.includes('心肌梗死') ? '原发性高血压 3级' : activeRecord.title.includes('阑尾炎') ? '局限性腹膜炎' : activeRecord.title.includes('肺炎') ? '低氧血症' : activeRecord.title.includes('胃肠炎') ? '轻度脱水' : activeRecord.title.includes('骨折') ? '骨质疏松' : '高脂血症') : '-' }}</td>
+                  <td>{{ i === 1 ? (activeRecord.title.includes('心肌梗死') ? 'I10.x00' : activeRecord.title.includes('阑尾炎') ? 'K65.900' : activeRecord.title.includes('肺炎') ? 'R09.100' : activeRecord.title.includes('胃肠炎') ? 'E86.x00' : activeRecord.title.includes('骨折') ? 'M81.900' : 'E78.500') : '-' }}</td>
                   <td>{{ i === 1 ? '有' : '-' }}</td>
                 </tr>
               </tbody>
@@ -272,28 +292,48 @@ const handleSearch = () => {
           <div class="report-section">
             <div class="rs-title">主诉：</div>
             <div class="rs-content">
-              {{ activeRecord.title.includes('高血压') ? '发现血压升高5年，伴头晕、心悸1周。' : (activeRecord.title.includes('胃炎') ? '反复上腹痛、反酸3个月。' : '咳嗽、咳痰伴发热2天。') }}
+              <template v-if="activeRecord.title.includes('高血压')">发现血压升高5年，伴头晕、心悸1周。</template>
+              <template v-else-if="activeRecord.title.includes('冠心病')">反复胸闷、心悸2周，加重3天。</template>
+              <template v-else-if="activeRecord.title.includes('腰椎') || activeRecord.title.includes('腰肌')">腰部疼痛伴活动受限1周，加重2天。</template>
+              <template v-else-if="activeRecord.title.includes('胃炎')">反复上腹痛、反酸3个月，加重1周。</template>
+              <template v-else-if="activeRecord.title.includes('上呼吸道') || activeRecord.title.includes('感冒')">咳嗽、咳痰伴发热2天。</template>
+              <template v-else-if="activeRecord.title.includes('结膜炎')">双眼发红、异物感伴流泪3天。</template>
+              <template v-else>不适就诊。</template>
             </div>
           </div>
 
           <div class="report-section">
             <div class="rs-title">现病史：</div>
             <div class="rs-content">
-              {{ activeRecord.title.includes('高血压') ? '患者于5年前体检时发现血压升高，最高达160/100mmHg，平时不规则服用“氨氯地平”治疗，血压波动在140-150/90-95mmHg。1周前无明显诱因出现头晕，呈阵发性，伴心悸、胸闷，无视物旋转、无恶心呕吐。为求进一步诊治，遂来我院门诊。' : '患者近3个月来无明显诱因出现反复上腹部隐痛，以餐后明显，伴有反酸、嗳气，偶有恶心。近期食欲欠佳，睡眠尚可，大小便正常，体重无明显变化。' }}
+              <template v-if="activeRecord.title.includes('高血压')">患者于5年前体检时发现血压升高，最高达160/100mmHg，平时不规则服用"氨氯地平"治疗，血压波动在140-150/90-95mmHg。1周前无明显诱因出现头晕，呈阵发性，伴心悸、胸闷，无视物旋转、无恶心呕吐。为求进一步诊治，遂来我院门诊。</template>
+              <template v-else-if="activeRecord.title.includes('冠心病')">患者于2周前无明显诱因出现胸闷，位于胸骨后，呈压榨感，持续约3-5分钟，休息或含服"硝酸甘油"后缓解。近3天症状加重，发作频率增加。无黑矇、晕厥。为求明确诊治，遂来我院门诊。</template>
+              <template v-else-if="activeRecord.title.includes('腰椎')">患者于1周前因搬重物后出现腰部疼痛，呈持续性酸胀痛，向左下肢放射，久坐及弯腰时加重，平卧休息后减轻。近2天疼痛加重，行走受限。为求进一步诊治，遂来我院门诊。</template>
+              <template v-else-if="activeRecord.title.includes('腰肌')">患者于1周前因久坐办公后出现腰部酸痛，呈持续性钝痛，以两侧腰肌为著，劳累后加重，休息后减轻。无下肢放射痛，无大小便障碍。为求诊治，遂来我院门诊。</template>
+              <template v-else-if="activeRecord.title.includes('胃炎')">患者近3个月来无明显诱因出现反复上腹部隐痛，以餐后明显，伴有反酸、嗳气，偶有恶心。近期食欲欠佳，睡眠尚可，大小便正常，体重无明显变化。为求明确诊治，遂来我院门诊。</template>
+              <template v-else-if="activeRecord.title.includes('上呼吸道') || activeRecord.title.includes('感冒')">患者于2天前受凉后出现咳嗽，咳白色黏痰，伴发热，体温最高38.2℃，伴鼻塞、流涕、咽痛。自行口服"感冒灵"效果欠佳。为求进一步诊治，遂来我院门诊。</template>
+              <template v-else-if="activeRecord.title.includes('结膜炎')">患者于3天前无明显诱因出现双眼发红，伴异物感、流泪，晨起有分泌物，视物尚清晰。自行滴用"氯霉素眼药水"效果欠佳。为求诊治，遂来我院门诊。</template>
+              <template v-else>患者近期出现不适症状，为求明确诊治，遂来我院门诊。</template>
             </div>
           </div>
 
           <div class="report-section">
             <div class="rs-title">既往史：</div>
             <div class="rs-content">
-              既往体健。否认“糖尿病、冠心病”等慢性病史。否认“肝炎、结核”等传染病史。否认手术、外伤及输血史。否认食物及药物过敏史。预防接种随社会进行。
+              既往体健。否认"糖尿病、冠心病"等慢性病史。否认"肝炎、结核"等传染病史。否认手术、外伤及输血史。否认食物及药物过敏史。预防接种随社会进行。
             </div>
           </div>
 
           <div class="report-section">
             <div class="rs-title">初步诊断：</div>
             <div class="rs-content" style="font-weight: 700;">
-              {{ activeRecord.title.includes('高血压') ? '1. 原发性高血压(2级，中危)；2. 高脂血症。' : '1. 慢性胃炎；2. 幽门螺杆菌感染。' }}
+              <template v-if="activeRecord.title.includes('高血压')">1. 原发性高血压(2级，中危)；2. 高脂血症。</template>
+              <template v-else-if="activeRecord.title.includes('冠心病')">1. 冠状动脉粥样硬化性心脏病；2. 稳定性心绞痛。</template>
+              <template v-else-if="activeRecord.title.includes('腰椎')">1. 腰椎间盘突出症(L4/L5)；2. 坐骨神经痛。</template>
+              <template v-else-if="activeRecord.title.includes('腰肌')">1. 腰肌劳损。</template>
+              <template v-else-if="activeRecord.title.includes('胃炎')">1. 慢性浅表性胃炎；2. 幽门螺杆菌感染(?)。</template>
+              <template v-else-if="activeRecord.title.includes('上呼吸道') || activeRecord.title.includes('感冒')">1. 急性上呼吸道感染。</template>
+              <template v-else-if="activeRecord.title.includes('结膜炎')">1. 急性结膜炎(双眼)。</template>
+              <template v-else>待进一步检查明确诊断。</template>
             </div>
           </div>
 
@@ -328,13 +368,32 @@ const handleSearch = () => {
               </tr>
             </thead>
             <tbody>
-              <tr v-for="i in 5" :key="i">
-                <td>{{ i === 1 ? '谷丙转氨酶' : (i === 2 ? '谷草转氨酶' : '总胆固醇') }}</td>
-                <td :style="{ color: i === 1 ? 'var(--red)' : 'inherit', fontWeight: i === 1 ? '700' : 'normal' }">{{ i === 1 ? '45' : '22' }}</td>
-                <td>U/L</td>
-                <td>0 - 40</td>
-                <td style="color: var(--red)">{{ i === 1 ? '↑' : '' }}</td>
-              </tr>
+              <template v-if="activeRecord.title.includes('生化')">
+                <tr><td>谷丙转氨酶 (ALT)</td><td style="color: var(--red); font-weight: 700;">45</td><td>U/L</td><td>0 - 40</td><td style="color: var(--red);">↑</td></tr>
+                <tr><td>总胆固醇 (TC)</td><td style="color: var(--red); font-weight: 700;">6.2</td><td>mmol/L</td><td>2.8 - 5.2</td><td style="color: var(--red);">↑</td></tr>
+                <tr><td>低密度脂蛋白 (LDL-C)</td><td style="color: var(--red); font-weight: 700;">4.1</td><td>mmol/L</td><td>< 3.4</td><td style="color: var(--red);">↑</td></tr>
+                <tr><td>空腹血糖 (GLU)</td><td style="font-weight: 700;">5.4</td><td>mmol/L</td><td>3.9 - 6.1</td><td>正常</td></tr>
+                <tr><td>肌酐 (Cr)</td><td style="font-weight: 700;">82</td><td>μmol/L</td><td>44 - 133</td><td>正常</td></tr>
+              </template>
+              <template v-else-if="activeRecord.title.includes('糖化')">
+                <tr><td>糖化血红蛋白 (HbA1c)</td><td :style="{ color: activeRecord.id === 206 ? 'var(--red)' : 'inherit', fontWeight: '700' }">{{ activeRecord.id === 202 ? '5.8' : '6.1' }}</td><td>%</td><td>4.0 - 6.0</td><td :style="{ color: activeRecord.id === 206 ? 'var(--red)' : 'inherit' }">{{ activeRecord.id === 206 ? '↑' : '' }}</td></tr>
+              </template>
+              <template v-else-if="activeRecord.title.includes('血常规')">
+                <tr><td>白细胞 (WBC)</td><td style="font-weight: 700;">7.2</td><td>10^9/L</td><td>3.5 - 9.5</td><td>正常</td></tr>
+                <tr><td>红细胞 (RBC)</td><td style="font-weight: 700;">4.8</td><td>10^12/L</td><td>4.0 - 5.5</td><td>正常</td></tr>
+                <tr><td>血红蛋白 (HGB)</td><td style="font-weight: 700;">142</td><td>g/L</td><td>130 - 175</td><td>正常</td></tr>
+                <tr><td>血小板 (PLT)</td><td style="font-weight: 700;">215</td><td>10^9/L</td><td>125 - 350</td><td>正常</td></tr>
+              </template>
+              <template v-else-if="activeRecord.title.includes('尿常规')">
+                <tr><td>尿蛋白 (PRO)</td><td style="font-weight: 700;">阴性</td><td>-</td><td>阴性</td><td>正常</td></tr>
+                <tr><td>尿糖 (GLU)</td><td style="font-weight: 700;">阴性</td><td>-</td><td>阴性</td><td>正常</td></tr>
+                <tr><td>白细胞 (LEU)</td><td style="font-weight: 700;">阴性</td><td>-</td><td>阴性</td><td>正常</td></tr>
+              </template>
+              <template v-else-if="activeRecord.title.includes('凝血')">
+                <tr><td>凝血酶原时间 (PT)</td><td style="font-weight: 700;">12.5</td><td>s</td><td>11.0 - 14.5</td><td>正常</td></tr>
+                <tr><td>APTT</td><td style="font-weight: 700;">30.2</td><td>s</td><td>25.0 - 35.0</td><td>正常</td></tr>
+                <tr><td>INR</td><td style="font-weight: 700;">1.05</td><td>-</td><td>0.8 - 1.2</td><td>正常</td></tr>
+              </template>
             </tbody>
           </table>
         </div>
@@ -355,7 +414,7 @@ const handleSearch = () => {
               <div class="ri-item"><span class="ri-lbl">病人姓名：</span><span class="ri-val">{{ patient?.name || '陈**' }}</span></div>
               <div class="ri-item"><span class="ri-lbl">性别/年龄：</span><span class="ri-val">{{ patient?.gender || '男' }} / {{ patient?.age || '42' }}岁</span></div>
               <div class="ri-item"><span class="ri-lbl">门诊号：</span><span class="ri-val">OP{{ activeRecord.id }}88231</span></div>
-              
+
               <div class="ri-item"><span class="ri-lbl">科室：</span><span class="ri-val">{{ activeRecord.dept }}</span></div>
               <div class="ri-item"><span class="ri-lbl">床号：</span><span class="ri-val">22床</span></div>
               <div class="ri-item"><span class="ri-lbl">住院号：</span><span class="ri-val">IP{{ activeRecord.id }}99283</span></div>
@@ -439,6 +498,125 @@ const handleSearch = () => {
           <div class="report-footer" style="margin-top: 100px;">
             <div class="rf-item"><span>医师：</span><span>王建国</span></div>
             <div class="rf-item"><span>药师：</span><span>李药师</span></div>
+          </div>
+        </div>
+
+        <!-- 穿戴数据详情 (Wearable Device Data) -->
+        <div class="report-container" v-else-if="activeRecord.type === 'wd'">
+          <div class="report-header">
+            <div class="report-hosp">{{ activeRecord.hosp }}</div>
+            <div class="report-title">穿戴设备监测报告</div>
+          </div>
+
+          <div class="ip-scroll-content">
+            <div class="report-info-grid" style="margin-top: 0;">
+              <div class="ri-item"><span class="ri-lbl">设备类型：</span><span class="ri-val">{{ activeRecord.hosp }}</span></div>
+              <div class="ri-item"><span class="ri-lbl">监测项目：</span><span class="ri-val">{{ activeRecord.title }}</span></div>
+              <div class="ri-item"><span class="ri-lbl">监测日期：</span><span class="ri-val">{{ activeRecord.date }} {{ activeRecord.time }}</span></div>
+              <div class="ri-item"><span class="ri-lbl">数据来源：</span><span class="ri-val">{{ activeRecord.dept }}</span></div>
+              <div class="ri-item"><span class="ri-lbl">报告编号：</span><span class="ri-val">WD{{ activeRecord.id }}001</span></div>
+            </div>
+
+            <div class="report-section">
+              <div class="rs-title">监测概述：</div>
+              <div class="rs-content" style="background: #fcfcfc; padding: 12px; border-radius: 4px; font-size: 14px; color: var(--ink2); line-height: 1.6;">
+                {{ activeRecord.title === '24h动态心电监测报告' ? '窦性心律，平均心率72bpm，偶发室性早搏(2次/24h)，ST-T未见明显异常。最长RR间期1.42s(睡眠中)。' :
+                   activeRecord.title === '睡眠呼吸监测' ? '总睡眠7h12m，深睡1h48m(25%)，浅睡4h20m，REM 1h4m。AHI指数3.2(正常<5)，SpO2最低93%，平均97%。鼾声时长占比8%。' :
+                   activeRecord.title === '家庭血压日志·本周汇总' ? '本周测量14次，收缩压均值138mmHg，舒张压均值88mmHg。晨峰血压偏高(152/95)，下午时段控制良好(128/82)。服药依从率100%。' :
+                   activeRecord.title === '空腹及餐后血糖监测周报' ? '空腹血糖均值5.6mmol/L，餐后2h血糖均值7.8mmol/L。1次餐后偏高(9.2mmol/L)，其余在目标范围内。TIR(3.9-10)为92%。' :
+                   activeRecord.title === '72h连续心电贴片监测终评' ? '总记录71.5h，窦性心律为主，偶发房性早搏(15次)，室性早搏(3次)。最长停搏1.8s(睡眠中)。心率变异性正常。未见明显恶性心律失常。' :
+                   '体重78.5kg，BMI 27.8(超重)，体脂率26.2%(偏高)，肌肉量54.3kg，内脏脂肪等级12(偏高)，基础代谢1720kcal。' }}
+              </div>
+            </div>
+
+            <div class="report-section" v-if="activeRecord.title === '24h动态心电监测报告'">
+              <div class="rs-title">关键指标：</div>
+              <table class="tbl" style="margin-top: 12px">
+                <thead><tr><th>指标</th><th>结果</th><th>单位</th><th>参考范围</th><th>提示</th></tr></thead>
+                <tbody>
+                  <tr><td>平均心率</td><td style="font-weight: 700;">72</td><td>bpm</td><td>60-100</td><td>正常</td></tr>
+                  <tr><td>最低心率</td><td style="font-weight: 700;">48</td><td>bpm</td><td>40-60</td><td>正常</td></tr>
+                  <tr><td>最高心率</td><td style="font-weight: 700; color: var(--red);">128</td><td>bpm</td><td>100-160</td><td>↑</td></tr>
+                  <tr><td>室性早搏</td><td style="font-weight: 700;">2</td><td>次/24h</td><td>< 100</td><td>正常</td></tr>
+                  <tr><td>HRV(SDNN)</td><td style="font-weight: 700;">86</td><td>ms</td><td>50-100</td><td>正常</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="report-section" v-if="activeRecord.title === '睡眠呼吸监测'">
+              <div class="rs-title">关键指标：</div>
+              <table class="tbl" style="margin-top: 12px">
+                <thead><tr><th>指标</th><th>结果</th><th>单位</th><th>参考范围</th><th>提示</th></tr></thead>
+                <tbody>
+                  <tr><td>总睡眠时长</td><td style="font-weight: 700;">7h12m</td><td>-</td><td>7-9h</td><td>正常</td></tr>
+                  <tr><td>深睡占比</td><td style="font-weight: 700;">25</td><td>%</td><td>20-25</td><td>正常</td></tr>
+                  <tr><td>AHI指数</td><td style="font-weight: 700;">3.2</td><td>-</td><td>< 5</td><td>正常</td></tr>
+                  <tr><td>最低血氧</td><td style="font-weight: 700; color: var(--red);">93</td><td>%</td><td>≥ 95</td><td>↓</td></tr>
+                  <tr><td>鼾声占比</td><td style="font-weight: 700;">8</td><td>%</td><td>< 10</td><td>正常</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="report-section" v-if="activeRecord.title === '家庭血压日志·本周汇总'">
+              <div class="rs-title">关键指标：</div>
+              <table class="tbl" style="margin-top: 12px">
+                <thead><tr><th>指标</th><th>结果</th><th>单位</th><th>参考范围</th><th>提示</th></tr></thead>
+                <tbody>
+                  <tr><td>收缩压均值</td><td style="font-weight: 700; color: var(--red);">138</td><td>mmHg</td><td>< 140</td><td>偏高</td></tr>
+                  <tr><td>舒张压均值</td><td style="font-weight: 700;">88</td><td>mmHg</td><td>< 90</td><td>正常</td></tr>
+                  <tr><td>晨峰收缩压</td><td style="font-weight: 700; color: var(--red);">152</td><td>mmHg</td><td>< 135</td><td>↑</td></tr>
+                  <tr><td>服药依从率</td><td style="font-weight: 700; color: var(--green);">100</td><td>%</td><td>≥ 80</td><td>达标</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="report-section" v-if="activeRecord.title === '空腹及餐后血糖监测周报'">
+              <div class="rs-title">关键指标：</div>
+              <table class="tbl" style="margin-top: 12px">
+                <thead><tr><th>指标</th><th>结果</th><th>单位</th><th>参考范围</th><th>提示</th></tr></thead>
+                <tbody>
+                  <tr><td>空腹血糖均值</td><td style="font-weight: 700;">5.6</td><td>mmol/L</td><td>3.9-6.1</td><td>正常</td></tr>
+                  <tr><td>餐后2h均值</td><td style="font-weight: 700;">7.8</td><td>mmol/L</td><td>< 7.8</td><td>正常</td></tr>
+                  <tr><td>血糖变异系数</td><td style="font-weight: 700;">22</td><td>%</td><td>< 36</td><td>正常</td></tr>
+                  <tr><td>TIR(3.9-10)</td><td style="font-weight: 700; color: var(--green);">92</td><td>%</td><td>> 70</td><td>达标</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="report-section" v-if="activeRecord.title === '72h连续心电贴片监测终评'">
+              <div class="rs-title">关键指标：</div>
+              <table class="tbl" style="margin-top: 12px">
+                <thead><tr><th>指标</th><th>结果</th><th>单位</th><th>参考范围</th><th>提示</th></tr></thead>
+                <tbody>
+                  <tr><td>总记录时长</td><td style="font-weight: 700;">71.5h</td><td>-</td><td>72h</td><td>正常</td></tr>
+                  <tr><td>房性早搏</td><td style="font-weight: 700;">15</td><td>次</td><td>< 100</td><td>正常</td></tr>
+                  <tr><td>室性早搏</td><td style="font-weight: 700;">3</td><td>次</td><td>< 100</td><td>正常</td></tr>
+                  <tr><td>最长停搏</td><td style="font-weight: 700; color: var(--red);">1.8</td><td>s</td><td>< 2.0</td><td>偏高</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="report-section" v-if="activeRecord.title === '体成分分析月报'">
+              <div class="rs-title">关键指标：</div>
+              <table class="tbl" style="margin-top: 12px">
+                <thead><tr><th>指标</th><th>结果</th><th>单位</th><th>参考范围</th><th>提示</th></tr></thead>
+                <tbody>
+                  <tr><td>体重</td><td style="font-weight: 700; color: var(--red);">78.5</td><td>kg</td><td>-</td><td>超重</td></tr>
+                  <tr><td>BMI</td><td style="font-weight: 700; color: var(--red);">27.8</td><td>-</td><td>18.5-24</td><td>↑</td></tr>
+                  <tr><td>体脂率</td><td style="font-weight: 700; color: var(--red);">26.2</td><td>%</td><td>10-20</td><td>↑</td></tr>
+                  <tr><td>内脏脂肪等级</td><td style="font-weight: 700; color: var(--red);">12</td><td>级</td><td>1-9</td><td>↑</td></tr>
+                  <tr><td>基础代谢</td><td style="font-weight: 700;">1720</td><td>kcal</td><td>-</td><td>正常</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="report-footer" style="margin-top: 30px; border-top: 1px solid var(--line2); padding-top: 20px;">
+              <div class="rf-item"><span>设备厂商：</span><span>{{ activeRecord.hosp }}</span></div>
+              <div class="rf-item"><span>报告日期：</span><span>{{ activeRecord.date }}</span></div>
+            </div>
+            <div style="font-size: 12px; color: var(--ink4); margin-top: 10px; font-style: italic;">
+              *本报告由穿戴设备自动采集生成，仅供健康管理参考
+            </div>
           </div>
         </div>
       </main>

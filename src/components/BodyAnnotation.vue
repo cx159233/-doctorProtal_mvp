@@ -49,13 +49,22 @@
           <text :x="BOX_W - 55" dominant-baseline="central" :style="{ fontSize: '9px', fill: btn.disabled ? '#cbd5e1' : '#64748b', fontWeight: 500 }">{{ btn.disabled ? '暂不可用' : '点击查看' }}</text>
         </g>
 
-        <!-- 近三次记录 - 往左移动 -->
+        <!-- 近三次记录 -->
         <g v-if="btn.recentRecords && btn.recentRecords.length > 0">
           <line :x1="btn.boxX + 10" :y1="btn.boxY + BOX_H" :x2="btn.boxX + BOX_W - 10" :y2="btn.boxY + BOX_H" stroke="#E2E8F0" stroke-width="0.5" />
           <template v-for="(record, index) in btn.recentRecords" :key="index">
-            <text :x="btn.boxX + 10" :y="btn.boxY + BOX_H + 14 + index * 18" dominant-baseline="central" style="font-size: 7.5px; fill: #94a3b8;">{{ record.date }}</text>
-            <text :x="btn.boxX + 50" :y="btn.boxY + BOX_H + 14 + index * 18" dominant-baseline="central" style="font-size: 7.5px; fill: #475569;">{{ record.type }}</text>
-            <text :x="btn.boxX + 85" :y="btn.boxY + BOX_H + 14 + index * 18" dominant-baseline="central" style="font-size: 7.5px; fill: #06B6D4;">{{ record.result }}</text>
+            <rect
+              :x="btn.boxX + 2" :y="btn.boxY + BOX_H + 2 + index * 18"
+              :width="BOX_W - 4" height="18" rx="2"
+              fill="transparent" stroke="transparent"
+              style="cursor: pointer;"
+              @click.stop="record.record && $emit('record-click', record.record)"
+              @mouseenter="(e) => { const el = (e.target as SVGElement); el.setAttribute('fill', '#f0f9ff'); }"
+              @mouseleave="(e) => { const el = (e.target as SVGElement); el.setAttribute('fill', 'transparent'); }"
+            />
+            <text :x="btn.boxX + 11" :y="btn.boxY + BOX_H + 14 + index * 18" dominant-baseline="central" style="font-size: 7px; fill: #94a3b8; pointer-events: none;">{{ record.date.slice(5) }}</text>
+            <text :x="btn.boxX + 44" :y="btn.boxY + BOX_H + 14 + index * 18" dominant-baseline="central" style="font-size: 7px; fill: #475569; pointer-events: none;">{{ record.type.length > 5 ? record.type.substring(0, 5) + '..' : record.type }}</text>
+            <text :x="btn.boxX + 88" :y="btn.boxY + BOX_H + 14 + index * 18" dominant-baseline="central" style="font-size: 7px; fill: #06B6D4; pointer-events: none;">{{ record.result }}</text>
           </template>
         </g>
       </g>
@@ -83,6 +92,7 @@ export interface PortraitButton {
     date: string;
     type: string;
     result: string;
+    record?: any;
   }[];
 }
 
@@ -99,6 +109,7 @@ const props = withDefaults(defineProps<{
 
 defineEmits<{
   'button-click': [id: string];
+  'record-click': [record: any];
 }>();
 
 function getBoxEdgeX(btn: PortraitButton) {
