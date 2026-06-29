@@ -780,7 +780,7 @@ const handleAction = (type: string, title: string, record?: any) => {
       date: record.date || '2024-06-15',
       hosp: record.hosp || '常州市第一人民医院',
       dept: record.dept || '放射科',
-      diag: record.diag || 'CT肺结节AI筛查',
+      diag: record.diag || '胸部CT平扫',
       type: 'exam'
     };
     showDicomViewer.value = true;
@@ -1258,7 +1258,7 @@ const handleAction = (type: string, title: string, record?: any) => {
               <td style="padding: 12px 16px;">
                 <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
               </td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">CT肺结节AI筛查</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">胸部CT平扫</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2026-06-29 10:23:15</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #334155;">陈*明</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">342******0879</td>
@@ -1276,7 +1276,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                 <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
               </td>
               <td style="padding: 12px 16px; text-align: center;">
-                <a class="text-blue-600 hover:text-blue-700 hover:underline cursor-pointer" style="font-size: 12px;" @click="handleAction('ai_dicom', '调阅影像', { date: '2026-06-29', hosp: '常州市第一人民医院', dept: '放射科', diag: 'CT肺结节AI筛查' })">查看详情</a>
+                <a class="text-blue-600 hover:text-blue-700 hover:underline cursor-pointer" style="font-size: 12px;" @click="handleAction('ai_dicom', '调阅影像', { date: '2026-06-29', hosp: '常州市第一人民医院', dept: '放射科', diag: '胸部CT平扫' })">查看详情</a>
               </td>
             </tr>
             <tr style="border-bottom: 1px solid #f1f5f9;">
@@ -1681,7 +1681,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                                   <span class="font-bold text-red-800" style="font-size: clamp(7px, 0.55vw, 9px);">影像AI辅助分析</span>
                                   <span class="font-bold text-red-600 rounded-full bg-red-100" style="font-size: clamp(5px, 0.4vw, 6px); padding: clamp(1px, 0.1vw, 2px) clamp(3px, 0.25vw, 4px);">新</span>
                                 </div>
-                                <div class="text-red-700/70" style="font-size: clamp(6px, 0.45vw, 7px); word-break: break-all;">胸部CT（06-10）· 发现2项可疑异常</div>
+                                <div class="text-red-700/70" style="font-size: clamp(6px, 0.45vw, 7px); word-break: break-all;">胸部CT（06-29）· 发现2项可疑异常</div>
                                 <div class="flex items-center gap-0.5 text-red-700/70 flex-wrap" style="margin-top: clamp(2px, 0.15vw, 4px); font-size: clamp(6px, 0.45vw, 7px);">
                                   <span>影像一扫多筛智能体</span>
                                   <span class="mx-0.5">·</span>
