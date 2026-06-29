@@ -621,7 +621,7 @@ type LifecycleTab = "all" | "op" | "ip" | "lab" | "exam" | "med" | "wd";
 
 const activeView = ref<ViewType>("his");
 function isActiveView(v: ViewType) { return activeView.value === v; }
-function setActiveView(v: ViewType) { activeView.value = v; }
+function setActiveView(v: ViewType) { activeView.value = v; showOutpatientDetail.value = false; showDicomViewer.value = false; }
 const activeNavTab = ref("imaging");
 const showHisDropdown = ref(false);
 const showMedInterceptPopup = ref(true);
@@ -1154,7 +1154,7 @@ const handleAction = (type: string, title: string, record?: any) => {
         </button>
       </div>
       <a-dropdown trigger="click">
-        <div class="top-nav-user"><span class="font-normal">陈xx鑫</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
+        <div class="top-nav-user"><span class="font-normal">陈**鑫</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
         <template #overlay>
           <a-menu @click="({ key }) => { if (key === 'medintercept') { setActiveView('medintercept'); showMedInterceptPopup = true; showRulesAdaptPopup = false } else if (key === 'rulesadapt') { setActiveView('rulesadapt'); showRulesAdaptPopup = true; showMedInterceptPopup = false } }">
             <a-menu-item key="medintercept">用药实时拦截</a-menu-item>
@@ -1448,10 +1448,10 @@ const handleAction = (type: string, title: string, record?: any) => {
         <span class="top-nav-subtitle">参保人全息视图</span>
       </div>
       <nav class="flex h-full items-center ant-header-menu">
-        <a class="ant-menu-item" :class="activeView === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeView = 'overview'"><i class="ant-menu-item-icon"><UserCircle :size="14" /></i><span>参保人画像</span></a>
-        <a class="ant-menu-item" :class="activeView === 'health' ? 'ant-menu-item-selected' : ''" @click="activeView = 'health'"><i class="ant-menu-item-icon"><Activity :size="14" /></i><span>医保健康档案</span></a>
-        <a class="ant-menu-item" :class="activeView === 'finance' ? 'ant-menu-item-selected' : ''" @click="activeView = 'finance'"><i class="ant-menu-item-icon"><CreditCard :size="14" /></i><span>医保财务档案</span></a>
-        <a class="ant-menu-item" :class="activeView === 'info' ? 'ant-menu-item-selected' : ''" @click="activeView = 'info'"><i class="ant-menu-item-icon"><Info :size="14" /></i><span>医保信息档案</span></a>
+        <a class="ant-menu-item" :class="activeView === 'overview' ? 'ant-menu-item-selected' : ''" @click="setActiveView('overview')"><i class="ant-menu-item-icon"><UserCircle :size="14" /></i><span>参保人画像</span></a>
+        <a class="ant-menu-item" :class="activeView === 'health' ? 'ant-menu-item-selected' : ''" @click="setActiveView('health')"><i class="ant-menu-item-icon"><Activity :size="14" /></i><span>医保健康档案</span></a>
+        <a class="ant-menu-item" :class="activeView === 'finance' ? 'ant-menu-item-selected' : ''" @click="setActiveView('finance')"><i class="ant-menu-item-icon"><CreditCard :size="14" /></i><span>医保财务档案</span></a>
+        <a class="ant-menu-item" :class="activeView === 'info' ? 'ant-menu-item-selected' : ''" @click="setActiveView('info')"><i class="ant-menu-item-icon"><Info :size="14" /></i><span>医保信息档案</span></a>
       </nav>
       <div class="flex-1"></div>
       <div class="flex items-center gap-1.5 mr-3">

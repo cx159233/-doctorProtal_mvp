@@ -89,8 +89,9 @@ const activeTimelineId = ref(
   (() => {
     const tl = currentTimeline.value;
     if (!props.record) return tl[0]?.id;
+    const recordDate = (props.record.date || '').split(' ')[0];
     const match = tl.find(t =>
-      t.date === props.record.date &&
+      t.date === recordDate &&
       t.title === (props.record.diag || props.record.title)
     );
     return match?.id || tl[0]?.id;
