@@ -10,17 +10,17 @@ const props = defineProps<{
 const emit = defineEmits(['back', 'show-dicom']);
 
 const opTimeline = [
-  { id: 1, date: '2024-05-15', time: '09:30', title: '冠心病常规复诊', dept: '心内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'op' },
-  { id: 2, date: '2024-03-22', time: '14:20', title: '腰椎间盘突出治疗', dept: '骨科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'op' },
-  { id: 3, date: '2024-03-15', time: '10:30', title: '原发性高血压', dept: '心内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'op' },
-  { id: 4, date: '2024-02-10', time: '11:15', title: '慢性胃炎', dept: '消化内科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'op' },
+  { id: 1, date: '2026-05-15', time: '09:30', title: '冠心病常规复诊', dept: '心内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'op' },
+  { id: 2, date: '2025-03-22', time: '14:20', title: '腰椎间盘突出治疗', dept: '骨科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'op' },
+  { id: 3, date: '2026-03-15', time: '10:30', title: '原发性高血压', dept: '心内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'op' },
+  { id: 4, date: '2025-02-10', time: '11:15', title: '慢性胃炎', dept: '消化内科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'op' },
   { id: 5, date: '2024-01-05', time: '10:00', title: '上呼吸道感染', dept: '呼吸内科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'op' },
   { id: 6, date: '2023-11-20', time: '15:30', title: '腰肌劳损', dept: '骨科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'op' },
   { id: 7, date: '2023-09-12', time: '08:45', title: '结膜炎', dept: '眼科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'op' },
 ];
 
 const ipTimeline = [
-  { id: 101, date: '2024-03-10', time: '10:00', title: '急性心肌梗死住院记录', dept: '心内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'ip' },
+  { id: 101, date: '2025-03-10', time: '10:00', title: '急性心肌梗死住院记录', dept: '心内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'ip' },
   { id: 102, date: '2023-05-10', time: '08:00', title: '阑尾炎住院', dept: '普外科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'ip' },
   { id: 103, date: '2022-12-01', time: '09:00', title: '大叶性肺炎', dept: '呼吸内科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'ip' },
   { id: 104, date: '2022-08-15', time: '14:30', title: '急性胃肠炎', dept: '消化内科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'ip' },
@@ -29,30 +29,38 @@ const ipTimeline = [
 ];
 
 const labTimeline = [
-  { id: 201, date: '2024-05-16', time: '08:30', title: '生化常规检查', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
-  { id: 202, date: '2024-04-12', time: '09:15', title: '糖化血红蛋白', dept: '检验科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'lab' },
-  { id: 203, date: '2024-03-15', time: '08:35', title: '血常规 (五分类)', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
+  { id: 201, date: '2026-05-16', time: '08:30', title: '生化常规检查', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
+  { id: 202, date: '2025-04-12', time: '09:15', title: '糖化血红蛋白', dept: '检验科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'lab' },
+  { id: 203, date: '2026-03-15', time: '08:35', title: '血常规 (五分类)', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
   { id: 204, date: '2023-12-15', time: '09:00', title: '尿常规', dept: '检验科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'lab' },
   { id: 205, date: '2023-10-10', time: '08:45', title: '凝血功能', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
   { id: 206, date: '2023-05-20', time: '10:15', title: '糖化血红蛋白', dept: '检验科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'lab' },
 ];
 
 const examTimeline = [
-  { id: 301, date: '2024-05-16', time: '10:20', title: '胸部CT平扫', dept: '放射科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'exam' },
-  { id: 302, date: '2024-04-12', time: '14:00', title: '彩色多普勒超声', dept: '超声科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'exam' },
+  { id: 301, date: '2026-05-16', time: '10:20', title: '胸部CT平扫', dept: '放射科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'exam' },
+  { id: 302, date: '2025-04-12', time: '14:00', title: '彩色多普勒超声', dept: '超声科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'exam' },
   { id: 303, date: '2024-03-16', time: '10:20', title: '胸部CT平扫', dept: '放射科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'exam' },
   { id: 304, date: '2024-03-15', time: '15:00', title: '心电图检查', dept: '心功能室', hosp: '常州市第一人民医院', level: '三级甲等', type: 'exam' },
-  { id: 305, date: '2024-03-12', time: '11:30', title: '心脏彩超', dept: '超声科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'exam' },
+  { id: 305, date: '2025-03-12', time: '11:30', title: '心脏彩超', dept: '超声科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'exam' },
   { id: 306, date: '2023-12-10', time: '09:00', title: '腹部超声', dept: '超声科', hosp: '南京大学医学院附属鼓楼医院', level: '三级甲等', type: 'exam' },
+  { id: 307, date: '2023-10-05', time: '08:50', title: '胃镜检查', dept: '内镜中心', hosp: '常州市第一人民医院', level: '三级甲等', type: 'exam' },
+  { id: 308, date: '2023-06-20', time: '13:40', title: '腰椎MRI', dept: '放射科', hosp: '常州市第一人民医院', level: '三级甲等', type: 'exam' },
 ];
 
 const medTimeline = [
-  { id: 401, date: '2024-05-17', time: '10:00', title: '长期用药处方', dept: '心内科', hosp: '常州德仁堂药店', level: '', type: 'med' },
-  { id: 402, date: '2024-04-15', time: '15:30', title: '门诊处方详单', dept: '门诊部', hosp: '常州万民药店', level: '', type: 'med' },
-  { id: 403, date: '2024-03-15', time: '10:00', title: '高血压用药', dept: '心内科', hosp: '常州德仁堂药店', level: '', type: 'med' },
-  { id: 404, date: '2024-02-10', time: '15:00', title: '胃病用药', dept: '消化内科', hosp: '南京益丰大药房', level: '', type: 'med' },
+  { id: 401, date: '2026-05-17', time: '10:00', title: '长期用药处方', dept: '心内科', hosp: '常州德仁堂药店', level: '', type: 'med' },
+  { id: 402, date: '2025-04-15', time: '15:30', title: '门诊处方详单', dept: '门诊部', hosp: '常州万民药店', level: '', type: 'med' },
+  { id: 403, date: '2026-03-15', time: '10:00', title: '高血压用药', dept: '心内科', hosp: '常州德仁堂药店', level: '', type: 'med' },
+  { id: 404, date: '2025-02-10', time: '15:00', title: '胃病用药', dept: '消化内科', hosp: '南京益丰大药房', level: '', type: 'med' },
   { id: 405, date: '2024-01-05', time: '11:00', title: '感冒用药', dept: '呼吸内科', hosp: '南京益丰大药房', level: '', type: 'med' },
   { id: 406, date: '2023-11-20', time: '12:00', title: '止痛用药', dept: '骨科', hosp: '常州万民药店', level: '', type: 'med' },
+  { id: 407, date: '2023-09-12', time: '16:20', title: '眼药水', dept: '眼科', hosp: '南京益丰大药房', level: '', type: 'med' },
+];
+
+const peTimeline = [
+  { id: 601, date: '2026-06-01', time: '08:00', title: '年度员工健康体检', dept: '体检中心', hosp: '常州爱康国宾体检中心', level: '', type: 'pe' },
+  { id: 602, date: '2025-05-15', time: '08:30', title: '专项防癌筛查体检', dept: '体检中心', hosp: '常州美年大健康体检中心', level: '', type: 'pe' },
 ];
 
 const wdTimeline = [
@@ -70,24 +78,44 @@ const currentTimeline = computed(() => {
   if (props.record?.type === 'exam') return examTimeline;
   if (props.record?.type === 'med') return medTimeline;
   if (props.record?.type === 'wd') return wdTimeline;
+  if (props.record?.type === 'pe') return peTimeline;
   return opTimeline;
+});
+
+const sortedTimeline = computed(() => {
+  return [...currentTimeline.value].sort((a, b) => b.date.localeCompare(a.date));
 });
 
 const searchQuery = ref('');
 const appliedSearchQuery = ref('');
 
 const filteredTimeline = computed(() => {
-  if (!appliedSearchQuery.value) return currentTimeline.value;
-  return currentTimeline.value.filter(item =>
+  const source = sortedTimeline.value;
+  if (!appliedSearchQuery.value) return source;
+  return source.filter(item =>
     item.title.includes(appliedSearchQuery.value) ||
     item.dept.includes(appliedSearchQuery.value) ||
     item.hosp.includes(appliedSearchQuery.value)
   );
 });
 
+const timelineWithYears = computed(() => {
+  const result: any[] = [];
+  let lastYear = '';
+  for (const item of filteredTimeline.value) {
+    const year = item.date.split('-')[0];
+    if (year !== lastYear) {
+      result.push({ type: 'year', year });
+      lastYear = year;
+    }
+    result.push({ type: 'item', ...item });
+  }
+  return result;
+});
+
 const activeTimelineId = ref(
   (() => {
-    const tl = currentTimeline.value;
+    const tl = sortedTimeline.value;
     if (!props.record) return tl[0]?.id;
     const recordDate = (props.record.date || '').split(' ')[0];
     const match = tl.find(t =>
@@ -97,7 +125,7 @@ const activeTimelineId = ref(
     return match?.id || tl[0]?.id;
   })()
 );
-const activeRecord = computed(() => currentTimeline.value.find(t => t.id === activeTimelineId.value) || currentTimeline.value[0]);
+const activeRecord = computed(() => sortedTimeline.value.find(t => t.id === activeTimelineId.value) || sortedTimeline.value[0]);
 
 const selectTimeline = (id: number) => {
   activeTimelineId.value = id;
@@ -140,25 +168,26 @@ const handleSearch = () => {
           </div>
 
           <div class="op-timeline scroll-y">
-            <div class="tl-year">{{ activeRecord.date.split('-')[0] }}</div>
-            <div
-              v-for="item in filteredTimeline"
-              :key="item.id"
-              :class="['tl-item', item.id === activeTimelineId ? 'on' : '']"
-              @click="selectTimeline(item.id)"
-            >
-              <div class="tl-dot"></div>
-              <div class="tl-content">
-                <div class="tl-time">{{ item.date.slice(5) }}<br/>{{ item.time }}</div>
-                <div class="tl-main">
-                  <div class="tl-title">{{ item.title }}</div>
-                  <div class="tl-meta">
-                    <span>{{ item.hosp }}</span>
-                    <span>{{ item.dept }}</span>
+            <template v-for="entry in timelineWithYears" :key="entry.type === 'year' ? 'y' + entry.year : entry.id">
+              <div v-if="entry.type === 'year'" class="tl-year">{{ entry.year }}</div>
+              <div
+                v-else
+                :class="['tl-item', entry.id === activeTimelineId ? 'on' : '']"
+                @click="selectTimeline(entry.id)"
+              >
+                <div class="tl-dot"></div>
+                <div class="tl-content">
+                  <div class="tl-time">{{ entry.date.slice(5) }}<br/>{{ entry.time }}</div>
+                  <div class="tl-main">
+                    <div class="tl-title">{{ entry.title }}</div>
+                    <div class="tl-meta">
+                      <span>{{ entry.hosp }}</span>
+                      <span>{{ entry.dept }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            </template>
           </div>
         </div>
       </aside>
@@ -214,7 +243,7 @@ const handleSearch = () => {
                 <div class="ip-item"><span class="ip-val">-</span></div>
               </div>
               <div class="ip-grid-row">
-                <div class="ip-item" style="grid-column: span 2"><span class="ip-lbl">出院：</span><span class="ip-val">{{ activeRecord.title.includes('心肌梗死') ? '2024-03-20' : activeRecord.title.includes('阑尾炎') ? '2023-05-18' : activeRecord.title.includes('肺炎') ? '2022-12-11' : activeRecord.title.includes('胃肠炎') ? '2022-08-23' : activeRecord.title.includes('骨折') ? '2022-03-25' : '2021-08-12' }} 09:30</span></div>
+                <div class="ip-item" style="grid-column: span 2"><span class="ip-lbl">出院：</span><span class="ip-val">{{ activeRecord.title.includes('心肌梗死') ? '2025-03-20' : activeRecord.title.includes('阑尾炎') ? '2023-05-18' : activeRecord.title.includes('肺炎') ? '2022-12-11' : activeRecord.title.includes('胃肠炎') ? '2022-08-23' : activeRecord.title.includes('骨折') ? '2022-03-25' : '2021-08-12' }} 09:30</span></div>
                 <div class="ip-item"><span class="ip-val">{{ activeRecord.dept }}</span></div>
                 <div class="ip-item"><span class="ip-val">1201 / 22床</span></div>
                 <div class="ip-item"><span class="ip-lbl">实际住院：</span><span class="ip-val" style="color: var(--blue);">{{ activeRecord.title.includes('心肌梗死') ? '11' : activeRecord.title.includes('阑尾炎') ? '8' : activeRecord.title.includes('肺炎') ? '10' : activeRecord.title.includes('胃肠炎') ? '8' : activeRecord.title.includes('骨折') ? '15' : '7' }}</span> 天</div>
@@ -404,7 +433,7 @@ const handleSearch = () => {
           <div class="report-header">
             <div class="report-hosp">{{ activeRecord.hosp }}</div>
             <div class="report-title">检查报告单</div>
-            <button class="report-view-btn" style="position: absolute; top: 20px; right: 20px; background: #fff; border: 1px solid var(--line2); padding: 6px 16px; border-radius: 4px; font-size: 13px; color: var(--ink2); cursor: pointer; display: flex; align-items: center; gap: 4px;" @click="emit('show-dicom')">
+            <button class="report-view-btn" style="position: absolute; top: 20px; right: 20px; background: #fff; border: 1px solid var(--line2); padding: 6px 16px; border-radius: 4px; font-size: 13px; color: var(--ink2); cursor: pointer; display: flex; align-items: center; gap: 4px;" @click="emit('show-dicom', activeRecord)">
               <Eye :size="14" />
               查看影像
             </button>
@@ -620,6 +649,59 @@ const handleSearch = () => {
             </div>
           </div>
         </div>
+
+        <!-- 体检报告 (Physical Examination) -->
+        <div class="report-container" v-else-if="activeRecord.type === 'pe'">
+          <div class="report-header">
+            <div class="report-hosp">{{ activeRecord.hosp }}</div>
+            <div class="report-title">体检报告单</div>
+          </div>
+
+          <div class="ip-scroll-content">
+            <div class="report-info-grid" style="margin-top: 0;">
+              <div class="ri-item"><span class="ri-lbl">姓名：</span><span class="ri-val">{{ patient?.name || '陈**' }}</span></div>
+              <div class="ri-item"><span class="ri-lbl">性别/年龄：</span><span class="ri-val">{{ patient?.gender || '男' }} / {{ patient?.age || '42' }}岁</span></div>
+              <div class="ri-item"><span class="ri-lbl">体检号：</span><span class="ri-val">PE{{ activeRecord.id }}001</span></div>
+
+              <div class="ri-item"><span class="ri-lbl">体检机构：</span><span class="ri-val">{{ activeRecord.hosp }}</span></div>
+              <div class="ri-item"><span class="ri-lbl">体检日期：</span><span class="ri-val">{{ activeRecord.date }}</span></div>
+              <div class="ri-item"><span class="ri-lbl">科室：</span><span class="ri-val">{{ activeRecord.dept }}</span></div>
+            </div>
+
+            <div class="report-section">
+              <div class="rs-title">体检结论：</div>
+              <div class="rs-content" style="background: #fcfcfc; padding: 12px; border-radius: 4px; font-size: 14px; color: var(--ink2); line-height: 1.6;">
+                <template v-if="activeRecord.title === '年度员工健康体检'">
+                  建议：1. 发现轻度脂肪肝，建议低脂饮食，控制脂肪摄入。<br/>
+                  2. 尿酸指标偏高，需控制嘌呤摄入，如海鲜、动物内脏。<br/>
+                  3. 建议增加有氧运动，每周至少3次，每次30分钟以上。
+                </template>
+                <template v-else>
+                  各项检查指标在正常范围内，未见明显异常。建议继续保持良好的生活习惯，定期体检。
+                </template>
+              </div>
+            </div>
+
+            <div class="report-section" v-if="activeRecord.title === '年度员工健康体检'">
+              <div class="rs-title">异常指标：</div>
+              <table class="tbl" style="margin-top: 12px">
+                <thead><tr><th>项目名称</th><th>结果</th><th>单位</th><th>参考范围</th><th>提示</th></tr></thead>
+                <tbody>
+                  <tr><td>甘油三酯 (TG)</td><td style="font-weight: 700; color: var(--red);">2.45</td><td>mmol/L</td><td>0.56 - 1.70</td><td style="color: var(--red);">↑</td></tr>
+                  <tr><td>血尿酸 (UA)</td><td style="font-weight: 700; color: var(--red);">468</td><td>μmol/L</td><td>208 - 428</td><td style="color: var(--red);">↑</td></tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="report-footer" style="margin-top: 30px; border-top: 1px solid var(--line2); padding-top: 20px;">
+              <div class="rf-item"><span>体检机构：</span><span>{{ activeRecord.hosp }}</span></div>
+              <div class="rf-item"><span>体检日期：</span><span>{{ activeRecord.date }}</span></div>
+            </div>
+            <div style="font-size: 12px; color: var(--ink4); margin-top: 10px; font-style: italic;">
+              *本报告仅供健康管理参考，如有异常请及时就医。
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   </div>
@@ -826,10 +908,9 @@ const handleSearch = () => {
 
 .tl-year {
   font-size: 12px;
-  font-weight: 700;
-  margin: 2px 8px 10px;
-  color: var(--ink4);
-  letter-spacing: 0.3px;
+  font-weight: 600;
+  margin: 14px 10px 4px;
+  color: var(--ink3);
 }
 
 .tl-item {
