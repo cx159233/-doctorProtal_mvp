@@ -367,8 +367,9 @@ onMounted(() => {
   // 检查 URL 参数，如果存在 view 参数，则设置对应的视图
   const urlParams = new URLSearchParams(window.location.search);
   const viewParam = urlParams.get('view');
-  if (viewParam === 'ai-diagnosis') {
-    activeView.value = 'ai-diagnosis';
+  const validViews: ViewType[] = ['overview', 'health', 'finance', 'info', 'ai-diagnosis', 'medintercept', 'rulesadapt'];
+  if (viewParam && validViews.includes(viewParam as ViewType)) {
+    activeView.value = viewParam as ViewType;
   }
 });
 
@@ -621,7 +622,7 @@ type LifecycleTab = "all" | "op" | "ip" | "lab" | "exam" | "med" | "wd";
 
 const activeView = ref<ViewType>("his");
 function isActiveView(v: ViewType) { return activeView.value === v; }
-function setActiveView(v: ViewType) { activeView.value = v; showOutpatientDetail.value = false; showDicomViewer.value = false; }
+function setActiveView(v: ViewType) { activeView.value = v; showOutpatientDetail.value = false; showDicomViewer.value = false; const url = new URL(window.location.href); if (v === 'his') { url.searchParams.delete('view'); } else { url.searchParams.set('view', v); } window.history.replaceState({}, '', url.toString()); }
 const activeNavTab = ref("imaging");
 const showHisDropdown = ref(false);
 const showMedInterceptPopup = ref(true);
@@ -987,7 +988,7 @@ const handleAction = (type: string, title: string, record?: any) => {
         <a class="ant-menu-item" :class="activeNavTab === 'imaging' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询</span></a>
         <a class="ant-menu-item" :class="activeNavTab === 'imaging-cross' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging-cross'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询(跨省)</span></a>
         <a class="ant-menu-item" :class="activeNavTab === 'inspection' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'inspection'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>检验查询</span></a>
-        <a class="ant-menu-item" :class="activeNavTab === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'overview'; activeView = 'overview'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>参保人画像</span></a>
+        <a class="ant-menu-item" :class="activeNavTab === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'overview'; setActiveView('overview')"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>参保人画像</span></a>
       </nav>
       <div class="top-nav-user"><span class="font-normal">陈**鑫</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
     </header>
@@ -1007,7 +1008,7 @@ const handleAction = (type: string, title: string, record?: any) => {
         <a class="ant-menu-item" :class="activeNavTab === 'imaging' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询</span></a>
         <a class="ant-menu-item" :class="activeNavTab === 'imaging-cross' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging-cross'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询(跨省)</span></a>
         <a class="ant-menu-item" :class="activeNavTab === 'inspection' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'inspection'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>检验查询</span></a>
-        <a class="ant-menu-item" :class="activeNavTab === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'overview'; activeView = 'overview'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>参保人画像</span></a>
+        <a class="ant-menu-item" :class="activeNavTab === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'overview'; setActiveView('overview')"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>参保人画像</span></a>
       </nav>
       <div class="top-nav-user"><span class="font-normal">陈**鑫</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
     </header>
@@ -1027,7 +1028,7 @@ const handleAction = (type: string, title: string, record?: any) => {
         <a class="ant-menu-item" :class="activeNavTab === 'imaging' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询</span></a>
         <a class="ant-menu-item" :class="activeNavTab === 'imaging-cross' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging-cross'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询(跨省)</span></a>
         <a class="ant-menu-item" :class="activeNavTab === 'inspection' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'inspection'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>检验查询</span></a>
-        <a class="ant-menu-item" :class="activeNavTab === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'overview'; activeView = 'overview'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>参保人画像</span></a>
+        <a class="ant-menu-item" :class="activeNavTab === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'overview'; setActiveView('overview')"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>参保人画像</span></a>
       </nav>
       <div class="top-nav-user"><span class="font-normal">陈**鑫</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
     </header>
@@ -1792,7 +1793,7 @@ const handleAction = (type: string, title: string, record?: any) => {
 
                   <div class="flex gap-2">
                     <!-- 左侧：历史病历快读（蓝色背景） -->
-                    <div class="w-80 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-2.5 shadow-md flex flex-col cursor-pointer hover:shadow-lg transition-all" @click="setActiveView('ai-diagnosis')">
+                    <div class="w-80 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-2.5 shadow-md flex flex-col cursor-pointer hover:shadow-lg transition-all" @click="openAIAssistant()">
                       <div class="flex items-center gap-1.5 mb-2">
                         <span class="w-5 h-5 rounded-md bg-white/20 flex items-center justify-center text-white text-[9px] font-bold">AI</span>
                         <span class="text-[11px] font-bold text-white">历史病历快读</span>
@@ -1822,7 +1823,7 @@ const handleAction = (type: string, title: string, record?: any) => {
 
                     <!-- 右侧：服务卡片 -->
                     <div class="flex-1 grid grid-cols-5 grid-rows-2 gap-2">
-                      <div class="col-span-3 bg-gradient-to-br from-red-50 to-red-100/50 rounded-xl p-2.5 cursor-pointer hover:shadow-sm transition-all" @click="setActiveView('ai-diagnosis')">
+                      <div class="col-span-3 bg-gradient-to-br from-red-50 to-red-100/50 rounded-xl p-2.5 cursor-pointer hover:shadow-sm transition-all" @click="openAIAssistant()">
                         <div class="flex items-center gap-2 mb-1.5">
                           <div class="w-5 h-5 rounded-md bg-red-100 flex items-center justify-center shrink-0">
                             <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.66 1.732-3L13.732 4c-.77-1.34-2.694-1.34-3.464 0L3.34 16c-.77 1.34.192 3 1.732 3z"></path></svg>
@@ -1840,42 +1841,42 @@ const handleAction = (type: string, title: string, record?: any) => {
                           </div>
                         </div>
                       </div>
-                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="setActiveView('ai-diagnosis')">
+                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="openAIAssistant()">
                         <div class="w-1/4 aspect-square rounded-lg bg-cyan-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                           <svg class="w-1/2 h-1/2 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         </div>
                         <span class="text-sm font-bold text-slate-700">影像AI</span>
                         <svg class="w-12 h-12 text-slate-300/10 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                       </div>
-                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="setActiveView('ai-diagnosis')">
+                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="openAIAssistant()">
                         <div class="w-1/4 aspect-square rounded-lg bg-amber-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                           <svg class="w-1/2 h-1/2 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                         </div>
                         <span class="text-sm font-bold text-slate-700">临床路径</span>
                         <svg class="w-12 h-12 text-slate-300/10 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                       </div>
-                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="setActiveView('ai-diagnosis')">
+                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="openAIAssistant()">
                         <div class="w-1/4 aspect-square rounded-lg bg-indigo-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                           <svg class="w-1/2 h-1/2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                         </div>
                         <span class="text-sm font-bold text-slate-700">远程诊断</span>
                         <svg class="w-12 h-12 text-slate-300/10 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                       </div>
-                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="setActiveView('ai-diagnosis')">
+                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="openAIAssistant()">
                         <div class="w-1/4 aspect-square rounded-lg bg-teal-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                           <svg class="w-1/2 h-1/2 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                         </div>
                         <span class="text-sm font-bold text-slate-700">随访计划</span>
                         <svg class="w-12 h-12 text-slate-300/10 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                       </div>
-                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="setActiveView('ai-diagnosis')">
+                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="openAIAssistant()">
                         <div class="w-1/4 aspect-square rounded-lg bg-green-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                           <svg class="w-1/2 h-1/2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                         </div>
                         <span class="text-sm font-bold text-slate-700">智能质控</span>
                         <svg class="w-12 h-12 text-slate-300/10 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                       </div>
-                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="setActiveView('ai-diagnosis')">
+                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="openAIAssistant()">
                         <div class="w-1/4 aspect-square rounded-lg bg-teal-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                           <svg class="w-1/2 h-1/2 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h6v6H3zM15 3h6v6h-6zM9 9h6v6H9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15h18v6H3z"/></svg>
                         </div>
