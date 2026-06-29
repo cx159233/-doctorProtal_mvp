@@ -62,9 +62,9 @@
               @mouseenter="(e) => { const el = (e.target as SVGElement); el.setAttribute('fill', '#f0f9ff'); }"
               @mouseleave="(e) => { const el = (e.target as SVGElement); el.setAttribute('fill', 'transparent'); }"
             />
-            <text :x="btn.boxX + 11" :y="btn.boxY + BOX_H + 14 + index * 18" dominant-baseline="central" style="font-size: 9px; fill: #94a3b8; pointer-events: none;">{{ record.date.slice(5) }}</text>
-            <text :x="btn.boxX + 44" :y="btn.boxY + BOX_H + 14 + index * 18" dominant-baseline="central" style="font-size: 9px; fill: #475569; pointer-events: none;">{{ record.type.length > 5 ? record.type.substring(0, 5) + '..' : record.type }}</text>
-            <text :x="btn.boxX + 88" :y="btn.boxY + BOX_H + 14 + index * 18" dominant-baseline="central" style="font-size: 9px; fill: #06B6D4; pointer-events: none;">{{ record.result }}</text>
+            <text :x="btn.boxX + 11" :y="btn.boxY + BOX_H + 14 + index * 18" dominant-baseline="central" style="font-size: 7px; fill: #94a3b8; pointer-events: none;">{{ record.date.slice(5) }}</text>
+            <text :x="btn.boxX + 44" :y="btn.boxY + BOX_H + 14 + index * 18" dominant-baseline="central" style="font-size: 7px; fill: #475569; pointer-events: none;">{{ record.type.length > 5 ? record.type.substring(0, 5) + '..' : record.type }}</text>
+            <text :x="btn.boxX + 88" :y="btn.boxY + BOX_H + 14 + index * 18" dominant-baseline="central" style="font-size: 7px; fill: #06B6D4; pointer-events: none;">{{ record.result }}</text>
           </template>
         </g>
       </g>
