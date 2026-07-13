@@ -47,6 +47,7 @@ import {
   ChevronDown,
   ChevronUp,
   Target,
+  Users,
   Maximize2,
   Scan,
   Database,
@@ -56,10 +57,11 @@ import {
   Droplets,
   FlaskConical,
   AlertTriangle,
+  Tags
 } from 'lucide-vue-next';
 
 const patients = [
-  { id: 1, name: "陈 * 明", age: 42, gender: "男", status: "就诊中", tags: ["高血压", "门诊"], av: "👨", avBg: "#EFF6FF", tagColors: ["t-amber", "t-blue"] },
+  { id: 1, name: "陈 ** 明", age: 42, gender: "男", status: "就诊中", tags: ["高血压", "门诊"], av: "👨", avBg: "#EFF6FF", tagColors: ["t-amber", "t-blue"] },
   { id: 2, name: "王 ** 芳", age: 35, gender: "女", status: "待诊", tags: ["糖尿病", "复查"], av: "👩", avBg: "#ECFDF5", tagColors: ["t-purple", "t-blue"] },
   { id: 3, name: "张 ** 国", age: 68, gender: "男", status: "已诊", tags: ["心衰", "随访"], av: "👴", avBg: "#FFF7E6", tagColors: ["t-red", "t-amber"] },
   { id: 4, name: "赵 ** 敏", age: 28, gender: "女", status: "待诊", tags: ["孕32周", "产检"], av: "👧", avBg: "#F5F3FF", tagColors: ["t-green", "t-cyan"] },
@@ -124,22 +126,22 @@ const recordTabOptions = [
 const portraitButtons = computed(() => {
   const examRecent = healthRecords
     .filter(r => r.type === 'exam')
-    .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-    .slice(0, 2)
-    .map(r => {
-      let result = (r.desc || '').replace(/^(诊断结论|结论)[：:]\s*/, '').replace(/[；;，,].*$/, '');
-      if (result.length > 8) result = result.substring(0, 8) + '...';
-      return { date: r.date, type: r.diag, result, record: r };
-    });
+    .slice(0, 3)
+    .map(r => ({
+      date: r.date,
+      type: r.diag,
+      result: (r.desc || '').replace(/^(诊断结论|结论)[：:]\s*/, '').replace(/[；;].*$/, '')
+    }));
   const labRecent = healthRecords
     .filter(r => r.type === 'lab')
-    .sort((a, b) => (b.date || '').localeCompare(a.date || ''))
-    .slice(0, 2)
+    .slice(0, 3)
     .map(r => {
       const m = r.metrics?.[0];
-      let result = m ? `${m.label.replace(/\(.*?\)/, '').trim()} ${m.value}${m.unit || ''}` : '';
-      if (result.length > 8) result = result.substring(0, 8) + '...';
-      return { date: r.date, type: r.diag, result, record: r };
+      return {
+        date: r.date,
+        type: r.diag,
+        result: m ? `${m.label.replace(/\(.*?\)/, '').trim()} ${m.value}${m.unit || ''}` : ''
+      };
     });
   return [
   { id: 'outpatient', label: '门诊记录', icon: '🏥', dotX: 428, dotY: 115, boxX: 540, boxY: 83,  side: 'right', color: '#3B82F6', ringR: 28, ringDur: 3.2, ringDelay: 0.0 },
@@ -169,12 +171,6 @@ function onPortraitButtonClick(id: string) {
     activeLifecycleTab.value = mapping.lifecycleTab as any;
   }
   activeView.value = 'health';
-}
-
-function onPortraitRecordClick(record: any) {
-  if (!record) return;
-  selectedRecordForDetail.value = record;
-  showOutpatientDetail.value = true;
 }
 
 function goToHealthFromOverview() {
@@ -365,9 +361,8 @@ onMounted(() => {
   // 检查 URL 参数，如果存在 view 参数，则设置对应的视图
   const urlParams = new URLSearchParams(window.location.search);
   const viewParam = urlParams.get('view');
-  const validViews: ViewType[] = ['overview', 'health', 'finance', 'info', 'ai-diagnosis', 'medintercept', 'rulesadapt'];
-  if (viewParam && validViews.includes(viewParam as ViewType)) {
-    activeView.value = viewParam as ViewType;
+  if (viewParam === 'ai-diagnosis') {
+    activeView.value = 'ai-diagnosis';
   }
 });
 
@@ -436,19 +431,13 @@ const expiredInsurancePolicies = ref([
 const metricData = computed(() => {
   const data = [];
   let count = 7;
-  let daysBack = 7;
-  if (selectedMetricRange.value === '近一周') { count = 7; daysBack = 7; }
-  else if (selectedMetricRange.value === '近一月') { count = 15; daysBack = 30; }
-  else if (selectedMetricRange.value === '近三月') { count = 30; daysBack = 90; }
-  else if (selectedMetricRange.value === '近一年') { count = 50; daysBack = 365; }
+  if (selectedMetricRange.value === '近一周') count = 7;
+  else if (selectedMetricRange.value === '近一月') count = 15;
+  else if (selectedMetricRange.value === '近三月') count = 30;
+  else if (selectedMetricRange.value === '近一年') count = 50;
 
-  const today = new Date(2026, 5, 28); // 2026-06-28
-
-  for (let i = count - 1; i >= 0; i--) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - Math.round((i / (count - 1)) * daysBack));
-    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const row: any = { date: dateStr };
+  for (let i = 1; i <= count; i++) {
+    const row: any = { date: `2022-06-${28 - i}` };
     if (selectedMetric.value === '血压') {
       row.v1 = 120 + Math.floor(Math.random() * 20);
       row.v2 = 70 + Math.floor(Math.random() * 15);
@@ -467,7 +456,7 @@ const metricData = computed(() => {
     row.source = getRandomSource();
     data.push(row);
   }
-  return data;
+  return data.reverse(); 
 });
 
 const chartPaths = computed(() => {
@@ -620,7 +609,7 @@ type LifecycleTab = "all" | "op" | "ip" | "lab" | "exam" | "med" | "wd";
 
 const activeView = ref<ViewType>("his");
 function isActiveView(v: ViewType) { return activeView.value === v; }
-function setActiveView(v: ViewType) { activeView.value = v; showOutpatientDetail.value = false; showDicomViewer.value = false; const url = new URL(window.location.href); if (v === 'his') { url.searchParams.delete('view'); } else { url.searchParams.set('view', v); } window.history.replaceState({}, '', url.toString()); }
+function setActiveView(v: ViewType) { activeView.value = v; }
 const activeNavTab = ref("imaging");
 const showHisDropdown = ref(false);
 const showMedInterceptPopup = ref(true);
@@ -768,26 +757,12 @@ const handleAction = (type: string, title: string, record?: any) => {
     return;
   }
   
-  if (type === 'op' || type === 'ip_detail' || type === 'lab_detail' || type === 'exam_detail' || type === 'wd') {
+  if (type === 'op' || type === 'ip_detail' || type === 'lab_detail' || type === 'exam_detail') {
     selectedRecordForDetail.value = record;
     showOutpatientDetail.value = true;
   } else if (type === 'dicom') {
     selectedRecordForDetail.value = record;
     showDicomViewer.value = true;
-  } else if (type === 'ai_dicom') {
-    selectedPatientId.value = 1;
-    selectedRecordForDetail.value = {
-      date: record.date || '2024-06-15',
-      hosp: record.hosp || '常州市第一人民医院',
-      dept: record.dept || '放射科',
-      diag: record.diag || '胸部CT平扫',
-      type: 'exam'
-    };
-    showDicomViewer.value = true;
-  } else if (type === 'wd_detail') {
-    recordTab.value = 'wearable';
-    activeLifecycleTab.value = 'wd';
-    activeView.value = 'health';
   } else {
     showDetail.value = { type, title };
   }
@@ -996,16 +971,13 @@ const handleAction = (type: string, title: string, record?: any) => {
         <a class="ant-menu-item" :class="activeNavTab === 'imaging' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询</span></a>
         <a class="ant-menu-item" :class="activeNavTab === 'imaging-cross' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging-cross'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询(跨省)</span></a>
         <a class="ant-menu-item" :class="activeNavTab === 'inspection' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'inspection'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>检验查询</span></a>
-        <a class="ant-menu-item" :class="activeNavTab === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'overview'; setActiveView('overview')"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>参保人画像</span></a>
+        <a class="ant-menu-item" :class="activeNavTab === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'overview'; activeView = 'overview'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>参保人画像</span></a>
       </nav>
-      <div class="top-nav-user"><span class="font-normal">陈*鑫</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
+      <div class="top-nav-user"><span class="font-normal">陈**鑫</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
     </header>
-    <!-- Body: 根据导航Tab切换背景 -->
-    <div v-if="activeNavTab === 'imaging'" class="flex-1 relative" style="background: url('/his1.png') top center / 100% 100% no-repeat;">
+    <div class="flex-1 relative" style="background: url('/his1.png') top center / 100% 100% no-repeat;">
       <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 360px; height: 280px; cursor: pointer;" @click="activeView = 'his2'"></div>
     </div>
-    <div v-else-if="activeNavTab === 'imaging-cross'" class="flex-1 overflow-hidden" style="background: url('/his5.png') top center / 100% 100% no-repeat;"></div>
-    <div v-else-if="activeNavTab === 'inspection'" class="flex-1 overflow-hidden" style="background: url('/his4.png') top center / 100% 100% no-repeat;"></div>
   </div>
   <!-- HIS1 界面还原设计 END -->
   <!-- HIS2 界面还原设计 — 授权确认界面 -->
@@ -1019,16 +991,13 @@ const handleAction = (type: string, title: string, record?: any) => {
         <a class="ant-menu-item" :class="activeNavTab === 'imaging' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询</span></a>
         <a class="ant-menu-item" :class="activeNavTab === 'imaging-cross' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging-cross'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询(跨省)</span></a>
         <a class="ant-menu-item" :class="activeNavTab === 'inspection' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'inspection'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>检验查询</span></a>
-        <a class="ant-menu-item" :class="activeNavTab === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'overview'; setActiveView('overview')"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>参保人画像</span></a>
+        <a class="ant-menu-item" :class="activeNavTab === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'overview'; activeView = 'overview'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>参保人画像</span></a>
       </nav>
-      <div class="top-nav-user"><span class="font-normal">陈*鑫</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
+      <div class="top-nav-user"><span class="font-normal">陈**鑫</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
     </header>
-    <!-- Body: 根据导航Tab切换背景 -->
-    <div v-if="activeNavTab === 'imaging'" class="flex-1 relative" style="background: url('/his2.png') top center / 100% 100% no-repeat;">
+    <div class="flex-1 relative" style="background: url('/his2.png') top center / 100% 100% no-repeat;">
       <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 360px; height: 280px; cursor: pointer;" @click="activeView = 'his3'"></div>
     </div>
-    <div v-else-if="activeNavTab === 'imaging-cross'" class="flex-1 overflow-hidden" style="background: url('/his5.png') top center / 100% 100% no-repeat;"></div>
-    <div v-else-if="activeNavTab === 'inspection'" class="flex-1 overflow-hidden" style="background: url('/his4.png') top center / 100% 100% no-repeat;"></div>
   </div>
   <!-- HIS2 界面还原设计 END -->
   <!-- HIS3 界面还原设计 — 授权结果界面 -->
@@ -1042,14 +1011,11 @@ const handleAction = (type: string, title: string, record?: any) => {
         <a class="ant-menu-item" :class="activeNavTab === 'imaging' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询</span></a>
         <a class="ant-menu-item" :class="activeNavTab === 'imaging-cross' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging-cross'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询(跨省)</span></a>
         <a class="ant-menu-item" :class="activeNavTab === 'inspection' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'inspection'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>检验查询</span></a>
-        <a class="ant-menu-item" :class="activeNavTab === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'overview'; setActiveView('overview')"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>参保人画像</span></a>
+        <a class="ant-menu-item" :class="activeNavTab === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'overview'; activeView = 'overview'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>参保人画像</span></a>
       </nav>
-      <div class="top-nav-user"><span class="font-normal">陈*鑫</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
+      <div class="top-nav-user"><span class="font-normal">陈**鑫</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
     </header>
-    <!-- Body: 根据导航Tab切换背景 -->
-    <div v-if="activeNavTab === 'imaging'" class="flex-1 overflow-hidden" style="background: url('/his3.png') top center / 100% 100% no-repeat;"></div>
-    <div v-else-if="activeNavTab === 'imaging-cross'" class="flex-1 overflow-hidden" style="background: url('/his5.png') top center / 100% 100% no-repeat;"></div>
-    <div v-else-if="activeNavTab === 'inspection'" class="flex-1 overflow-hidden" style="background: url('/his4.png') top center / 100% 100% no-repeat;"></div>
+    <div class="flex-1 overflow-hidden" style="background: url('/his3.png') top center / 100% 100% no-repeat;"></div>
   </div>
   <!-- HIS3 界面还原设计 END -->
   <div v-else-if="activeView === 'medintercept'" style="position: relative; width: 100vw; height: 100vh; background: url('/his.png') center / cover no-repeat;">
@@ -1154,6 +1120,8 @@ const handleAction = (type: string, title: string, record?: any) => {
       <div class="top-nav-header flex items-center shrink-0 h-full">
         <img src="/logo.png" class="h-12" alt="Logo" />
         <span class="top-nav-title">个人医保云数据共享</span>
+        <span class="top-nav-sep"></span>
+        <span class="top-nav-subtitle">AI辅助诊断</span>
       </div>
       <nav class="flex h-full items-center ant-header-menu">
         <a class="ant-menu-item" :class="isActiveView('overview') ? 'ant-menu-item-selected' : ''" @click="setActiveView('overview')"><i class="ant-menu-item-icon"><UserCircle :size="14" /></i><span>参保人画像</span></a>
@@ -1161,28 +1129,16 @@ const handleAction = (type: string, title: string, record?: any) => {
         <a class="ant-menu-item" :class="isActiveView('finance') ? 'ant-menu-item-selected' : ''" @click="setActiveView('finance')"><i class="ant-menu-item-icon"><CreditCard :size="14" /></i><span>医保财务档案</span></a>
         <a class="ant-menu-item" :class="isActiveView('info') ? 'ant-menu-item-selected' : ''" @click="setActiveView('info')"><i class="ant-menu-item-icon"><Info :size="14" /></i><span>医保信息档案</span></a>
       </nav>
-      <div class="flex-1"></div>
-      <div class="flex items-center gap-1.5 mr-3">
-        <input v-model="searchPatientName" type="text" placeholder="患者姓名" class="border border-slate-200 rounded-xl px-3 py-1.5 text-xs w-24 outline-none focus:border-blue-400 transition-colors" />
-        <input v-model="searchPatientId" type="text" placeholder="证件号码" class="border border-slate-200 rounded-xl px-3 py-1.5 text-xs w-36 outline-none focus:border-blue-400 transition-colors" />
-        <button @click="handlePatientSearch" class="bg-blue-600 text-xs px-3 py-1.5 rounded-xl hover:bg-blue-700 transition-colors flex items-center gap-1 whitespace-nowrap font-medium" style="color: #fff;">
-          <Search :size="12" /> 查询
-        </button>
-      </div>
       <a-dropdown trigger="click">
-        <div class="top-nav-user"><span class="font-normal">陈*鑫</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
+        <div class="top-nav-user"><span class="font-normal">张兮兮</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
         <template #overlay>
-          <a-menu @click="({ key }) => { if (key === 'logout') { showMedInterceptPopup = false; showRulesAdaptPopup = false; setActiveView('his'); } }">
-            <a-menu-item key="logout">退出</a-menu-item>
+          <a-menu @click="({ key }) => { if (key === 'medintercept') { setActiveView('medintercept'); showMedInterceptPopup = true; showRulesAdaptPopup = false } else if (key === 'rulesadapt') { setActiveView('rulesadapt'); showRulesAdaptPopup = true; showMedInterceptPopup = false } }">
+            <a-menu-item key="medintercept">用药实时拦截</a-menu-item>
+            <a-menu-item key="rulesadapt">医保规则智能适配</a-menu-item>
           </a-menu>
         </template>
       </a-dropdown>
     </header>
-
-    <!-- 面包屑导航 -->
-    <div class="page-header" style="padding: 20px 24px 0 24px;">
-      <div class="ph-breadcrumb">首页 / 参保人画像 / AI辅助诊断</div>
-    </div>
 
     <!-- 功能按钮栏 -->
     <div style="padding: 12px 24px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 12px;">
@@ -1249,7 +1205,6 @@ const handleAction = (type: string, title: string, record?: any) => {
               <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">诊断科室</th>
               <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">影像评分</th>
               <th style="padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b;">任务状态</th>
-              <th style="padding: 12px 16px; text-align: center; font-size: 12px; font-weight: 600; color: #64748b;">操作</th>
             </tr>
           </thead>
           <tbody>
@@ -1258,10 +1213,10 @@ const handleAction = (type: string, title: string, record?: any) => {
               <td style="padding: 12px 16px;">
                 <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
               </td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">胸部CT平扫</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2026-06-29 10:23:15</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">陈*明</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">342******0879</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">CT肺结节AI筛查</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-15 10:23:15</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">陈志明</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3204**********1263</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">男</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">42</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">门诊</td>
@@ -1275,9 +1230,6 @@ const handleAction = (type: string, title: string, record?: any) => {
               <td style="padding: 12px 16px;">
                 <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
               </td>
-              <td style="padding: 12px 16px; text-align: center;">
-                <a class="text-blue-600 hover:text-blue-700 hover:underline cursor-pointer" style="font-size: 12px;" @click="handleAction('ai_dicom', '调阅影像', { date: '2026-06-29', hosp: '常州市第一人民医院', dept: '放射科', diag: '胸部CT平扫' })">查看详情</a>
-              </td>
             </tr>
             <tr style="border-bottom: 1px solid #f1f5f9;">
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2</td>
@@ -1285,11 +1237,11 @@ const handleAction = (type: string, title: string, record?: any) => {
                 <span class="px-2 py-1 bg-blue-100 text-blue-700 text-[11px] font-medium rounded-full">诊断中</span>
               </td>
               <td style="padding: 12px 16px; font-size: 12px; color: #334155;">心电图AI智能分析</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2026-06-29 09:45:22</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">陈*明</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">342******0879</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">男</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">42</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-15 09:45:22</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">王小红</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3205**********8741</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">女</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">35</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">门诊</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #334155;">心内科</td>
               <td style="padding: 12px 16px;">
@@ -1301,9 +1253,6 @@ const handleAction = (type: string, title: string, record?: any) => {
               <td style="padding: 12px 16px;">
                 <span class="px-2 py-1 bg-blue-100 text-blue-700 text-[11px] font-medium rounded-full">进行中</span>
               </td>
-              <td style="padding: 12px 16px; text-align: center;">
-                <a class="text-blue-600 hover:text-blue-700 hover:underline cursor-pointer" style="font-size: 12px;" @click="handleAction('ai_dicom', '调阅影像', { date: '2026-06-29', hosp: '常州市第一人民医院', dept: '心内科', diag: '心电图AI智能分析' })">查看详情</a>
-              </td>
             </tr>
             <tr style="border-bottom: 1px solid #f1f5f9;">
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">3</td>
@@ -1311,11 +1260,11 @@ const handleAction = (type: string, title: string, record?: any) => {
                 <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
               </td>
               <td style="padding: 12px 16px; font-size: 12px; color: #334155;">病理切片AI筛查</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2026-06-28 08:30:12</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">陈*明</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">342******0879</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-15 08:30:12</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">李明华</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3206**********5628</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">男</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">42</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">58</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">住院</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #334155;">病理科</td>
               <td style="padding: 12px 16px;">
@@ -1327,9 +1276,6 @@ const handleAction = (type: string, title: string, record?: any) => {
               <td style="padding: 12px 16px;">
                 <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
               </td>
-              <td style="padding: 12px 16px; text-align: center;">
-                <a class="text-blue-600 hover:text-blue-700 hover:underline cursor-pointer" style="font-size: 12px;" @click="handleAction('ai_dicom', '调阅影像', { date: '2026-06-28', hosp: '南京大学医学院附属鼓楼医院', dept: '病理科', diag: '病理切片AI筛查' })">查看详情</a>
-              </td>
             </tr>
             <tr style="border-bottom: 1px solid #f1f5f9;">
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">4</td>
@@ -1337,11 +1283,11 @@ const handleAction = (type: string, title: string, record?: any) => {
                 <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
               </td>
               <td style="padding: 12px 16px; font-size: 12px; color: #334155;">临床决策支持</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2026-06-28 16:22:33</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">陈*明</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">342******0879</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">男</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">42</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-14 16:22:33</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">张丽华</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3207**********9834</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">女</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">62</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">住院</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #334155;">内科</td>
               <td style="padding: 12px 16px;">
@@ -1353,9 +1299,6 @@ const handleAction = (type: string, title: string, record?: any) => {
               <td style="padding: 12px 16px;">
                 <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
               </td>
-              <td style="padding: 12px 16px; text-align: center;">
-                <a class="text-blue-600 hover:text-blue-700 hover:underline cursor-pointer" style="font-size: 12px;" @click="handleAction('ai_dicom', '调阅影像', { date: '2026-06-28', hosp: '南京大学医学院附属鼓楼医院', dept: '内科', diag: '临床决策支持' })">查看详情</a>
-              </td>
             </tr>
             <tr style="border-bottom: 1px solid #f1f5f9;">
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">5</td>
@@ -1363,11 +1306,11 @@ const handleAction = (type: string, title: string, record?: any) => {
                 <span class="px-2 py-1 bg-amber-100 text-amber-700 text-[11px] font-medium rounded-full">待审核</span>
               </td>
               <td style="padding: 12px 16px; font-size: 12px; color: #334155;">用药风险AI评估</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2026-06-28 14:15:47</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">陈*明</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">342******0879</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-14 14:15:47</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">刘海波</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3208**********6721</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">男</td>
-              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">42</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">47</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">门诊</td>
               <td style="padding: 12px 16px; font-size: 12px; color: #334155;">药剂科</td>
               <td style="padding: 12px 16px;">
@@ -1379,8 +1322,74 @@ const handleAction = (type: string, title: string, record?: any) => {
               <td style="padding: 12px 16px;">
                 <span class="px-2 py-1 bg-amber-100 text-amber-700 text-[11px] font-medium rounded-full">待审核</span>
               </td>
-              <td style="padding: 12px 16px; text-align: center;">
-                <a class="text-blue-600 hover:text-blue-700 hover:underline cursor-pointer" style="font-size: 12px;" @click="handleAction('ai_dicom', '调阅影像', { date: '2026-06-28', hosp: '南京大学医学院附属鼓楼医院', dept: '药剂科', diag: '用药风险AI评估' })">查看详情</a>
+            </tr>
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">6</td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-[11px] font-medium rounded-full">诊断中</span>
+              </td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">慢病风险预测</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-14 11:05:30</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">赵云龙</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3209**********3451</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">男</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">56</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">体检</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">内分泌科</td>
+              <td style="padding: 12px 16px;">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-purple-600">76.4</span>
+                  <span style="font-size: 10px; color: #94a3b8;">—</span>
+                </div>
+              </td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-blue-100 text-blue-700 text-[11px] font-medium rounded-full">进行中</span>
+              </td>
+            </tr>
+            <tr style="border-bottom: 1px solid #f1f5f9;">
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">7</td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
+              </td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">检验结果智能解读</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-13 09:20:18</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">孙晓芬</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3210**********7294</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">女</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">51</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">门诊</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">检验科</td>
+              <td style="padding: 12px 16px;">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-purple-600">95.8</span>
+                  <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+              </td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-green-100 text-green-700 text-[11px] font-medium rounded-full">已完成</span>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">8</td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-[11px] font-medium rounded-full">待审核</span>
+              </td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">手术风险评估</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">2024-06-13 15:42:05</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">周国强</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b; font-family: monospace;">3211**********5083</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">男</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">68</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #64748b;">住院</td>
+              <td style="padding: 12px 16px; font-size: 12px; color: #334155;">普外科</td>
+              <td style="padding: 12px 16px;">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold text-purple-600">73.6</span>
+                  <span style="font-size: 10px; color: #f59e0b;">⚠</span>
+                </div>
+              </td>
+              <td style="padding: 12px 16px;">
+                <span class="px-2 py-1 bg-amber-100 text-amber-700 text-[11px] font-medium rounded-full">待审核</span>
               </td>
             </tr>
           </tbody>
@@ -1411,12 +1420,14 @@ const handleAction = (type: string, title: string, record?: any) => {
       <div class="top-nav-header flex items-center shrink-0 h-full">
         <img src="/logo.png" class="h-12" alt="Logo" />
         <span class="top-nav-title">个人医保云数据共享</span>
+        <span class="top-nav-sep"></span>
+        <span class="top-nav-subtitle">参保人全息视图</span>
       </div>
       <nav class="flex h-full items-center ant-header-menu">
-        <a class="ant-menu-item" :class="activeView === 'overview' ? 'ant-menu-item-selected' : ''" @click="setActiveView('overview')"><i class="ant-menu-item-icon"><UserCircle :size="14" /></i><span>参保人画像</span></a>
-        <a class="ant-menu-item" :class="activeView === 'health' ? 'ant-menu-item-selected' : ''" @click="setActiveView('health')"><i class="ant-menu-item-icon"><Activity :size="14" /></i><span>医保健康档案</span></a>
-        <a class="ant-menu-item" :class="activeView === 'finance' ? 'ant-menu-item-selected' : ''" @click="setActiveView('finance')"><i class="ant-menu-item-icon"><CreditCard :size="14" /></i><span>医保财务档案</span></a>
-        <a class="ant-menu-item" :class="activeView === 'info' ? 'ant-menu-item-selected' : ''" @click="setActiveView('info')"><i class="ant-menu-item-icon"><Info :size="14" /></i><span>医保信息档案</span></a>
+        <a class="ant-menu-item" :class="activeView === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeView = 'overview'"><i class="ant-menu-item-icon"><UserCircle :size="14" /></i><span>参保人画像</span></a>
+        <a class="ant-menu-item" :class="activeView === 'health' ? 'ant-menu-item-selected' : ''" @click="activeView = 'health'"><i class="ant-menu-item-icon"><Activity :size="14" /></i><span>医保健康档案</span></a>
+        <a class="ant-menu-item" :class="activeView === 'finance' ? 'ant-menu-item-selected' : ''" @click="activeView = 'finance'"><i class="ant-menu-item-icon"><CreditCard :size="14" /></i><span>医保财务档案</span></a>
+        <a class="ant-menu-item" :class="activeView === 'info' ? 'ant-menu-item-selected' : ''" @click="activeView = 'info'"><i class="ant-menu-item-icon"><Info :size="14" /></i><span>医保信息档案</span></a>
       </nav>
       <div class="flex-1"></div>
       <div class="flex items-center gap-1.5 mr-3">
@@ -1427,10 +1438,11 @@ const handleAction = (type: string, title: string, record?: any) => {
         </button>
       </div>
       <a-dropdown trigger="click">
-        <div class="top-nav-user"><span class="font-normal">陈*鑫</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
+        <div class="top-nav-user"><span class="font-normal">陈**鑫</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
         <template #overlay>
-          <a-menu @click="({ key }) => { if (key === 'logout') { showMedInterceptPopup = false; showRulesAdaptPopup = false; setActiveView('his'); } }">
-            <a-menu-item key="logout">退出</a-menu-item>
+          <a-menu @click="({ key }) => { if (key === 'medintercept') { activeView = 'medintercept'; showMedInterceptPopup = true; showRulesAdaptPopup = false } else if (key === 'rulesadapt') { activeView = 'rulesadapt'; showRulesAdaptPopup = true; showMedInterceptPopup = false } }">
+            <a-menu-item key="medintercept">用药实时拦截</a-menu-item>
+            <a-menu-item key="rulesadapt">医保规则智能适配</a-menu-item>
           </a-menu>
         </template>
       </a-dropdown>
@@ -1501,25 +1513,15 @@ const handleAction = (type: string, title: string, record?: any) => {
                       </div>
                     </div>
 
-                    <div class="flex items-center justify-between mb-2">
-                      <h3 class="text-[11px] font-bold text-blue-600 uppercase tracking-widest flex items-center gap-2">
-                        <CreditCard :size="13" />
-                        医保财务档案
-                      </h3>
-                      <button type="button" class="text-[11px] font-normal text-blue-600 flex items-center gap-1 transition-colors hover:opacity-80" style="color: #2563EB !important; font-size: 11px; font-weight: 400;" @click="setActiveView('finance')">
-                        查看更多
-                        <ChevronRight :size="11" />
-                      </button>
-                    </div>
                     <div class="grid grid-cols-2 gap-1 mb-1.5">
-                      <div class="bg-gradient-to-br from-blue-500 to-blue-600 border border-blue-400 rounded-lg py-1.5 px-2.5 shadow-md hover:scale-[1.02] transition-all relative overflow-hidden group cursor-pointer" @click="setActiveView('finance')">
+                      <div class="bg-gradient-to-br from-blue-500 to-blue-600 border border-blue-400 rounded-lg py-1.5 px-2.5 shadow-md hover:scale-[1.02] transition-all relative overflow-hidden group">
                         <p class="text-[10px] text-blue-100 font-medium flex items-center gap-1 mb-0.5 relative z-10">
                           <CircleDot :size="5" class="text-blue-200" />
                           个人账户余额
                         </p>
                         <p class="flex items-baseline gap-0.5 font-bold font-mono leading-none text-white relative z-10"><span class="text-base">5,240</span><span class="text-blue-100/80 text-[9px]">.50</span></p>
                       </div>
-                      <div class="bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600 rounded-lg py-1.5 px-2.5 shadow-md hover:scale-[1.02] transition-all relative overflow-hidden group cursor-pointer" @click="setActiveView('finance')">
+                      <div class="bg-gradient-to-br from-slate-700 to-slate-800 border border-slate-600 rounded-lg py-1.5 px-2.5 shadow-md hover:scale-[1.02] transition-all relative overflow-hidden group">
                         <p class="text-[10px] text-slate-300 font-medium flex items-center gap-1 mb-0.5 relative z-10">
                           <Target :size="5" class="text-slate-400" />
                           本年统筹支付
@@ -1531,6 +1533,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                     <!-- Family Mutual Aid Account -->
                     <div class="pt-4 border-t border-slate-100 mt-3 pb-2">
                       <div class="flex items-center gap-2 mb-3">
+                        <Users :size="13" class="text-blue-600" />
                         <span class="text-[11px] font-bold text-blue-600 tracking-widest uppercase">家庭共济账户</span>
                       </div>
                       <div class="flex items-center justify-between px-1">
@@ -1580,6 +1583,7 @@ const handleAction = (type: string, title: string, record?: any) => {
 
                     <div class="pt-4 border-t border-slate-100 mt-3 pb-1">
                       <div class="flex items-center gap-2 mb-3">
+                        <Tags :size="13" class="text-blue-600" />
                         <span class="text-[11px] font-bold text-blue-600 tracking-widest uppercase">标签画像</span>
                       </div>
                       <div class="px-0.5 space-y-4">
@@ -1634,7 +1638,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                   <div class="flex-1 min-h-0 relative standard-card !bg-white/80 overflow-hidden group">
                     <div class="w-full h-full flex items-center justify-center">
                       <div class="relative w-full h-full flex items-center justify-center p-3">
-                        <BodyAnnotation body-image-src="/body.png" :buttons="portraitButtons" @button-click="onPortraitButtonClick" @record-click="onPortraitRecordClick" />
+                        <BodyAnnotation body-image-src="/body.png" :buttons="portraitButtons" @button-click="onPortraitButtonClick" />
                       </div>
                     </div>
 
@@ -1681,7 +1685,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                                   <span class="font-bold text-red-800" style="font-size: clamp(7px, 0.55vw, 9px);">影像AI辅助分析</span>
                                   <span class="font-bold text-red-600 rounded-full bg-red-100" style="font-size: clamp(5px, 0.4vw, 6px); padding: clamp(1px, 0.1vw, 2px) clamp(3px, 0.25vw, 4px);">新</span>
                                 </div>
-                                <div class="text-red-700/70" style="font-size: clamp(6px, 0.45vw, 7px); word-break: break-all;">胸部CT（06-29）· 发现2项可疑异常</div>
+                                <div class="text-red-700/70" style="font-size: clamp(6px, 0.45vw, 7px); word-break: break-all;">胸部CT（06-10）· 发现2项可疑异常</div>
                                 <div class="flex items-center gap-0.5 text-red-700/70 flex-wrap" style="margin-top: clamp(2px, 0.15vw, 4px); font-size: clamp(6px, 0.45vw, 7px);">
                                   <span>影像一扫多筛智能体</span>
                                   <span class="mx-0.5">·</span>
@@ -1764,7 +1768,7 @@ const handleAction = (type: string, title: string, record?: any) => {
 
                   <div class="flex gap-2">
                     <!-- 左侧：历史病历快读（蓝色背景） -->
-                    <div class="w-80 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-2.5 shadow-md flex flex-col cursor-pointer hover:shadow-lg transition-all" @click="openAIAssistant()">
+                    <div class="w-80 bg-gradient-to-br from-blue-400 to-blue-500 rounded-xl p-2.5 shadow-md flex flex-col cursor-pointer hover:shadow-lg transition-all" @click="setActiveView('ai-diagnosis')">
                       <div class="flex items-center gap-1.5 mb-2">
                         <span class="w-5 h-5 rounded-md bg-white/20 flex items-center justify-center text-white text-[9px] font-bold">AI</span>
                         <span class="text-[11px] font-bold text-white">历史病历快读</span>
@@ -1794,7 +1798,7 @@ const handleAction = (type: string, title: string, record?: any) => {
 
                     <!-- 右侧：服务卡片 -->
                     <div class="flex-1 grid grid-cols-5 grid-rows-2 gap-2">
-                      <div class="col-span-3 bg-gradient-to-br from-red-50 to-red-100/50 rounded-xl p-2.5 cursor-pointer hover:shadow-sm transition-all" @click="openAIAssistant()">
+                      <div class="col-span-3 bg-gradient-to-br from-red-50 to-red-100/50 rounded-xl p-2.5 cursor-pointer hover:shadow-sm transition-all" @click="setActiveView('ai-diagnosis')">
                         <div class="flex items-center gap-2 mb-1.5">
                           <div class="w-5 h-5 rounded-md bg-red-100 flex items-center justify-center shrink-0">
                             <svg class="w-3 h-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.66 1.732-3L13.732 4c-.77-1.34-2.694-1.34-3.464 0L3.34 16c-.77 1.34.192 3 1.732 3z"></path></svg>
@@ -1812,42 +1816,42 @@ const handleAction = (type: string, title: string, record?: any) => {
                           </div>
                         </div>
                       </div>
-                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="openAIAssistant()">
+                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="setActiveView('ai-diagnosis')">
                         <div class="w-1/4 aspect-square rounded-lg bg-cyan-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                           <svg class="w-1/2 h-1/2 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                         </div>
                         <span class="text-sm font-bold text-slate-700">影像AI</span>
                         <svg class="w-12 h-12 text-slate-300/10 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                       </div>
-                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="openAIAssistant()">
+                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="setActiveView('ai-diagnosis')">
                         <div class="w-1/4 aspect-square rounded-lg bg-amber-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                           <svg class="w-1/2 h-1/2 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                         </div>
                         <span class="text-sm font-bold text-slate-700">临床路径</span>
                         <svg class="w-12 h-12 text-slate-300/10 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
                       </div>
-                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="openAIAssistant()">
+                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="setActiveView('ai-diagnosis')">
                         <div class="w-1/4 aspect-square rounded-lg bg-indigo-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                           <svg class="w-1/2 h-1/2 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                         </div>
                         <span class="text-sm font-bold text-slate-700">远程诊断</span>
                         <svg class="w-12 h-12 text-slate-300/10 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                       </div>
-                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="openAIAssistant()">
+                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="setActiveView('ai-diagnosis')">
                         <div class="w-1/4 aspect-square rounded-lg bg-teal-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                           <svg class="w-1/2 h-1/2 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                         </div>
                         <span class="text-sm font-bold text-slate-700">随访计划</span>
                         <svg class="w-12 h-12 text-slate-300/10 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                       </div>
-                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="openAIAssistant()">
+                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="setActiveView('ai-diagnosis')">
                         <div class="w-1/4 aspect-square rounded-lg bg-green-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                           <svg class="w-1/2 h-1/2 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                         </div>
                         <span class="text-sm font-bold text-slate-700">智能质控</span>
                         <svg class="w-12 h-12 text-slate-300/10 absolute -right-3 -bottom-3 group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                       </div>
-                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="openAIAssistant()">
+                      <div class="bg-white rounded-xl p-3 cursor-pointer hover:shadow-md transition-all flex items-center gap-3 relative overflow-hidden group shadow-sm border border-slate-100" @click="setActiveView('ai-diagnosis')">
                         <div class="w-1/4 aspect-square rounded-lg bg-teal-100 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                           <svg class="w-1/2 h-1/2 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h6v6H3zM15 3h6v6h-6zM9 9h6v6H9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15h18v6H3z"/></svg>
                         </div>
@@ -1928,7 +1932,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                         <!-- Record Card -->
                         <div 
                           class="bg-white shadow-sm rounded-xl p-3 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer group relative overflow-hidden"
-                          @click="handleAction(record.type === 'med' ? 'op' : (record.type === 'lab' ? 'lab_detail' : (record.type === 'exam' ? 'exam_detail' : (record.type === 'ip' ? 'ip_detail' : (record.type === 'wd' ? 'wd' : 'op')))), record.diag, record)"
+                          @click="handleAction(record.type === 'med' ? 'op' : (record.type === 'lab' ? 'lab_detail' : (record.type === 'exam' ? 'exam_detail' : (record.type === 'ip' ? 'ip_detail' : (record.type === 'wd' ? 'wd_detail' : 'op')))), record.diag, record)"
                         >
                           <div class="flex items-start justify-between gap-3 mb-2">
                             <div class="flex items-center gap-2">
@@ -1989,8 +1993,8 @@ const handleAction = (type: string, title: string, record?: any) => {
                             <div v-else-if="record.type === 'wd'" class="space-y-1">
                               <div class="text-[11px] text-slate-600 line-clamp-2 leading-relaxed">{{ record.desc }}</div>
                               <div class="flex flex-wrap gap-2 mt-2">
-                                <div v-for="metric in record.metrics?.slice(0, 1)" :key="metric.label" class="warning-tag flex items-center">
-                                    {{ metric.label }} {{ metric.value }}<span v-if="metric.unit">{{ metric.unit }}</span>
+                                <div v-for="metric in record.metrics" :key="metric.label" class="warning-tag flex items-center">
+                                    {{ metric.label }} {{ metric.value }} ↑
                                 </div>
                               </div>
                             </div>
@@ -2098,7 +2102,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                                 </div>
                                 <div>
                                   <h4 class="text-sm font-bold text-slate-900">江苏医惠保1号</h4>
-                                  <p class="text-[12px] text-slate-500">保单号：PASH20240312001</p>
+                                  <p class="text-[10px] text-slate-500">保单号：PASH20240312001</p>
                                 </div>
                               </div>
                               <svg class="w-4 h-4 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
@@ -2135,7 +2139,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                                 </div>
                                 <div>
                                   <h4 class="text-sm font-bold text-slate-900">乐享健康重疾险</h4>
-                                  <p class="text-[12px] text-slate-500">保单号：LXJK20240520008</p>
+                                  <p class="text-[10px] text-slate-500">保单号：LXJK20240520008</p>
                                 </div>
                               </div>
                               <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
@@ -2170,7 +2174,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                             <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center border border-green-100 shadow-sm text-xl">🦽</div>
                             <div>
                               <h4 class="text-sm font-bold text-slate-900">常州市长期护理保险</h4>
-                              <p class="text-[12px] text-slate-500">评定等级：重度失能 II 级</p>
+                              <p class="text-[10px] text-slate-500">评定等级：重度失能 II 级</p>
                             </div>
                           </div>
                           <div class="grid grid-cols-4 gap-2 border-t border-green-100 pt-3">
@@ -2365,16 +2369,16 @@ const handleAction = (type: string, title: string, record?: any) => {
           </div>
           <div class="g4" style="margin-bottom: 14px">
             <div class="mc">
-              <div class="mc-lbl">💰 个人账户余额</div>
-              <div class="mc-val" style="color: var(--blue)">¥5,240.50</div>
-              <div class="mc-sub">职工基本医疗保险</div>
-              <div class="mc-trend tr-up">↑ 本年累计入账</div>
+              <div class="mc-lbl">💰 年度费用总额</div>
+              <div class="mc-val" style="color: var(--blue)">{{ selectedYear === '2026' ? '¥10,250.00' : '¥8,540.00' }}</div>
+              <div class="mc-sub">包含所有就医费用</div>
+              <div class="mc-trend tr-flat">→ 较去年增长 15%</div>
             </div>
             <div class="mc">
-              <div class="mc-lbl">🏥 本年统筹支付</div>
-              <div class="mc-val" style="color: var(--green)">¥1,850.00</div>
-              <div class="mc-sub">医保统筹基金支付</div>
-              <div class="mc-trend tr-up">↑ 本年累计报销</div>
+              <div class="mc-lbl">🏥 医保支付总额</div>
+              <div class="mc-val" style="color: var(--green)">{{ selectedYear === '2026' ? '¥6,320.00' : '¥5,100.00' }}</div>
+              <div class="mc-sub">报销额度比例 38%</div>
+              <div class="mc-trend tr-up">↑ 统筹+个账支付</div>
             </div>
             <div class="mc">
               <div class="mc-lbl">👤 个人支付金额</div>
@@ -2383,10 +2387,10 @@ const handleAction = (type: string, title: string, record?: any) => {
               <div class="mc-trend tr-down">↓ 门槛费已过线</div>
             </div>
             <div class="mc">
-              <div class="mc-lbl">📈 商保报销总额</div>
+              <div class="mc-lbl">📈 医保报销总额</div>
               <div class="mc-val" style="color: var(--blue)">{{ selectedYear === '2026' ? '¥6,320' : '¥5,100' }}</div>
-              <div class="mc-sub">商业补充医疗保险</div>
-              <div class="mc-trend tr-up">↑ 年度商保报销限额 ¥200,000</div>
+              <div class="mc-sub">统筹年度封顶线</div>
+              <div class="mc-trend tr-up">↑ 已用 {{ selectedYear === '2026' ? '¥6,320' : '¥5,100' }} / ¥200,000</div>
             </div>
           </div>
           <div class="g-full">
@@ -2561,9 +2565,9 @@ const handleAction = (type: string, title: string, record?: any) => {
           <div class="g4" style="margin-bottom: 20px;">
             <div class="mc">
               <div class="mc-lbl">🏦 个人账户余额</div>
-              <div class="mc-val" style="color: var(--blue)">¥5,240.50</div>
-              <div class="mc-sub">职工基本医疗保险</div>
-              <div class="mc-trend tr-up">↑ 本年累计入账</div>
+              <div class="mc-val" style="color: var(--blue)">888.59</div>
+              <div class="mc-sub">最近一次划拨时间</div>
+              <div class="mc-trend tr-flat">→ 2026-03-01</div>
             </div>
             <div class="mc">
               <div class="mc-lbl">🌍 异地就医备案</div>
@@ -2576,12 +2580,6 @@ const handleAction = (type: string, title: string, record?: any) => {
               <div class="mc-val" style="color: var(--green)">已开通</div>
               <div class="mc-sub">授信额度 ¥5,000</div>
               <div class="mc-trend" style="background: rgba(34, 197, 94, 0.1); color: var(--green); display: inline-block; padding: 2px 8px; border-radius: 10px;">→ 当前可用 ¥5,000</div>
-            </div>
-            <div class="mc">
-              <div class="mc-lbl">🏠 家庭医生</div>
-              <div class="mc-val" style="color: var(--blue)">李华 (家医)</div>
-              <div class="mc-sub">签约家庭医生</div>
-              <div class="mc-trend" style="background: rgba(37, 99, 235, 0.1); color: var(--blue); display: inline-block; padding: 2px 8px; border-radius: 10px;">→ 服务中</div>
             </div>
           </div>
           <div class="g2">
@@ -2752,7 +2750,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                       </div>
                       <div class="ins-v2-body" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
                         <div class="ins-v2-item">
-                          <div class="ins-v2-lbl" style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;" title="保障状态">保障状态</div>
+                          <div class="ins-v2-lbl" style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;" title="保障状态">保障状态</div>
                           <div class="ins-v2-val" style="font-size: 13px; font-weight: 700; color: #10b981;" title="保障中">保障中</div>
                         </div>
                         <div class="ins-v2-item">
@@ -2783,7 +2781,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                       </div>
                       <div class="ins-v2-body" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
                         <div class="ins-v2-item">
-                          <div class="ins-v2-lbl" style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;" title="保障状态">保障状态</div>
+                          <div class="ins-v2-lbl" style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;" title="保障状态">保障状态</div>
                           <div class="ins-v2-val" style="font-size: 13px; font-weight: 700; color: #10b981;" title="保障中">保障中</div>
                         </div>
                         <div class="ins-v2-item">
@@ -2865,7 +2863,7 @@ const handleAction = (type: string, title: string, record?: any) => {
         <div v-if="showDetail.type === 'op'" class="emr-mock">
           <div class="emr-header">门诊电子病历</div>
           <div class="emr-info-grid">
-            <div class="emr-row"><span>姓名：</span>陈 * 明</div>
+            <div class="emr-row"><span>姓名：</span>陈 ** 明</div>
             <div class="emr-row"><span>性别：</span>男</div>
             <div class="emr-row"><span>年龄：</span>42岁</div>
             <div class="emr-row"><span>科室：</span>心内科</div>
@@ -2913,7 +2911,7 @@ const handleAction = (type: string, title: string, record?: any) => {
           <div class="dicom-main">
             <div class="dicom-img">
               <img src="https://picsum.photos/seed/ct-scan/800/600" alt="DICOM" referrerPolicy="no-referrer" />
-              <div class="dicom-overlay-tl">陈 * 明 [M, 42Y]<br/>ID: 342******0879<br/>2024-05-16</div>
+              <div class="dicom-overlay-tl">陈 ** 明 [M, 42Y]<br/>ID: 320404...<br/>2024-05-16</div>
               <div class="dicom-overlay-tr">常州市第一人民医院<br/>CT Chest<br/>Se: 4 Im: 12/48</div>
               <div class="dicom-overlay-bl">KV: 120<br/>mAs: 250<br/>Thick: 1.5mm</div>
               <div class="dicom-overlay-br">W: 1500<br/>L: -500</div>
@@ -2957,7 +2955,7 @@ const handleAction = (type: string, title: string, record?: any) => {
     >
       <div class="modal-body">
         <div class="refill-info">
-          <div class="ri-row"><span>患者姓名：</span>陈 * 明</div>
+          <div class="ri-row"><span>患者姓名：</span>陈 ** 明</div>
           <div class="ri-row"><span>诊断：</span>原发性高血压 3级</div>
           <div class="ri-row"><span>上次就诊：</span>2024-05-15 常州市第一人民医院</div>
         </div>
@@ -2999,7 +2997,7 @@ const handleAction = (type: string, title: string, record?: any) => {
     >
       <div class="modal-body">
         <div class="refill-info">
-          <div class="ri-row"><span>患者姓名：</span>陈 * 明</div>
+          <div class="ri-row"><span>患者姓名：</span>陈 ** 明</div>
           <div class="ri-row"><span>诊断：</span>原发性高血压 3级</div>
           <div class="ri-row"><span>上次就诊：</span>2024-05-15 常州市第一人民医院</div>
         </div>
@@ -3148,7 +3146,7 @@ const handleAction = (type: string, title: string, record?: any) => {
           <div class="fam-v2-user">
             <div class="fam-v2-av">👨‍⚕️</div>
             <div class="fam-v2-info">
-              <div class="fam-v2-name">陈 * 明 <span class="fam-v2-tag">主授权人</span></div>
+              <div class="fam-v2-name">陈 ** 明 <span class="fam-v2-tag">主授权人</span></div>
               <div class="fam-v2-id">共济账户号：GJ3204********1234</div>
             </div>
           </div>
@@ -3217,7 +3215,7 @@ const handleAction = (type: string, title: string, record?: any) => {
           <div class="fam-v2-user">
             <div class="fam-v2-av">👨‍⚕️</div>
             <div class="fam-v2-info">
-              <div class="fam-v2-name">陈 * 明 <span class="fam-v2-tag">主授权人</span></div>
+              <div class="fam-v2-name">陈 ** 明 <span class="fam-v2-tag">主授权人</span></div>
               <div class="fam-v2-id">身份证号：3204**********1234</div>
             </div>
           </div>
@@ -3299,7 +3297,15 @@ const handleAction = (type: string, title: string, record?: any) => {
       :patient="selectedPatient" 
       :record="selectedRecordForDetail"
       @back="showOutpatientDetail = false"
-      @show-dicom="(r) => { selectedRecordForDetail = r; showDicomViewer = true; }"
+      @show-dicom="showDicomViewer = true"
+    />
+
+    <!-- DICOM Viewer Page (Full Screen Overlay) -->
+    <DicomViewer
+      v-if="showDicomViewer"
+      :patient="selectedPatient"
+      :record="selectedRecordForDetail"
+      @back="showDicomViewer = false"
     />
 
     <!-- Insurance Claim Modal -->
@@ -3436,12 +3442,12 @@ const handleAction = (type: string, title: string, record?: any) => {
               </h3>
             </div>
             <div class="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4">
-              <div class="bg-red-50 border border-red-200 p-3 rounded">
-                <div class="flex items-center gap-1.5 text-red-600 text-[10px] font-bold mb-2 uppercase tracking-wider">
+              <div class="bg-red-500/10 border border-red-500/25 p-3 rounded">
+                <div class="flex items-center gap-1.5 text-red-600 text-[9px] font-bold mb-2 uppercase tracking-wider">
                   <Activity :size="10" />
                   异常发现
                 </div>
-                <p class="text-[11px] text-slate-800 leading-relaxed">右侧基底节区可见斑点状低密度影，边界模糊，提示轻度腔隙性脑梗死。</p>
+                <p class="text-[10px] text-slate-700 leading-relaxed">右侧基底节区可见斑点状低密度影，边界模糊，提示轻度腔隙性脑梗死。</p>
               </div>
             </div>
           </div>
@@ -3482,7 +3488,7 @@ const handleAction = (type: string, title: string, record?: any) => {
                 >{{ range }}</span>
               </div>
               <div class="md-date-picker">
-                <input type="text" :value="metricData.length ? metricData[0].date + ' - ' + metricData[metricData.length - 1].date : '自定义时间范围'" readonly />
+                <input type="text" :value="selectedMetricRange === '近三月' ? '2022-03-27 - 2022-06-27' : '自定义时间范围'" readonly />
                 <Calendar :size="14" />
               </div>
             </div>
@@ -3823,14 +3829,6 @@ const handleAction = (type: string, title: string, record?: any) => {
     </div>
   </a-modal>
   </a-config-provider>
-
-  <!-- DICOM Viewer Page (Full Screen Overlay) - outside layout for AI diagnosis access -->
-  <DicomViewer
-    v-if="showDicomViewer"
-    :patient="selectedPatient"
-    :record="selectedRecordForDetail"
-    @back="showDicomViewer = false"
-  />
 </template>
 
 <style>
