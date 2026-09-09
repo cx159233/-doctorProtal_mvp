@@ -359,10 +359,12 @@ onMounted(() => {
   }, 1000);
 
   // 检查 URL 参数，如果存在 view 参数，则设置对应的视图
+  // 支持直接打开参保人画像（?view=overview）等任意视图，可用 source 参数区分入口（如 source=his 表示从 HIS 授权进入）
   const urlParams = new URLSearchParams(window.location.search);
   const viewParam = urlParams.get('view');
-  if (viewParam === 'ai-diagnosis') {
-    activeView.value = 'ai-diagnosis';
+  const validViews: ViewType[] = ["his", "his1", "his2", "his3", "overview", "health", "finance", "info", "medintercept", "rulesadapt", "ai-diagnosis", "unified-entry", "model-detail"];
+  if (viewParam && validViews.includes(viewParam as ViewType)) {
+    activeView.value = viewParam as ViewType;
   }
 });
 
