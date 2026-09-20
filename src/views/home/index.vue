@@ -636,7 +636,7 @@ import img6 from '@/assets/home/img6.png'
 // import dqIcon from '#/images/dq.png'
 // import hrIcon from '#/images/hr.png'
 import jsonStr from './config'
-import { DEFAULT_PATIENT } from '@/config/demo'
+import { DEFAULT_PATIENT, OFFLINE_DEMO } from '@/config/demo'
 import { ssoJump,clearAllCookie } from '@/utils/auth'
 // import { createFeedback } from '@/api/abnormal'
 export default {
@@ -1307,12 +1307,17 @@ export default {
             patient_idcard: this.postData.patient_id_card,
           }
         })
-        // 先去查询授权状态
-        this.authStatus({
-          name: this.postData.patient_name,
-          cardno: this.postData.patient_id_card,
-          auth_status: 1 //  0：等待授权 1：授权成功 2：等待授权已过期 3：授权已失效
-        })
+        if (OFFLINE_DEMO) {
+          // 离线演示：问不到授权状态，直接出列表（跟门诊/病理那几个查询页一个口径）
+          this.getAllData()
+        } else {
+          // 先去查询授权状态
+          this.authStatus({
+            name: this.postData.patient_name,
+            cardno: this.postData.patient_id_card,
+            auth_status: 1 //  0：等待授权 1：授权成功 2：等待授权已过期 3：授权已失效
+          })
+        }
         // 获取全量数据
         // this.getAllData()
         // if (this.patient_name !== this.postData.patient_name && this.patient_id_card !== this.postData.patient_id_card) {
@@ -1551,7 +1556,7 @@ export default {
       if (this.postData.patient_name && this.postData.patient_id_card) {
         this.searchBtnLoading = true
         this.btnLoading = true
-        this.$refs.queryList.loading = true
+        if (this.$refs.queryList) this.$refs.queryList.loading = true
         const obj = {
           sending_time: +new Date(),
           appver: '1.0.1',
@@ -1568,8 +1573,8 @@ export default {
           tm: +new Date(), // 记录触发事件
           action: 'search_start',
         })
-        console.log('this.onIframeLoad调用')
-         this.onIframeLoad()
+        // 跨省调阅的 iframe 只有进详情路由才渲染，拿不到就跳过，别让它挡住列表查询
+        if (this.$refs.myIframe) this.onIframeLoad()
         // 开始查询
         this.trackingEvent(trackingParams)
         const startTimeValue = new Date().getTime()
@@ -1596,7 +1601,7 @@ export default {
         obj2.is_authorize =this.is_authorize
         obj2.source = this.postData.source
         this.setPoint('patient_data_check','data_list_page_loading_success',new Date().getTime()-startTimeValue,obj2)
-        this.$refs.queryList.loading = false
+        if (this.$refs.queryList) this.$refs.queryList.loading = false
         this.btnLoading = false
         this.searchBtnLoading = false
         this.isDropdownChangeVisible = false
@@ -1755,22 +1760,24 @@ export default {
         if(params){
           const formData = new FormData()
           formData.append('encrypt_params', params)
-            const {code,data}=await getWaibuUserInfo(formData)
-            if(code===200){
-              this.urlParams=data||{}
-              setCookie('op_em_hp_ex_mark', data.op_em_hp_ex_mark || '')
-              setCookie('url_params',params)
-              res()
-            }else{
-              this.urlParams={}
-              removeCookie('url_params', this.urlParams.source)
-            }
+          // 离线时这个接口必然失败、会 resolve 成 undefined，兜个空对象，别让解构直接抛错
+          const {code,data}=(await getWaibuUserInfo(formData))||{}
+          if(code===200){
+            this.urlParams=data||{}
+            setCookie('op_em_hp_ex_mark', data.op_em_hp_ex_mark || '')
+            setCookie('url_params',params)
           }else{
-            res()
             this.urlParams={}
             removeCookie('url_params', this.urlParams.source)
           }
-        })
+        }else{
+          this.urlParams={}
+          removeCookie('url_params', this.urlParams.source)
+        }
+        // 无论解密成功与否都要放行：created() 在等这个 Promise，
+        // 不 resolve 的话整个 created() 卡死在这，列表永远查不出来
+        res()
+      })
       }
     },
   async created() {
