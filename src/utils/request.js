@@ -101,6 +101,9 @@ instance.interceptors.response.use(res => {
   }
   // 处理其他不等于200的状态码
   if (code !== 200) {
+    // 离线演示下不弹错误提示：后端不可达时接口本就回落到 mock 假数据，
+    // 弹出来只是噪音（部署后 /api 被静态站点兜底成 HTML，连 message 都是空的）
+    if (OFFLINE_DEMO) return res.data || res
     const userInfo = JSON.parse(Vue.ls.get(USER_INFO)) // 如果能缓存中获取
     if(userInfo && userInfo.debug) {
       notification.error({
