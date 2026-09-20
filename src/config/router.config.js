@@ -14,7 +14,8 @@ export const asyncRouterMap = [
   {
     path: '/',
     name: 'index',
-    redirect: '/home/index',
+    // 打开根地址直接进个人医保画像（演示的开门页）；医保健康档案等查询页从菜单进
+    redirect: '/portrait/index',
     component: BaseLayout,
     meta: {
       title: '影像查询'

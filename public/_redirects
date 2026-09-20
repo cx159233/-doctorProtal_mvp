@@ -1,10 +1,13 @@
 # 演示入口地址：
-#   <域名>/his        → HIS 门诊医生站
-#   <域名>/portrait   → 个人医保画像（主应用 index.html 的 hash 路由）
-#   <域名>/           → 同 /his，整个演示流程从 HIS 开始
+#   <域名>/          → 个人医保画像（主应用根路径，默认路由指向画像）
+#   <域名>/portrait  → 个人医保画像
+#   <域名>/his       → HIS 门诊医生站
+#
+# 这里**不能**给 / 写重定向：Cloudflare Pages 会把 /index.html 规范化成 /（hash 按 RFC 继承），
+# 所以主应用内部任何跳转最终都落到 / 上；一旦 / 被重定向走，画像页就永远打不开，
+# 表现为「点个人医保云没反应，只在 HIS 页上挂了个 hash」。
 #
 # 只写精确匹配，不要用 /portrait/* 这类通配：/portrait/ 和 /portrait/index.html
 # 是个人医保画像大屏自己的静态产物，画像页的 iframe 要加载它，通配会把 iframe 一起重定向掉。
 /his       /his-standalone.html         302
 /portrait  /index.html#/portrait/index  302
-/          /his-standalone.html         302
