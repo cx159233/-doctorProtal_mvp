@@ -774,7 +774,9 @@
     // 大屏内部按身份证派生年龄、性别、出生日期。
     // entry=his 表示「从 HIS 进来」:画像会清掉该患者的已授权记录,强制重新授权
     // （从主应用里点「个人医保画像」不带这个参数,于是沿用已授权状态）
-    const PORTRAIT_URL = 'http://localhost:8081/#/portrait/index';
+    // 地址按当前页面推:这个 HTML 和主应用的 index.html 同在 public/ 根目录,
+    // dev 下得到 localhost:8081,部署后得到站点域名——写死本机地址会让线上点「个人医保云」跳回开发机
+    const PORTRAIT_URL = new URL('index.html#/portrait/index', location.href).href;
     function goToPortrait() {
       const active = document.querySelector('.patient-item.patient-active');
       const id = active ? active.dataset.patientId : null;
