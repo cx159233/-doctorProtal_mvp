@@ -7,7 +7,7 @@
     <!-- 主体 -->
     <main class="main">
       <!-- 人体模型作为全局背景层 -->
-      <img class="body-bg" src="../assets/slices/l_2246.png" alt="" />
+      <img ref="bodyEl" class="body-bg" src="../assets/slices/l_2246.png" alt="" />
 
       <!-- 左侧面板 -->
       <aside class="left-column">
@@ -199,9 +199,9 @@
 
         <div v-if="!authorized" class="auth-empty auth-empty--center">患者未授权，页面数据为空</div>
         <template v-else>
-        <div v-if="activeView === 'panorama'" class="record-cards">
+        <div v-if="activeView === 'panorama'" ref="cardsEl" class="record-cards">
           <div
-            v-for="item in records"
+            v-for="(item, idx) in records"
             :key="item.title"
             class="record-card"
             :class="[item.side, item.variant, item.tone]"
@@ -217,7 +217,7 @@
               class="record-line"
               :class="item.side"
               :src="icon(item.line)"
-              :style="lineStyle(item)"
+              :style="lineStyle(item, idx)"
               alt=""
             />
             <div class="record-main">
@@ -390,7 +390,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 /* 「医保健康档案」的列表直接复用主应用各查询页的演示数据：
    大屏上的条数、最近时间、列表内容跟档案页看到的完全同源，不再另写一份 */
 import { buildStudyList } from '../../src/mock/image'
@@ -691,16 +691,59 @@ const DOT_TOP = 4
    内联样式必须手动换算，否则小屏下线条不随视口缩放、圆点会脱离卡片 */
 const px2rem = (v: number) => `${v / 16}rem`
 
+/* 人体图 l_2246.png 里人体图形的水平范围（占整图宽度的比例）。
+   整图是张带背景的房间照，人体只占中间 0.393 ~ 0.609；按颜色饱和度离线量出来的，
+   拿整图宽度当人体宽度会让线尾多伸出去一大截、整条压在人体上 */
+const FIG_LEFT = 0.393
+const FIG_RIGHT = 0.609
+
+/* 运行时实测的几何（CSS px）：人体图等比显示后的可见框 + 每张卡片的内侧边。
+   连线的长度不写死，直接由「卡片最内侧 → 人体最外侧」的距离决定 */
+const bodyEl = ref<HTMLImageElement | null>(null)
+const cardsEl = ref<HTMLElement | null>(null)
+const geom = ref<{ bodyLeft: number; bodyW: number; inner: number[] } | null>(null)
+/* 1 设计稿 px 当前等于多少 CSS px（= 根字号 / 16，与 rem.ts 的算法一致） */
+const remScale = ref(1)
+
+const measure = () => {
+  const img = bodyEl.value
+  const wrap = cardsEl.value
+  if (!img || !wrap) return
+  const box = img.getBoundingClientRect()
+  if (!box.width || !box.height) return
+  const ratio = img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight : 1.5354
+  /* object-fit: contain 之后人体图真正画出来的宽度：宽高两个缩放比里取小的那个 */
+  const bodyW = Math.min(box.width, box.height * ratio)
+  const bodyLeft = box.left + (box.width - bodyW) / 2
+  const cardEls = wrap.querySelectorAll<HTMLElement>('.record-card')
+  const inner = records.map((item, i) => {
+    const el = cardEls[i]
+    if (!el) return 0
+    const r = el.getBoundingClientRect()
+    return item.side === 'left' ? r.right : r.left
+  })
+  const rootFont = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16
+  remScale.value = rootFont / 16
+  geom.value = { bodyLeft, bodyW, inner }
+}
+
 /* 连接线摆放：圆点钉在卡片内角（左卡右上角 / 右卡左上角），
-   以远端（人体侧）为支点微调缩放，保证线尾落点不动 */
-const lineStyle = (item: RecordItem) => {
+   以远端（人体侧）为支点缩放，线尾正好落在人体外缘上 */
+const lineStyle = (item: RecordItem, idx: number) => {
   const dy = item.lineDy ?? 0
   const meta = item.line ? LINE_DOTS[item.line] : undefined
   if (!meta) return { top: px2rem((item.lineY ?? 24) + dy), width: px2rem(item.lineW ?? 240) }
   const baseW = item.lineW ?? 240
   /* 圆点到线图远端的图内距离：左卡远端在右侧，右卡远端在左侧 */
   const farSpan = item.side === 'left' ? meta.w - meta.x : meta.x
-  const scale = (baseW + DOT_INSET) / farSpan
+  /* 目标线长：卡片内侧边到人体外缘的实测距离，换算回设计稿 px。
+     量不到（首帧 / 换视图）时退回手调的 lineW，避免首屏闪一下 */
+  const g = geom.value
+  const edge = g
+    ? g.bodyLeft + g.bodyW * (item.side === 'left' ? FIG_LEFT : FIG_RIGHT)
+    : 0
+  const reach = g ? Math.max(0, Math.abs(edge - (g.inner[idx] ?? 0)) / remScale.value) : baseW
+  const scale = (reach + DOT_INSET) / farSpan
   const w = meta.w * scale
   const dotX = meta.x * scale
   const dotY = meta.y * scale
@@ -714,6 +757,26 @@ const lineStyle = (item: RecordItem) => {
     : {}
   return { ...pos, top: px2rem(DOT_TOP - dotY + dy), width: px2rem(w), ...rot }
 }
+
+/* 量尺要在卡片量出来之后跑：进全景视图、换患者授权状态、窗口 resize 都要重算 */
+let bodyObserver: ResizeObserver | undefined
+const remeasure = () => nextTick(measure)
+
+watch([activeView, authorized], remeasure)
+
+onMounted(() => {
+  remeasure()
+  window.addEventListener('resize', remeasure)
+  if (typeof ResizeObserver !== 'undefined' && bodyEl.value) {
+    bodyObserver = new ResizeObserver(remeasure)
+    bodyObserver.observe(bodyEl.value)
+  }
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('resize', remeasure)
+  bodyObserver?.disconnect()
+})
 
 
 
@@ -882,11 +945,18 @@ const services = [
   --pad-x: 20px;
   --gap: 25px;
   --side-w: 451px;
-  --card-w: 222px;
+  /* 全景视图两侧的记录卡宽度：连线圆点钉在卡片内角，卡片越窄连线外端越往两边退 */
+  --card-w: 200px;
+  /* 人体图大小（1 = 原样）。连线压到人体上就调小、人体两侧太空就调大 */
+  --body-scale: 1;
 
   position: relative;
   width: max(120rem, 100vw);
-  height: max(68rem, 95vh);
+  /* 高度只跟 rem 走，不要用 95vh 去填满视口：视口比设计稿高时画布会被拉长，
+     人体图的容器跟着变高，contain 就会从「按高度卡」翻成「按宽度卡」，
+     人体图直接铺满整个画布宽度，压到两侧卡片和连线上（窗口拉宽就又正常，就是这个原因）。
+     多出来的高度留白，由 .screen 的渐变背景填掉。 */
+  height: 68rem;
   display: flex;
   flex-direction: column;
   font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
@@ -1025,7 +1095,9 @@ const services = [
   overflow: hidden;
 }
 
-/* 人体背景：等比完整显示，底部避开智能服务栏，保证人体不被遮挡 */
+/* 人体背景：等比完整显示，底部避开智能服务栏，保证人体不被遮挡。
+   大小单独由 --body-scale 控制（1 = 原样），以画面中心为轴缩放，
+   只影响人体图本身，卡片和连线都不动。 */
 .body-bg {
   position: absolute;
   left: 0;
@@ -1035,6 +1107,7 @@ const services = [
   width: 100%;
   height: calc(100% - 150px);
   object-fit: contain;
+  transform: scale(var(--body-scale, 1));
   pointer-events: none;
   z-index: 1;
 }
