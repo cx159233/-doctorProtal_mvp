@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue';
+import { ref, computed, watch, onMounted, onBeforeUnmount } from 'vue';
 import LifecycleList from './components/LifecycleList.vue';
 import RecordList from './components/RecordList.vue';
 import MedicalDetail from './components/MedicalDetail.vue';
@@ -11,9 +11,8 @@ import type { ConfigProviderProps } from 'ant-design-vue';
 import { 
   UserCircle, 
   Activity, 
-  CreditCard, 
-  Info, 
-  Stethoscope, 
+  CreditCard,
+  Stethoscope,
   Hospital, 
   ClipboardCheck, 
   Microscope, 
@@ -37,7 +36,6 @@ import {
   CircleDot,
   Menu,
   Calendar,
-  RefreshCw,
   Radar,
   ZoomIn,
   Hand,
@@ -280,53 +278,6 @@ const commercialInsuranceData: Record<string, any> = {
       { id: 'CL20240120002', date: '2024-01-20', type: '门诊检查', amount: '2,800', status: '已赔付' },
     ],
   },
-  lexiang: {
-    name: '乐享健康重疾险',
-    shortName: '乐享',
-    company: '平安健康险',
-    policyNo: 'PA202401000123',
-    color: '#2563eb',
-    colorLight: '#60a5fa',
-    colorBg: 'from-blue-50 to-white',
-    colorBorder: 'border-blue-200',
-    colorHover: 'hover:border-blue-300',
-    insured: '陈志明',
-    period: '2024-05-20 至 2025-05-19',
-    premium: '¥3,200.00',
-    coverage: '¥0',
-    totalCoverage: '50万',
-    coverageTypes: [
-      { category: '重大疾病保障', items: [
-        { name: '恶性肿瘤', limit: '全额赔付50万', covered: true },
-        { name: '急性心肌梗塞', limit: '全额赔付50万', covered: true },
-        { name: '脑中风后遗症', limit: '全额赔付50万', covered: true },
-        { name: '重大器官移植', limit: '全额赔付50万', covered: true },
-        { name: '冠状动脉搭桥术', limit: '全额赔付50万', covered: true },
-        { name: '终末期肾病', limit: '全额赔付50万', covered: true },
-      ]},
-      { category: '特定疾病保障', items: [
-        { name: '轻症疾病', limit: '额外30%保额', covered: true },
-        { name: '中症疾病', limit: '额外50%保额', covered: true },
-        { name: '特定肿瘤', limit: '额外30%保额', covered: true },
-      ]},
-      { category: '身故/全残保障', items: [
-        { name: '疾病身故', limit: '全额赔付50万', covered: true },
-        { name: '意外身故', limit: '全额赔付50万', covered: true },
-        { name: '全残保障', limit: '全额赔付50万', covered: true },
-      ]},
-    ],
-    exclusions: [
-      { name: '等待期出险', desc: '等待期内发生的疾病' },
-      { name: '投保前未如实告知', desc: '故意隐瞒既往病史' },
-      { name: '违法行为', desc: '酒驾、吸毒等' },
-      { name: '高风险运动', desc: '潜水、攀岩等' },
-      { name: '战争暴乱', desc: '战争、军事冲突等' },
-      { name: '核辐射', desc: '核爆炸、核污染等' },
-    ],
-    claims: [
-      { id: 'CL20240620001', date: '2024-06-20', type: '轻症理赔', amount: '15,000', status: '已赔付' },
-    ],
-  },
 };
 
 function openCommercialInsuranceDetail(id: string) {
@@ -362,7 +313,7 @@ onMounted(() => {
   // 支持直接打开参保人画像（?view=overview）等任意视图，可用 source 参数区分入口（如 source=his 表示从 HIS 授权进入）
   const urlParams = new URLSearchParams(window.location.search);
   const viewParam = urlParams.get('view');
-  const validViews: ViewType[] = ["his", "his1", "his2", "his3", "overview", "health", "finance", "info", "medintercept", "rulesadapt", "ai-diagnosis", "unified-entry", "model-detail"];
+  const validViews: ViewType[] = ["his", "his1", "his2", "his3", "overview", "health", "finance", "medintercept", "rulesadapt", "ai-diagnosis", "unified-entry", "model-detail"];
   if (viewParam && validViews.includes(viewParam as ViewType)) {
     activeView.value = viewParam as ViewType;
   }
@@ -606,14 +557,75 @@ const claimForm = ref({
   account: '6222 **** **** 8832'
 });
 
-type ViewType = "his" | "his1" | "his2" | "his3" | "overview" | "health" | "finance" | "info" | "logout" | "medintercept" | "rulesadapt" | "ai-diagnosis" | "unified-entry" | "model-detail";
+type ViewType = "his" | "his1" | "his2" | "his3" | "overview" | "health" | "finance" | "logout" | "medintercept" | "rulesadapt" | "ai-diagnosis" | "unified-entry" | "model-detail";
 type LifecycleTab = "all" | "op" | "ip" | "lab" | "exam" | "med" | "wd";
 
 const activeView = ref<ViewType>("his");
 function isActiveView(v: ViewType) { return activeView.value === v; }
 function setActiveView(v: ViewType) { activeView.value = v; }
+
+/* ════════════ PRD 分屏（iframe 嵌入 public/prd.html） ════════════ */
+const PRD_ENABLED = true;            // false: 隐藏 PRD 分隔条与面板
+const showPrd = computed(() => PRD_ENABLED);
+const prdVisible = ref(true);
+const prdFrame = ref<HTMLIFrameElement | null>(null);
+const prdRouteMap = ref<Record<string, string>>({});
+const prdDialogAnchor = ref('');
+
+// iframe 加载完成后：读取 data-route 建路由映射，并补发首次锚点
+function onPrdFrameLoad() {
+  const doc = prdFrame.value?.contentDocument;
+  if (doc) {
+    const map: Record<string, string> = {};
+    doc.querySelectorAll('.prd-doc h3[data-route]').forEach(h => {
+      const id = h.id;
+      h.getAttribute('data-route')!.split(',').forEach(r => {
+        const key = r.trim();
+        if (key) map[key] = id;
+      });
+    });
+    prdRouteMap.value = map;
+  }
+  dispatchPrdAnchor();
+}
+
+function sendPrdAnchor(anchor: string) {
+  if (!anchor) return;             // 查不到锚点就不发，文档停在原位置
+  prdFrame.value?.contentWindow?.postMessage({ type: 'prd-anchor', anchor }, '*');
+}
+
+function dispatchPrdAnchor() {
+  sendPrdAnchor(prdDialogAnchor.value || prdRouteMap.value[activeView.value] || '');
+}
+
+// 页面内弹窗打开时：window.dispatchEvent(new CustomEvent('set-prd-anchor', { detail: 'prd-3.1.1' }))
+function onSetPrdAnchor(e: Event) {
+  const anchor = (e as CustomEvent<string>).detail;
+  if (!anchor) return;
+  prdDialogAnchor.value = anchor;
+  if (prdVisible.value) setTimeout(dispatchPrdAnchor, 200);
+}
+
+watch(prdVisible, (v) => {
+  // 等 CSS enter 过渡（300ms）结束、iframe 挂载完成后再派发
+  if (v) setTimeout(dispatchPrdAnchor, 350);
+});
+
+watch(activeView, () => {
+  prdDialogAnchor.value = '';      // 切页面时清掉弹窗锚点，避免串页
+  if (prdVisible.value) dispatchPrdAnchor();
+});
+
+onMounted(() => window.addEventListener('set-prd-anchor', onSetPrdAnchor));
+onBeforeUnmount(() => window.removeEventListener('set-prd-anchor', onSetPrdAnchor));
 const activeNavTab = ref("imaging");
 const showHisDropdown = ref(false);
+// 患者一屏看 授权蒙层步骤：0=无蒙层，1=展示 his1.png，2=展示 his2.png
+const authStep = ref(0);
+function openPatientOverview() {
+  activeView.value = 'overview';
+  authStep.value = 1;
+}
 const showMedInterceptPopup = ref(true);
 const showRulesAdaptPopup = ref(true);
 const selectedPatientId = ref(1);
@@ -633,28 +645,6 @@ const selectedYear = ref("2026");
 const selectedRecordType = ref("门诊");
 const currentPage = ref(1);
 const itemsPerPage = 5;
-
-const cbCurrentPage = ref(1);
-const cbItemsPerPage = 5;
-
-const cbReimbursementData = [
-  { date: "2026-01-15", name: "平安e生保·长期医疗", hosp: "常州市第一人民医院", type: "住院理赔", typeTag: "t-red", amount: "1,250.00", status: "已打款", statusTag: "t-green" },
-  { date: "2025-06-20", name: "泰康在线·百万医疗险", hosp: "常州市第一人民医院", type: "门诊理赔", typeTag: "t-blue", amount: "450.00", status: "已打款", statusTag: "t-green" }
-];
-
-const paginatedCbReimbursementData = computed(() => {
-  const start = (cbCurrentPage.value - 1) * cbItemsPerPage;
-  const end = start + cbItemsPerPage;
-  return cbReimbursementData.slice(start, end);
-});
-
-const cbTotalPages = computed(() => Math.ceil(cbReimbursementData.length / cbItemsPerPage));
-
-const changeCbPage = (page: number) => {
-  if (page >= 1 && page <= cbTotalPages.value) {
-    cbCurrentPage.value = page;
-  }
-};
 
 const reimbursementData = [
   { date: "2026-03-05 14:20:31", hosp: "常州市第一人民医院", type: "门诊", total: "386.00", cash: "38.00", fund: "268.00", account: "80.00", deduct: "0.00", other: "0.00", ratio: "69.4%" },
@@ -697,8 +687,6 @@ const filteredAccountFlows = computed(() => {
   if (activeFlowTab.value === '全部') return accountFlows;
   return accountFlows.filter(f => f.type === activeFlowTab.value);
 });
-const activeInsuranceType = ref<"职工" | "居民">("职工");
-
 const accountFlows = [
   { date: '2026-06-25', type: '支出', desc: '配偶门诊统筹支付', target: '常州市第一人民医院·心内科', amount: '186.00', balance: '12,264.00' },
   { date: '2026-06-20', type: '划拨', desc: '个人账户资金划拨', target: '医保中心·年度注入', amount: '2,400.00', balance: '12,450.00' },
@@ -731,8 +719,7 @@ const viewTitle = computed(() => {
   switch (activeView.value) {
     case "overview": return "参保人画像";
     case "health": return "医保健康档案";
-    case "finance": return "医保财务档案";
-    case "info": return "医保信息档案";
+    case "finance": return "医保档案";
     case "logout": return "退出登录";
     case "medintercept": return "用药实时拦截";
     case "rulesadapt": return "医保规则智能适配";
@@ -1045,7 +1032,7 @@ const hisMedicalTabs: { key: HisMedicalTab; label: string }[] = [
               <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">医生工作量查血</div>
               <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">门诊病人范围设置</div>
               <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">报告卡管理</div>
-              <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap" @click="showHisDropdown = false; activeView = 'his1'">个人医保云数据共享</div>
+              <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap" @click="showHisDropdown = false; activeView = 'his1'">个人医保云</div>
               <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">卫生健康应用服务</div>
               <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap">应用市场</div>
               <div class="px-3 py-1.5 text-xs hover:bg-blue-50 hover:text-blue-800 cursor-pointer whitespace-nowrap" @click="showHisDropdown = false; activeView = 'unified-entry'">统一入口</div>
@@ -1053,6 +1040,7 @@ const hisMedicalTabs: { key: HisMedicalTab; label: string }[] = [
             </div>
           </div>
           <div class="flex items-center space-x-1 cursor-pointer hover:opacity-100 hover:bg-white/20 px-2 py-0.5 rounded-sm transition"><i class="fas fa-file-alt"></i><span>单据</span></div>
+          <div class="flex items-center space-x-1 cursor-pointer hover:opacity-100 hover:bg-white/20 px-2 py-0.5 rounded-sm transition" @click="openPatientOverview()"><i class="fas fa-landmark"></i><span>个人医保云</span></div>
         </nav>
       </div>
       <div class="flex items-center space-x-4 text-xs">
@@ -1250,12 +1238,12 @@ const hisMedicalTabs: { key: HisMedicalTab; label: string }[] = [
     </div>
   </div>
   <!-- HIS 界面还原设计 END — 以上为 HIS 门诊医生站模拟界面，后续可删除 -->
-  <!-- HIS1 界面还原设计 — 个人医保云数据共享界面 -->
+  <!-- HIS1 界面还原设计 — 个人医保云界面 -->
   <div v-else-if="activeView === 'his1'" class="flex flex-col h-screen w-screen bg-white">
     <header class="top-nav-bar">
       <div class="top-nav-header flex items-center shrink-0 h-full">
         <img src="/logo.png" class="h-12" alt="Logo" />
-        <span class="top-nav-title">个人医保云数据共享</span>
+        <span class="top-nav-title">个人医保云</span>
       </div>
       <nav class="flex h-full items-center flex-1 ant-header-menu">
         <a class="ant-menu-item" :class="activeNavTab === 'imaging' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询</span></a>
@@ -1275,7 +1263,7 @@ const hisMedicalTabs: { key: HisMedicalTab; label: string }[] = [
     <header class="top-nav-bar">
       <div class="top-nav-header flex items-center shrink-0 h-full">
         <img src="/logo.png" class="h-12" alt="Logo" />
-        <span class="top-nav-title">个人医保云数据共享</span>
+        <span class="top-nav-title">个人医保云</span>
       </div>
       <nav class="flex h-full items-center flex-1 ant-header-menu">
         <a class="ant-menu-item" :class="activeNavTab === 'imaging' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询</span></a>
@@ -1295,7 +1283,7 @@ const hisMedicalTabs: { key: HisMedicalTab; label: string }[] = [
     <header class="top-nav-bar">
       <div class="top-nav-header flex items-center shrink-0 h-full">
         <img src="/logo.png" class="h-12" alt="Logo" />
-        <span class="top-nav-title">个人医保云数据共享</span>
+        <span class="top-nav-title">个人医保云</span>
       </div>
       <nav class="flex h-full items-center flex-1 ant-header-menu">
         <a class="ant-menu-item" :class="activeNavTab === 'imaging' ? 'ant-menu-item-selected' : ''" @click="activeNavTab = 'imaging'"><i class="ant-menu-item-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="14" height="14" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></i><span>影像查询</span></a>
@@ -1637,15 +1625,14 @@ const hisMedicalTabs: { key: HisMedicalTab; label: string }[] = [
     <header class="top-nav-bar">
       <div class="top-nav-header flex items-center shrink-0 h-full">
         <img src="/logo.png" class="h-12" alt="Logo" />
-        <span class="top-nav-title">个人医保云数据共享</span>
+        <span class="top-nav-title">个人医保云</span>
         <span class="top-nav-sep"></span>
         <span class="top-nav-subtitle">AI辅助诊断</span>
       </div>
       <nav class="flex h-full items-center ant-header-menu">
         <a class="ant-menu-item" :class="isActiveView('overview') ? 'ant-menu-item-selected' : ''" @click="setActiveView('overview')"><i class="ant-menu-item-icon"><UserCircle :size="14" /></i><span>参保人画像</span></a>
         <a class="ant-menu-item" :class="isActiveView('health') ? 'ant-menu-item-selected' : ''" @click="setActiveView('health')"><i class="ant-menu-item-icon"><Activity :size="14" /></i><span>医保健康档案</span></a>
-        <a class="ant-menu-item" :class="isActiveView('finance') ? 'ant-menu-item-selected' : ''" @click="setActiveView('finance')"><i class="ant-menu-item-icon"><CreditCard :size="14" /></i><span>医保财务档案</span></a>
-        <a class="ant-menu-item" :class="isActiveView('info') ? 'ant-menu-item-selected' : ''" @click="setActiveView('info')"><i class="ant-menu-item-icon"><Info :size="14" /></i><span>医保信息档案</span></a>
+        <a class="ant-menu-item" :class="isActiveView('finance') ? 'ant-menu-item-selected' : ''" @click="setActiveView('finance')"><i class="ant-menu-item-icon"><CreditCard :size="14" /></i><span>医保档案</span></a>
       </nav>
       <a-dropdown trigger="click">
         <div class="top-nav-user"><span class="font-normal">张兮兮</span><span class="opacity-20">|</span><span>常州市第七人民医院</span><span class="text-[9px] opacity-60 select-none">▼</span></div>
@@ -1932,20 +1919,19 @@ const hisMedicalTabs: { key: HisMedicalTab; label: string }[] = [
     </div>
   </div>
 
-  <div v-else class="layout">
+  <div v-else class="app-shell">
+  <div class="app-shell-main">
+  <div class="layout">
     <!-- ════ Top Navigation ════ -->
     <header class="top-nav-bar">
       <div class="top-nav-header flex items-center shrink-0 h-full">
         <img src="/logo.png" class="h-12" alt="Logo" />
-        <span class="top-nav-title">个人医保云数据共享</span>
-        <span class="top-nav-sep"></span>
-        <span class="top-nav-subtitle">参保人全息视图</span>
+        <span class="top-nav-title">个人医保云</span>
       </div>
       <nav class="flex h-full items-center ant-header-menu">
         <a class="ant-menu-item" :class="activeView === 'overview' ? 'ant-menu-item-selected' : ''" @click="activeView = 'overview'"><i class="ant-menu-item-icon"><UserCircle :size="14" /></i><span>参保人画像</span></a>
         <a class="ant-menu-item" :class="activeView === 'health' ? 'ant-menu-item-selected' : ''" @click="activeView = 'health'"><i class="ant-menu-item-icon"><Activity :size="14" /></i><span>医保健康档案</span></a>
-        <a class="ant-menu-item" :class="activeView === 'finance' ? 'ant-menu-item-selected' : ''" @click="activeView = 'finance'"><i class="ant-menu-item-icon"><CreditCard :size="14" /></i><span>医保财务档案</span></a>
-        <a class="ant-menu-item" :class="activeView === 'info' ? 'ant-menu-item-selected' : ''" @click="activeView = 'info'"><i class="ant-menu-item-icon"><Info :size="14" /></i><span>医保信息档案</span></a>
+        <a class="ant-menu-item" :class="activeView === 'finance' ? 'ant-menu-item-selected' : ''" @click="activeView = 'finance'"><i class="ant-menu-item-icon"><CreditCard :size="14" /></i><span>医保档案</span></a>
       </nav>
       <div class="flex-1"></div>
       <div class="flex items-center gap-1.5 mr-3">
@@ -2541,7 +2527,7 @@ const hisMedicalTabs: { key: HisMedicalTab; label: string }[] = [
                         <ShieldCheck class="w-4 h-4" />
                         医保信息档案
                       </h3>
-                      <button class="text-[13px] font-normal text-[#2563EB] flex items-center gap-1 transition-colors hover:opacity-80" style="color: #2563EB !important; font-size: 13px; font-weight: 400;" @click="activeView = 'info'">
+                      <button class="text-[13px] font-normal text-[#2563EB] flex items-center gap-1 transition-colors hover:opacity-80" style="color: #2563EB !important; font-size: 13px; font-weight: 400;" @click="activeView = 'finance'">
                         查看更多
                         <ChevronRight :size="12" />
                       </button>
@@ -2641,43 +2627,6 @@ const hisMedicalTabs: { key: HisMedicalTab; label: string }[] = [
                               <div>
                                 <p class="text-[8px] text-slate-400 uppercase font-bold mb-0.5">到期日期</p>
                                 <p class="text-[10px] font-bold text-slate-900">25-03-11</p>
-                              </div>
-                            </div>
-                          </div>
-
-                          <!-- 乐享健康重疾险 -->
-                          <div 
-                            class="relative rounded-xl overflow-hidden bg-gradient-to-br from-blue-50 to-white border border-blue-200 p-4 shadow-sm cursor-pointer hover:shadow-md hover:border-blue-300 transition-all duration-200"
-                            @click="openCommercialInsuranceDetail('lexiang')"
-                          >
-                            <div class="flex justify-between items-start mb-4">
-                              <div class="flex items-center gap-3">
-                                <div class="w-10 h-10 rounded-lg bg-white flex items-center justify-center border border-blue-100 shadow-sm text-xl">
-                                  🛡️
-                                </div>
-                                <div>
-                                  <h4 class="text-sm font-bold text-slate-900">乐享健康重疾险</h4>
-                                  <p class="text-[10px] text-slate-500">保单号：LXJK20240520008</p>
-                                </div>
-                              </div>
-                              <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                            </div>
-                            <div class="grid grid-cols-4 gap-2 border-t border-blue-100 pt-3">
-                              <div>
-                                <p class="text-[8px] text-slate-400 uppercase font-bold mb-0.5">保障状态</p>
-                                <p class="text-[10px] font-bold text-green-600">保障中</p>
-                              </div>
-                              <div>
-                                <p class="text-[8px] text-slate-400 uppercase font-bold mb-0.5">年度保额</p>
-                                <p class="text-[10px] font-bold text-slate-900">50万</p>
-                              </div>
-                              <div>
-                                <p class="text-[8px] text-slate-400 uppercase font-bold mb-0.5">免赔额</p>
-                                <p class="text-[10px] font-bold text-slate-900">0</p>
-                              </div>
-                              <div>
-                                <p class="text-[8px] text-slate-400 uppercase font-bold mb-0.5">到期日期</p>
-                                <p class="text-[10px] font-bold text-slate-900">25-05-19</p>
                               </div>
                             </div>
                           </div>
@@ -2859,488 +2808,253 @@ const hisMedicalTabs: { key: HisMedicalTab; label: string }[] = [
 
         <!-- Finance View -->
         <div v-if="activeView === 'finance'" class="v on">
-          <div class="filter-header" style="display: flex; justify-content: flex-start; gap: 16px; margin-bottom: 20px; padding: 12px; background: #fff; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 13px; color: var(--ink3); font-weight: 500;">年度：</span>
-              <select class="ch-sel" style="width: 110px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; background: #f8fafc; outline: none; cursor: pointer;" v-model="selectedYear" @change="updateFinancialData">
-                <option value="2026">2026年度</option>
-                <option value="2025">2025年度</option>
-                <option value="2024">2024年度</option>
-              </select>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 13px; color: var(--ink3); font-weight: 500;">地区：</span>
-              <select class="ch-sel" style="width: 110px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; background: #f8fafc; outline: none; cursor: pointer;" v-model="selectedCity" @change="updateFinancialData">
-                <option value="changzhou">常州市</option>
-                <option value="nanjing">南京市</option>
-                <option value="wuxi">无锡市</option>
-              </select>
-            </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 13px; color: var(--ink3); font-weight: 500;">类型：</span>
-              <select class="ch-sel" style="width: 110px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; background: #f8fafc; outline: none; cursor: pointer;" v-model="selectedRecordType">
-                <option value="门诊">门诊</option>
-                <option value="住院">住院</option>
-                <option value="药店">药店</option>
-              </select>
-            </div>
-          </div>
-          <div class="g4" style="margin-bottom: 14px">
-            <div class="mc">
-              <div class="mc-lbl">💰 年度费用总额</div>
-              <div class="mc-val" style="color: var(--blue)">{{ selectedYear === '2026' ? '¥10,250.00' : '¥8,540.00' }}</div>
-              <div class="mc-sub">包含所有就医费用</div>
-              <div class="mc-trend tr-flat">→ 较去年增长 15%</div>
-            </div>
-            <div class="mc">
-              <div class="mc-lbl">🏥 医保支付总额</div>
-              <div class="mc-val" style="color: var(--green)">{{ selectedYear === '2026' ? '¥6,320.00' : '¥5,100.00' }}</div>
-              <div class="mc-sub">报销额度比例 38%</div>
-              <div class="mc-trend tr-up">↑ 统筹+个账支付</div>
-            </div>
-            <div class="mc">
-              <div class="mc-lbl">👤 个人支付金额</div>
-              <div class="mc-val" style="color: var(--amber)">{{ selectedYear === '2026' ? '¥3,930.00' : '¥3,440.00' }}</div>
-              <div class="mc-sub">自费+自付部分</div>
-              <div class="mc-trend tr-down">↓ 门槛费已过线</div>
-            </div>
-            <div class="mc">
-              <div class="mc-lbl">📈 医保报销总额</div>
-              <div class="mc-val" style="color: var(--blue)">{{ selectedYear === '2026' ? '¥6,320' : '¥5,100' }}</div>
-              <div class="mc-sub">统筹年度封顶线</div>
-              <div class="mc-trend tr-up">↑ 已用 {{ selectedYear === '2026' ? '¥6,320' : '¥5,100' }} / ¥200,000</div>
-            </div>
-          </div>
-          <div class="g-full">
-            <div class="card">
-              <div class="ch">
-                <div class="ch-l">
-                  <div class="ch-stripe" style="background: var(--blue)"></div>
-                  <div class="ch-title">使用记录</div>
+          <!-- 顶部用户信息行（Header） -->
+          <div class="card" style="position: sticky; top: -20px; z-index: 30; margin-bottom: 16px;">
+            <div style="display: flex; align-items: center; gap: 28px; padding: 16px 22px;">
+              <!-- 左侧：患者身份 -->
+              <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0; flex: 1;">
+                <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                  <span style="font-size: 20px; font-weight: 800; color: var(--ink); line-height: 1;">{{ selectedPatient.name }}</span>
+                  <span style="font-size: 13px; color: var(--ink3);">{{ selectedPatient.gender }} · {{ selectedPatient.age }}岁</span>
+                  <span style="background: var(--green-l); color: var(--green); font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 12px;">正常参保</span>
                 </div>
-              </div>
-              <div class="cb">
-                <!-- Ring Charts Row -->
-                <div style="display: flex; justify-content: space-around; align-items: center; padding: 20px 0; border-bottom: 1px dashed var(--line); margin-bottom: 20px">
-                  <!-- Inpatient Ring -->
-                  <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
-                    <div style="position: relative; width: 100px; height: 100px">
-                      <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg)">
-                        <circle cx="18" cy="18" r="16" fill="none" stroke="var(--blue-l)" stroke-width="3"></circle>
-                        <circle cx="18" cy="18" r="16" fill="none" stroke="var(--blue)" stroke-width="3" stroke-dasharray="98.7, 100" stroke-linecap="round"></circle>
-                      </svg>
-                      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--blue)">
-                        住院 98.7%
-                      </div>
-                    </div>
-                  </div>
-                  <!-- Outpatient Ring -->
-                  <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
-                    <div style="position: relative; width: 100px; height: 100px">
-                      <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg)">
-                        <circle cx="18" cy="18" r="16" fill="none" stroke="var(--green-l)" stroke-width="3"></circle>
-                        <circle cx="18" cy="18" r="16" fill="none" stroke="var(--green)" stroke-width="3" stroke-dasharray="1.3, 100" stroke-linecap="round"></circle>
-                      </svg>
-                      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--green)">
-                        门诊 1.3%
-                      </div>
-                    </div>
-                  </div>
-                  <!-- Pharmacy Ring -->
-                  <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
-                    <div style="position: relative; width: 100px; height: 100px">
-                      <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg)">
-                        <circle cx="18" cy="18" r="16" fill="none" stroke="var(--cyan-l)" stroke-width="3"></circle>
-                        <circle cx="18" cy="18" r="16" fill="none" stroke="var(--cyan)" stroke-width="3" stroke-dasharray="0, 100" stroke-linecap="round"></circle>
-                      </svg>
-                      <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--cyan)">
-                        药店 0%
-                      </div>
-                    </div>
-                  </div>
+                <div style="display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--ink4); flex-wrap: wrap;">
+                  <span style="font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;">3204**********1234</span>
+                  <span style="color: var(--line);">|</span>
+                  <span>常州市 · 职工基本医疗保险</span>
                 </div>
-
-                <!-- Table Row -->
-                <div class="scroll-x" style="margin: 0 -18px">
-                  <table class="tbl">
-                    <thead>
-                      <tr>
-                        <th>日期</th>
-                        <th>机构</th>
-                        <th>类型</th>
-                        <th>总费用(元)</th>
-                        <th>现金支付(元)</th>
-                        <th>基金支付(元)</th>
-                        <th>个账支付(元)</th>
-                        <th>账户抵扣金额(元)</th>
-                        <th>其他支付金额(元)</th>
-                        <th>报销比例</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="(item, i) in paginatedReimbursementData" :key="i">
-                        <td style="font-size: 11px; color: var(--ink4)">{{ item.date }}</td>
-                        <td>{{ item.hosp }}</td>
-                        <td><span :class="['tag', item.type === '门诊' ? 't-blue' : (item.type === '住院' ? 't-red' : 't-cyan')]">{{ item.type }}</span></td>
-                        <td style="font-weight: 700; color: var(--ink)">{{ item.total }}</td>
-                        <td style="color: var(--ink); font-weight: 600">{{ item.cash }}</td>
-                        <td style="color: var(--blue); font-weight: 600">{{ item.fund }}</td>
-                        <td style="color: var(--blue); font-weight: 600">{{ item.account }}</td>
-                        <td style="color: var(--ink); font-weight: 600">{{ item.deduct }}</td>
-                        <td style="color: var(--ink); font-weight: 600">{{ item.other }}</td>
-                        <td>
-                          <div style="display: flex; align-items: center; gap: 4px">
-                            <div style="position: relative; width: 24px; height: 24px;">
-                              <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg)">
-                                <circle cx="18" cy="18" r="16" fill="none" stroke="var(--line)" stroke-width="4"></circle>
-                                <circle cx="18" cy="18" r="16" fill="none" stroke="var(--blue)" stroke-width="4" :stroke-dasharray="parseFloat(item.ratio) + ', 100'" stroke-linecap="round"></circle>
-                              </svg>
-                            </div>
-                            <span style="font-size: 11px; color: var(--ink4); font-weight: 600">{{ item.ratio }}</span>
-                          </div>
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-                
-                <!-- Pagination -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; font-size: 13px; color: var(--ink3);">
-                  <div>共 {{ filteredReimbursementData.length }} 条数据</div>
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <button style="border: 1px solid var(--line); background: #fff; padding: 2px 8px; border-radius: 4px; cursor: pointer;" @click="changePage(currentPage - 1)" :disabled="currentPage === 1">&lt;</button>
-                    <span v-for="page in totalPages" :key="page" 
-                          :style="{ background: currentPage === page ? 'var(--blue)' : 'transparent', color: currentPage === page ? '#fff' : 'var(--ink)', padding: '2px 8px', borderRadius: '4px', cursor: 'pointer' }"
-                          @click="changePage(page)">
-                      {{ page }}
-                    </span>
-                    <button style="border: 1px solid var(--line); background: #fff; padding: 2px 8px; border-radius: 4px; cursor: pointer;" @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages">&gt;</button>
-                    <span style="margin-left: 8px;">跳至</span>
-                    <input type="number" min="1" :max="totalPages" v-model.number="currentPage" @change="changePage(currentPage)" style="width: 40px; border: 1px solid var(--line); border-radius: 4px; text-align: center; padding: 2px;" />
-                    <span>页</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <!-- 商保报销记录 -->
-            <div class="card" style="margin-top: 14px">
-              <div class="ch">
-                <div class="ch-l">
-                  <div class="ch-stripe" style="background: var(--purple)"></div>
-                  <div class="ch-title">商保报销记录</div>
-                </div>
-              </div>
-              <div class="cb">
-                <div class="scroll-x" style="margin: 0 -18px">
-                  <table class="tbl">
-                    <thead>
-                      <tr>
-                        <th>报销日期</th>
-                        <th>保险名称</th>
-                        <th>就诊机构</th>
-                        <th>理赔类型</th>
-                        <th>理赔金额(元)</th>
-                        <th>状态</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr v-for="(rec, idx) in paginatedCbReimbursementData" :key="idx">
-                        <td style="font-size: 11px; color: var(--ink4)">{{ rec.date }}</td>
-                        <td>{{ rec.name }}</td>
-                        <td>{{ rec.hosp }}</td>
-                        <td><span :class="['tag', rec.typeTag]">{{ rec.type }}</span></td>
-                        <td style="font-weight: 700; color: var(--blue)">{{ rec.amount }}</td>
-                        <td><span :class="['tag', rec.statusTag]">{{ rec.status }}</span></td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                <!-- Pagination for Commercial Insurance -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; font-size: 13px; color: var(--ink3);">
-                  <div>共 {{ cbReimbursementData.length }} 条数据</div>
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <button style="border: 1px solid var(--line); background: #fff; padding: 2px 8px; border-radius: 4px; cursor: pointer;" @click="changeCbPage(cbCurrentPage - 1)" :disabled="cbCurrentPage === 1">&lt;</button>
-                    <span v-for="page in cbTotalPages" :key="page" 
-                          :style="{ background: cbCurrentPage === page ? 'var(--blue)' : 'transparent', color: cbCurrentPage === page ? '#fff' : 'var(--ink)', padding: '2px 8px', borderRadius: '4px', cursor: 'pointer' }"
-                          @click="changeCbPage(page)">
-                      {{ page }}
-                    </span>
-                    <button style="border: 1px solid var(--line); background: #fff; padding: 2px 8px; border-radius: 4px; cursor: pointer;" @click="changeCbPage(cbCurrentPage + 1)" :disabled="cbCurrentPage === cbTotalPages">&gt;</button>
-                    <span style="margin-left: 8px;">跳至</span>
-                    <input type="number" min="1" :max="cbTotalPages" v-model.number="cbCurrentPage" @change="changeCbPage(cbCurrentPage)" style="width: 40px; border: 1px solid var(--line); border-radius: 4px; text-align: center; padding: 2px;" />
-                    <span>页</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Info View -->
-        <div v-if="activeView === 'info'" class="v on">
-          <div class="g4" style="margin-bottom: 20px;">
-            <div class="mc">
-              <div class="mc-lbl">🏦 个人账户余额</div>
-              <div class="mc-val" style="color: var(--blue)">888.59</div>
-              <div class="mc-sub">最近一次划拨时间</div>
-              <div class="mc-trend tr-flat">→ 2026-03-01</div>
-            </div>
-            <div class="mc">
-              <div class="mc-lbl">🌍 异地就医备案</div>
-              <div class="mc-val" style="color: var(--blue)">已备案</div>
-              <div class="mc-sub">上海市、南京市</div>
-              <div class="mc-trend" style="background: rgba(34, 197, 94, 0.1); color: var(--green); display: inline-block; padding: 2px 8px; border-radius: 10px;">→ 长期有效</div>
-            </div>
-            <div class="mc">
-              <div class="mc-lbl">💳 信用就医</div>
-              <div class="mc-val" style="color: var(--green)">已开通</div>
-              <div class="mc-sub">授信额度 ¥5,000</div>
-              <div class="mc-trend" style="background: rgba(34, 197, 94, 0.1); color: var(--green); display: inline-block; padding: 2px 8px; border-radius: 10px;">→ 当前可用 ¥5,000</div>
-            </div>
-          </div>
-          <div class="g2">
-            <div style="display: flex; flex-direction: column; gap: 20px">
-              <!-- 参保基本信息 -->
-              <div class="card">
-                <div class="ch">
-                  <div class="ch-l">
-                    <div class="ch-stripe" style="background: var(--blue)"></div>
-                    <div class="ch-title">参保基本信息</div>
-                  </div>
-                  <span 
-                    class="ch-r" 
-                    style="cursor: pointer; background: var(--amber); color: #fff; padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600; display: flex; align-items: center; gap: 4px;"
-                    @click="activeInsuranceType = activeInsuranceType === '职工' ? '居民' : '职工'"
-                  >
-                    <RefreshCw :size="14" />
-                    {{ activeInsuranceType === '职工' ? '切换居民' : '切换职工' }}
-                  </span>
-                </div>
-                <div class="cb">
-                  <!-- 职工医保展示信息 -->
-                  <div v-if="activeInsuranceType === '职工'" style="display: flex; flex-direction: column; gap: 0">
-                    <div style="display: flex; justify-content: space-between; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px dashed var(--line2);">
-                      <div style="flex: 1; text-align: center; border-right: 1px solid var(--line2);">
-                        <div style="font-size: 16px; font-weight: 700; color: var(--blue); margin-bottom: 4px;">职工基本医疗保险</div>
-                        <div style="font-size: 12px; color: var(--ink4); padding-top: 8px;">参保类型</div>
-                      </div>
-                      <div style="flex: 1; text-align: center; border-right: 1px solid var(--line2);">
-                        <div style="font-size: 20px; font-weight: 700; color: var(--blue); margin-bottom: 4px;">888.59</div>
-                        <div style="font-size: 12px; color: var(--ink4);">个人账户余额 ℹ️</div>
-                      </div>
-                      <div style="flex: 1; text-align: center;">
-                        <div style="font-size: 20px; font-weight: 700; color: var(--blue); margin-bottom: 4px;">7378.00</div>
-                        <div style="font-size: 12px; color: var(--ink4); padding-top: 8px;">月缴费基数(元) ℹ️</div>
-                      </div>
-                    </div>
-                    
-                    <div style="font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-                      <div style="width: 4px; height: 14px; background: var(--blue); border-radius: 2px;"></div>
-                      参保信息
-                    </div>
-
-                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line2)">
-                      <span style="color: var(--ink4); font-size: 13px;">参保单位</span>
-                      <span style="font-size: 13px; font-weight: 600; text-align: right;">常州某科技有限公司</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line2)">
-                      <span style="color: var(--ink4); font-size: 13px;">参保时间</span>
-                      <span style="font-size: 13px; font-weight: 600; text-align: right;">201306</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px dashed var(--line2)">
-                      <span style="color: var(--ink4); font-size: 13px;">参保状态</span>
-                      <span style="font-size: 13px; font-weight: 600; color: var(--ink); text-align: right;">正常参保</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line2); margin-top: 8px;">
-                      <span style="color: var(--ink4); font-size: 13px;">缴费总数</span>
-                      <span style="font-size: 13px; font-weight: 600; color: var(--blue); text-align: right;">774.69 元</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line2)">
-                      <span style="color: var(--ink4); font-size: 13px;">个人缴费</span>
-                      <span style="font-size: 13px; font-weight: 600; color: var(--blue); text-align: right;">147.56 元</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 12px 0;">
-                      <span style="color: var(--ink4); font-size: 13px;">单位缴费</span>
-                      <span style="font-size: 13px; font-weight: 600; color: var(--blue); text-align: right;">627.13 元</span>
-                    </div>
-
-                    <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--line2); cursor: pointer; display: flex; align-items: center; justify-content: flex-end;" @click="openBasicInsuranceDetail">
-                      <span style="font-size: 12px; color: var(--blue); display: flex; align-items: center; gap: 2px;">保单详情 <ChevronRight :size="12" /></span>
-                    </div>
-                  </div>
-                  
-                  <!-- 居民医保展示信息 -->
-                  <div v-else style="display: flex; flex-direction: column; gap: 0">
-                    <div style="display: flex; justify-content: space-between; padding-bottom: 20px; margin-bottom: 20px; border-bottom: 1px dashed var(--line2);">
-                      <div style="flex: 1; text-align: center; border-right: 1px solid var(--line2);">
-                        <div style="font-size: 16px; font-weight: 700; color: var(--amber); margin-bottom: 4px;">城乡居民基本医疗保险</div>
-                        <div style="font-size: 12px; color: var(--ink4); padding-top: 8px;">参保类型</div>
-                      </div>
-                      <div style="flex: 1; text-align: center; border-right: 1px solid var(--line2);">
-                        <div style="font-size: 16px; font-weight: 700; color: var(--amber); margin-bottom: 4px;">暂停参保</div>
-                        <div style="font-size: 12px; color: var(--ink4);">参保状态</div>
-                      </div>
-                      <div style="flex: 1; text-align: center;">
-                        <div style="font-size: 16px; font-weight: 700; color: var(--amber); margin-bottom: 4px;">暂无数据</div>
-                        <div style="font-size: 12px; color: var(--ink4);">参保身份</div>
-                      </div>
-                    </div>
-                    
-                    <div style="font-size: 15px; font-weight: 700; color: var(--ink); margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
-                      <div style="width: 4px; height: 14px; background: var(--amber); border-radius: 2px;"></div>
-                      参保信息
-                    </div>
-
-                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line2)">
-                      <span style="color: var(--ink4); font-size: 13px;">单位名称</span>
-                      <span style="font-size: 13px; font-weight: 600; text-align: right;">常州市天宁区青龙街道</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line2)">
-                      <span style="color: var(--ink4); font-size: 13px;">参保时间</span>
-                      <span style="font-size: 13px; font-weight: 600; text-align: right;">201201</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line2)">
-                      <span style="color: var(--ink4); font-size: 13px;">应缴金额</span>
-                      <span style="font-size: 13px; font-weight: 600; text-align: right;">110.00 元</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; padding: 12px 0;">
-                      <span style="color: var(--ink4); font-size: 13px;">个人应缴</span>
-                      <span style="font-size: 13px; font-weight: 600; text-align: right;">110.00 元</span>
-                    </div>
-                  </div>
+                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                  <span style="background: var(--blue-l); color: var(--blue); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px;">异地就医备案</span>
+                  <span style="font-size: 12px; color: var(--green); font-weight: 700;">已备案 · 长期有效</span>
+                  <span style="font-size: 12px; color: var(--ink4);">上海市 · 南京市</span>
                 </div>
               </div>
 
-              <!-- 家庭共济成员 -->
-              <div class="card">
-                <div class="ch">
-                  <div class="ch-l">
-                    <div class="ch-stripe" style="background: var(--amber)"></div>
-                    <div class="ch-title">家庭共济成员</div>
-                  </div>
+              <div style="width: 1px; align-self: stretch; background: var(--line2);"></div>
+
+              <!-- 右侧：家庭共济成员账户 -->
+              <div style="display: flex; flex-direction: column; gap: 10px; flex-shrink: 0;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <span style="font-size: 12px; color: var(--ink3); font-weight: 600;">家庭共济成员</span>
                   <span class="ch-r" @click="showFamilyManagementModal = true">管理 →</span>
                 </div>
-                <div class="cb">
-                  <div style="font-size: 12px; color: var(--ink4); margin-bottom: 12px; font-weight: 500">个账余额可供成员在定点机构使用</div>
-                  <div class="fam-row">
-                    <div class="fm" @click="showFamilyManagementModal = true">
-                      <div class="fm-av" style="background: #FEE2E2; border: 2px solid #FECACA">👩<div class="fm-badge" style="background: var(--green)">✓</div></div>
-                      <div><div class="fm-name">李 **</div><div class="fm-rel">配偶</div></div>
-                    </div>
-                    <div class="fm" @click="showFamilyManagementModal = true">
-                      <div class="fm-av" style="background: var(--blue-l); border: 2px solid #BFDBFE">👦<div class="fm-badge" style="background: var(--green)">✓</div></div>
-                      <div><div class="fm-name">陈 **</div><div class="fm-rel">子女</div></div>
-                    </div>
-                    <div class="fm" @click="showFamilyManagementModal = true">
-                      <div class="fm-av" style="background: var(--purple-l); border: 2px solid #E9D5FF">👴<div class="fm-badge" style="background: var(--amber)">!</div></div>
-                      <div><div class="fm-name">陈 ** 华</div><div class="fm-rel">父亲</div></div>
-                    </div>
+                <div style="display: flex; align-items: center; gap: 16px;">
+                  <div style="display: flex; cursor: pointer;" @click="showFamilyManagementModal = true">
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #f1f5f9; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #64748b; z-index: 3;">妻</div>
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #f1f5f9; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #64748b; margin-left: -10px; z-index: 2;">子</div>
+                    <div style="width: 32px; height: 32px; border-radius: 50%; background: #f1f5f9; border: 2px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #64748b; margin-left: -10px; z-index: 1;">父</div>
+                  </div>
+                  <div style="display: flex; flex-direction: column; gap: 2px;">
+                    <span style="font-size: 11px; color: var(--ink4);">共济账户余额</span>
+                    <span style="font-size: 16px; font-weight: 800; color: var(--ink); font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;">¥12,450.00</span>
                   </div>
                 </div>
               </div>
             </div>
+          </div>
 
-            <div style="display: flex; flex-direction: column; gap: 20px">
-              <!-- 商业保险管理 -->
-              <div class="card">
-                <div class="ch">
-                  <div class="ch-l">
-                    <div class="ch-stripe" style="background: var(--red)"></div>
-                    <div class="ch-title">商业保险管理</div>
-                  </div>
-                  <span class="ch-r" @click="showExpiredInsuranceModal = true">到期保单管理 →</span>
+          <div style="display: grid; grid-template-columns: minmax(0, 1fr) 440px; gap: 20px; align-items: start;">
+          <!-- 财务档案：医保基金与资金结算 -->
+          <div class="card">
+            <div class="ch">
+              <div class="ch-l">
+                <div class="ch-stripe" style="background: var(--blue)"></div>
+                <div class="ch-title">财务档案</div>
+                <span style="font-size: 12px; color: var(--ink3); font-weight: 500;">医保基金与资金结算</span>
+              </div>
+            </div>
+            <div class="cb">
+              <div class="g4" style="margin-bottom: 20px;">
+                <div class="mc">
+                  <div class="mc-lbl">💊 年度统筹支付</div>
+                  <div class="mc-val" style="color: var(--blue)">{{ selectedYear === '2026' ? '¥6,320.00' : '¥5,100.00' }}</div>
+                  <div class="mc-sub">统筹基金支付金额</div>
+                  <div class="mc-trend tr-up">↑ 已用 {{ selectedYear === '2026' ? '¥6,320' : '¥5,100' }} / ¥200,000</div>
                 </div>
-                <div class="cb">
-                  <div style="font-size: 12px; color: var(--ink4); margin-bottom: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="已关联商业保险，支持一键理赔直付">已关联商业保险，支持一键理赔直付</div>
-                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-                    <div class="ins-card-v2 cursor-pointer hover:shadow-lg transition-shadow" style="background: #FFF7ED; border: 1px solid #FFEDD5; box-shadow: 0 4px 20px rgba(0,0,0,0.05);" @click="openCommercialInsuranceDetail('yihuibao')">
-                      <div class="ins-v2-top" style="border-bottom: 1px dashed #FFEDD5; padding-bottom: 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                          <div class="ins-v2-logo" style="background: #fff; border: 1px solid #f1f5f9; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🛡️</div>
-                          <div class="ins-v2-info">
-                            <div class="ins-v2-name" style="font-size: 16px; font-weight: 700; color: #1e293b;" title="江苏医惠保1号">江苏医惠保1号</div>
-                            <div class="ins-v2-id" style="font-size: 12px; color: #94a3b8;" title="保单号：PASH20240312001">保单号：PASH20240312001</div>
-                          </div>
-                        </div>
-                        <ChevronRight :size="18" class="text-orange-400 flex-shrink-0" />
-                      </div>
-                      <div class="ins-v2-body" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
-                        <div class="ins-v2-item">
-                          <div class="ins-v2-lbl" style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;" title="保障状态">保障状态</div>
-                          <div class="ins-v2-val" style="font-size: 13px; font-weight: 700; color: #10b981;" title="保障中">保障中</div>
-                        </div>
-                        <div class="ins-v2-item">
-                          <div class="ins-v2-lbl" style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;" title="年度保额">年度保额</div>
-                          <div class="ins-v2-val" style="font-size: 15px; font-weight: 700; color: #1e293b;" title="¥400.00万">¥400.00万</div>
-                        </div>
-                        <div class="ins-v2-item">
-                          <div class="ins-v2-lbl" style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;" title="免赔额">免赔额</div>
-                          <div class="ins-v2-val" style="font-size: 15px; font-weight: 700; color: #1e293b;" title="¥1.00万">¥1.00万</div>
-                        </div>
-                        <div class="ins-v2-item">
-                          <div class="ins-v2-lbl" style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;" title="到期日期">到期日期</div>
-                          <div class="ins-v2-val" style="font-size: 15px; font-weight: 700; color: #1e293b;" title="2025-03-11">2025-03-11</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="ins-card-v2 cursor-pointer hover:shadow-lg transition-shadow" style="background: #EFF6FF; border: 1px solid #DBEAFE; box-shadow: 0 4px 20px rgba(0,0,0,0.05);" @click="openCommercialInsuranceDetail('lexiang')">
-                      <div class="ins-v2-top" style="border-bottom: 1px dashed #DBEAFE; padding-bottom: 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
-                          <div class="ins-v2-logo" style="background: #fff; border: 1px solid #f1f5f9; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">🛡️</div>
-                          <div class="ins-v2-info">
-                            <div class="ins-v2-name" style="font-size: 16px; font-weight: 700; color: #1e293b;" title="乐享健康重疾险">乐享健康重疾险</div>
-                            <div class="ins-v2-id" style="font-size: 12px; color: #94a3b8;" title="保单号：LXJK20240520008">保单号：LXJK20240520008</div>
-                          </div>
-                        </div>
-                        <ChevronRight :size="18" class="text-blue-400 flex-shrink-0" />
-                      </div>
-                      <div class="ins-v2-body" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
-                        <div class="ins-v2-item">
-                          <div class="ins-v2-lbl" style="font-size: 11px; color: #94a3b8; margin-bottom: 4px;" title="保障状态">保障状态</div>
-                          <div class="ins-v2-val" style="font-size: 13px; font-weight: 700; color: #10b981;" title="保障中">保障中</div>
-                        </div>
-                        <div class="ins-v2-item">
-                          <div class="ins-v2-lbl" style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;" title="年度保额">年度保额</div>
-                          <div class="ins-v2-val" style="font-size: 15px; font-weight: 700; color: #1e293b;" title="¥50.00万">¥50.00万</div>
-                        </div>
-                        <div class="ins-v2-item">
-                          <div class="ins-v2-lbl" style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;" title="免赔额">免赔额</div>
-                          <div class="ins-v2-val" style="font-size: 15px; font-weight: 700; color: #1e293b;" title="¥0.00">¥0.00</div>
-                        </div>
-                        <div class="ins-v2-item">
-                          <div class="ins-v2-lbl" style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;" title="到期日期">到期日期</div>
-                          <div class="ins-v2-val" style="font-size: 15px; font-weight: 700; color: #1e293b;" title="2025-05-19">2025-05-19</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <!-- AI 医保条款分析建议已隐藏，后续可能恢复 -->
+                <div class="mc">
+                  <div class="mc-lbl">🏥 年度医疗总费用</div>
+                  <div class="mc-val">{{ selectedYear === '2026' ? '¥12,480.00' : '¥9,860.00' }}</div>
+                  <div class="mc-sub">门诊 · 住院 · 药店</div>
+                  <div class="mc-trend tr-down">↓ 较上年下降 12%</div>
+                </div>
+                <div class="mc">
+                  <div class="mc-lbl">💰 医保基金支付总额</div>
+                  <div class="mc-val" style="color: var(--green)">{{ selectedYear === '2026' ? '¥8,210.00' : '¥6,540.00' }}</div>
+                  <div class="mc-sub">统筹基金 + 个人账户</div>
+                  <div class="mc-trend" style="background: var(--green-l); color: var(--green);">→ 报销比例 65.8%</div>
+                </div>
+                <div class="mc">
+                  <div class="mc-lbl">🧾 个人现金支付</div>
+                  <div class="mc-val" style="color: var(--amber)">{{ selectedYear === '2026' ? '¥4,270.00' : '¥3,320.00' }}</div>
+                  <div class="mc-sub">自付 · 自费</div>
+                  <div class="mc-trend tr-flat">→ 含大病保险自付</div>
                 </div>
               </div>
 
-              <!-- 增加长护险区域 -->
-              <div class="card">
-                <div class="ch">
-                  <div class="ch-l">
-                    <div class="ch-stripe" style="background: var(--cyan)"></div>
-                    <div class="ch-title">长期护理保险</div>
+              <div style="display: flex; justify-content: flex-start; gap: 12px; margin-bottom: 16px; padding: 10px 12px; background: #f8fafc; border-radius: 8px; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 13px; color: var(--ink3); font-weight: 500;">年度：</span>
+                  <select class="ch-sel" style="width: 110px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; background: #fff; outline: none; cursor: pointer;" v-model="selectedYear" @change="updateFinancialData">
+                    <option value="2026">2026年度</option>
+                    <option value="2025">2025年度</option>
+                    <option value="2024">2024年度</option>
+                  </select>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 13px; color: var(--ink3); font-weight: 500;">地区：</span>
+                  <select class="ch-sel" style="width: 110px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; background: #fff; outline: none; cursor: pointer;" v-model="selectedCity" @change="updateFinancialData">
+                    <option value="changzhou">常州市</option>
+                    <option value="nanjing">南京市</option>
+                    <option value="wuxi">无锡市</option>
+                  </select>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 13px; color: var(--ink3); font-weight: 500;">类型：</span>
+                  <select class="ch-sel" style="width: 110px; border: 1px solid var(--line); border-radius: 6px; padding: 6px 10px; font-size: 13px; background: #fff; outline: none; cursor: pointer;" v-model="selectedRecordType">
+                    <option value="门诊">门诊</option>
+                    <option value="住院">住院</option>
+                    <option value="药店">药店</option>
+                  </select>
+                </div>
+              </div>
+
+
+              <div class="scroll-x" style="margin: 0 -18px">
+                <table class="tbl">
+                  <thead>
+                    <tr>
+                      <th>日期</th>
+                      <th>机构</th>
+                      <th>类型</th>
+                      <th>总费用(元)</th>
+                      <th>现金支付(元)</th>
+                      <th>基金支付(元)</th>
+                      <th>个账支付(元)</th>
+                      <th>账户抵扣金额(元)</th>
+                      <th>其他支付金额(元)</th>
+                      <th>报销比例</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr v-for="(item, i) in paginatedReimbursementData" :key="i">
+                      <td style="font-size: 11px; color: var(--ink4)">{{ item.date }}</td>
+                      <td>{{ item.hosp }}</td>
+                      <td><span :class="['tag', item.type === '门诊' ? 't-blue' : (item.type === '住院' ? 't-red' : 't-cyan')]">{{ item.type }}</span></td>
+                      <td style="font-weight: 700; color: var(--ink)">{{ item.total }}</td>
+                      <td style="color: var(--ink); font-weight: 600">{{ item.cash }}</td>
+                      <td style="color: var(--blue); font-weight: 600">{{ item.fund }}</td>
+                      <td style="color: var(--blue); font-weight: 600">{{ item.account }}</td>
+                      <td style="color: var(--ink); font-weight: 600">{{ item.deduct }}</td>
+                      <td style="color: var(--ink); font-weight: 600">{{ item.other }}</td>
+                      <td>
+                        <div style="display: flex; align-items: center; gap: 4px">
+                          <div style="position: relative; width: 24px; height: 24px;">
+                            <svg viewBox="0 0 36 36" style="width: 100%; height: 100%; transform: rotate(-90deg)">
+                              <circle cx="18" cy="18" r="16" fill="none" stroke="var(--line)" stroke-width="4"></circle>
+                              <circle cx="18" cy="18" r="16" fill="none" stroke="var(--blue)" stroke-width="4" :stroke-dasharray="parseFloat(item.ratio) + ', 100'" stroke-linecap="round"></circle>
+                            </svg>
+                          </div>
+                          <span style="font-size: 11px; color: var(--ink4); font-weight: 600">{{ item.ratio }}</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 16px; font-size: 13px; color: var(--ink3);">
+                <div>共 {{ filteredReimbursementData.length }} 条数据</div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <button style="border: 1px solid var(--line); background: #fff; padding: 2px 8px; border-radius: 4px; cursor: pointer;" @click="changePage(currentPage - 1)" :disabled="currentPage === 1">&lt;</button>
+                  <span v-for="page in totalPages" :key="page"
+                        :style="{ background: currentPage === page ? 'var(--blue)' : 'transparent', color: currentPage === page ? '#fff' : 'var(--ink)', padding: '2px 8px', borderRadius: '4px', cursor: 'pointer' }"
+                        @click="changePage(page)">
+                    {{ page }}
+                  </span>
+                  <button style="border: 1px solid var(--line); background: #fff; padding: 2px 8px; border-radius: 4px; cursor: pointer;" @click="changePage(currentPage + 1)" :disabled="currentPage === totalPages">&gt;</button>
+                  <span style="margin-left: 8px;">跳至</span>
+                  <input type="number" min="1" :max="totalPages" v-model.number="currentPage" @change="changePage(currentPage)" style="width: 40px; border: 1px solid var(--line); border-radius: 4px; text-align: center; padding: 2px;" />
+                  <span>页</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 信息档案：待遇资质看板 -->
+          <div class="card">
+            <div class="ch">
+              <div class="ch-l">
+                <div class="ch-stripe" style="background: var(--green)"></div>
+                <div class="ch-title">信息档案</div>
+                <span style="font-size: 12px; color: var(--ink3); font-weight: 500;">待遇资质看板</span>
+              </div>
+            </div>
+            <div class="cb">
+              <div style="display: flex; align-items: center; gap: 16px; padding: 16px 18px; background: #F0FDF4; border: 1px solid #BBF7D0; border-radius: 12px; margin-bottom: 20px;">
+                <div style="width: 44px; height: 44px; border-radius: 50%; background: #DCFCE7; display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0;">🩺</div>
+                <div style="display: flex; flex-direction: column; gap: 4px; min-width: 0;">
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <span style="font-size: 14px; font-weight: 700; color: var(--ink);">慢特病</span>
+                    <span style="background: var(--green-l); color: var(--green); font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 12px;">已认定</span>
+                  </div>
+                  <span style="font-size: 13px; color: var(--ink3);">高血压 · 糖尿病</span>
+                </div>
+                <div style="margin-left: auto; display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--green); font-weight: 700; flex-shrink: 0;">→ 2项慢特病待遇</div>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 20px;">
+                <div>
+                  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                    <span style="font-size: 13px; font-weight: 700; color: var(--ink);">商业保险</span>
+                    <span style="font-size: 11px; color: var(--ink4); opacity: 0.5; cursor: not-allowed;">到期保单管理 →</span>
+                  </div>
+                  <div style="font-size: 12px; color: var(--ink4); margin-bottom: 10px; font-weight: 500;">本期暂不提供商保服务，以下为示例卡片</div>
+                  <div class="ins-card-v2" style="background: #FFF7ED; border: 1px dashed #FFEDD5; box-shadow: 0 4px 20px rgba(0,0,0,0.05); opacity: 0.75;">
+                    <div class="ins-v2-top" style="border-bottom: 1px dashed #FFEDD5; padding-bottom: 16px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+                      <div style="display: flex; align-items: center; gap: 12px;">
+                        <div class="ins-v2-logo" style="background: #fff; border: 1px solid #f1f5f9; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px;">🛡️</div>
+                        <div class="ins-v2-info">
+                          <div class="ins-v2-name" style="font-size: 15px; font-weight: 700; color: #1e293b;" title="江苏医惠保1号">江苏医惠保1号</div>
+                          <div class="ins-v2-id" style="font-size: 12px; color: #94a3b8;" title="保单号：PASH20240312001">保单号：PASH20240312001</div>
+                        </div>
+                      </div>
+                      <span style="background: #F1F5F9; color: #94A3B8; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 10px;">示例</span>
+                    </div>
+                    <div class="ins-v2-body" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;">
+                      <div class="ins-v2-item">
+                        <div class="ins-v2-lbl" title="保障状态">保障状态</div>
+                        <div class="ins-v2-val" style="color: #10b981;" title="保障中">保障中</div>
+                      </div>
+                      <div class="ins-v2-item">
+                        <div class="ins-v2-lbl" title="年度保额">年度保额</div>
+                        <div class="ins-v2-val" style="color: #1e293b;" title="¥400.00万">¥400.00万</div>
+                      </div>
+                      <div class="ins-v2-item">
+                        <div class="ins-v2-lbl" title="免赔额">免赔额</div>
+                        <div class="ins-v2-val" style="color: #1e293b;" title="¥1.00万">¥1.00万</div>
+                      </div>
+                      <div class="ins-v2-item">
+                        <div class="ins-v2-lbl" title="到期日期">到期日期</div>
+                        <div class="ins-v2-val" style="color: #1e293b;" title="2025-03-11">2025-03-11</div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-                <div class="cb">
-                  <div style="font-size: 12px; color: var(--ink4); margin-bottom: 12px; font-weight: 500">为重度失能人员提供基本生活照料和医疗护理服务</div>
+
+                <div>
+                  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+                    <span style="font-size: 13px; font-weight: 700; color: var(--ink);">长期护理保险</span>
+                  </div>
+                  <div style="font-size: 12px; color: var(--ink4); margin-bottom: 10px; font-weight: 500;">为重度失能人员提供基本生活照料和医疗护理服务</div>
                   <div class="ins-card-v2" style="background: #F0FDF4; border: 1px solid #BBF7D0;">
-                    <div class="ins-v2-top">
+                    <div class="ins-v2-top" style="border-bottom: 1px solid #BBF7D0;">
                       <div class="ins-v2-logo" style="background: #DCFCE7;">🦽</div>
                       <div class="ins-v2-info">
                         <div class="ins-v2-name">常州市长期护理保险</div>
                         <div class="ins-v2-id">评定等级：重度失能 II 级</div>
                       </div>
                     </div>
-                    <div class="ins-v2-body">
+                    <div class="ins-v2-body" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
                       <div class="ins-v2-item">
                         <div class="ins-v2-lbl">待遇状态</div>
                         <div class="ins-v2-val" style="color: var(--green)">享受中</div>
@@ -3355,7 +3069,7 @@ const hisMedicalTabs: { key: HisMedicalTab; label: string }[] = [
                       </div>
                       <div class="ins-v2-item">
                         <div class="ins-v2-lbl">定点机构</div>
-                        <div class="ins-v2-val" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 80px;" title="常州安心养老服务中心">常州安心养老...</div>
+                        <div class="ins-v2-val" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px;" title="常州安心养老服务中心">常州安心养老服务中心</div>
                       </div>
                     </div>
                   </div>
@@ -3363,6 +3077,9 @@ const hisMedicalTabs: { key: HisMedicalTab; label: string }[] = [
               </div>
             </div>
           </div>
+          </div>
+
+
         </div>
       </div>
     </div>
@@ -3895,9 +3612,7 @@ const hisMedicalTabs: { key: HisMedicalTab; label: string }[] = [
           <div class="flex items-center gap-4">
             <div class="flex items-center gap-2">
               <Radar :size="18" class="text-blue-600" />
-              <span class="text-slate-900 font-black text-sm tracking-tighter">个人医保云数据共享</span>
-              <div class="h-3.5 w-[1px] bg-slate-300 mx-0.5"></div>
-              <span class="text-blue-700/70 text-xs font-light tracking-widest uppercase">参保人全息视图</span>
+              <span class="text-slate-900 font-black text-sm tracking-tighter">个人医保云</span>
             </div>
             <div class="h-3.5 w-[1px] bg-slate-200"></div>
             <span class="text-[10px] text-slate-500 font-mono">DICOM · 张伟 · Head CT · 2024-05-10</span>
@@ -4070,6 +3785,27 @@ const hisMedicalTabs: { key: HisMedicalTab; label: string }[] = [
         </div>
       </div>
     </a-modal>
+  </div>
+  </div>
+
+  <!-- ════ PRD 分隔条：点击展开 / 收起右侧文档 ════ -->
+  <div v-if="showPrd" class="prd-divider" @click="prdVisible = !prdVisible">
+    <div class="prd-divider-line"></div>
+    <div class="prd-divider-btn">
+      <svg class="prd-divider-arrow" :class="{ 'is-open': prdVisible }" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      <span class="prd-divider-text">PRD</span>
+    </div>
+    <div class="prd-divider-line"></div>
+  </div>
+
+  <!-- ════ PRD 面板：iframe 嵌入 public/prd.html ════ -->
+  <transition name="prd-panel">
+    <div v-if="prdVisible && showPrd" class="prd-panel">
+      <iframe ref="prdFrame" src="/prd.html" @load="onPrdFrameLoad"></iframe>
+    </div>
+  </transition>
   </div>
 
   <!-- 商保详情弹窗 -->
@@ -4346,10 +4082,54 @@ const hisMedicalTabs: { key: HisMedicalTab; label: string }[] = [
       </div>
     </div>
   </a-modal>
+
+  <!-- 患者一屏看 授权蒙层：覆盖参保人画像内容区，展示 his1.png → his2.png，点击切换 -->
+  <div
+    v-if="activeView === 'overview' && authStep > 0"
+    class="auth-overlay"
+    @click="authStep = authStep === 1 ? 2 : 0"
+  >
+    <img v-if="authStep === 1" src="/his1.png" alt="授权" class="auth-overlay-img" />
+    <img v-else src="/his2.png" alt="授权确认" class="auth-overlay-img" />
+  </div>
   </a-config-provider>
 </template>
 
 <style>
+/* ════ PRD 分屏 ════ */
+.app-shell { display: flex; width: 100vw; height: 100vh; overflow: hidden; }
+.app-shell-main { flex: 1; min-width: 0; }
+
+.prd-divider {
+  width: 28px; flex-shrink: 0; cursor: pointer; z-index: 51;
+  background: #f8fafc; border-left: 1px solid #e8ecf0;
+  display: flex; flex-direction: column; align-items: center;
+}
+.prd-divider:hover { background: #eef3ff; }
+.prd-divider-line { width: 1px; flex: 1; background: #e2e8f0; }
+.prd-divider-btn {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 10px 4px; color: #035BFE; border-radius: 4px;
+}
+.prd-divider:hover .prd-divider-btn { background: rgba(3, 91, 254, 0.08); }
+.prd-divider-text {
+  font-size: 10px; font-weight: 600; color: #035BFE;
+  writing-mode: vertical-lr; letter-spacing: 2px;
+}
+.prd-divider-arrow { width: 14px; height: 14px; transition: transform 0.3s; }
+.prd-divider-arrow.is-open { transform: rotate(180deg); }
+
+.prd-panel {
+  width: 680px; flex-shrink: 0; background: #fff; display: flex;
+  box-shadow: -4px 0 24px rgba(0, 0, 0, 0.08);
+}
+.prd-panel iframe { width: 100%; height: 100%; border: 0; display: block; }
+
+.prd-panel-enter-active { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+.prd-panel-leave-active { transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+.prd-panel-enter-from,
+.prd-panel-leave-to { width: 0 !important; opacity: 0; overflow: hidden; }
+
 /* 商保详情弹窗样式 */
 .commercial-insurance-detail-modal .ant-modal-content {
   padding: 0;
@@ -4619,5 +4399,29 @@ const hisMedicalTabs: { key: HisMedicalTab; label: string }[] = [
 .chips .cdot {
   width: 6px;
   height: 6px;
+}
+
+/* 患者一屏看 授权蒙层 */
+.auth-overlay {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #0f172a;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.auth-overlay-img {
+  max-width: 80vw;
+  max-height: calc(100vh - 64px - 48px);
+  object-fit: contain;
+  display: block;
+  border-radius: 8px;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12);
 }
 </style>
