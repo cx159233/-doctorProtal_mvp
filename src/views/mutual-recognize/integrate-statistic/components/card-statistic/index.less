@@ -1,0 +1,29 @@
+@px4: 4px;
+@themeColor: #1890ff;
+.card-statistic {
+  flex: 1;
+  /deep/.ant-card-body {
+    display: flex;
+    .left {
+      display: flex;
+      align-items: center;
+      margin-right: @px4 * 6;
+    }
+    .right {
+      flex: 1;
+      .title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: @px4 * 2;
+      }
+      .count {
+        font-size: 30px;
+        color: rgba(0, 0, 0, 0.85);
+      }
+    }
+  }
+  &:not(:last-child) {
+    margin-right: @px4 * 4;
+  }
+}

@@ -1,0 +1,70 @@
+@px4: 4px;
+@themeColor: #1890ff;
+@color: rgba(0, 0, 0, 0.85);
+.integrative-statistic {
+  margin: 16px;
+  .individual, .orgName { // 个人互认统计
+    margin-bottom: @px4 * 8;
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: @px4 * 4;
+      .left {
+        display: flex;
+        align-items: center;
+        .title {
+          margin-right: @px4;
+          font-size: @px4 * 4;
+          font-weight: bold;
+          color: @color;
+          &::before {
+            content: '';
+            display: inline-block;
+            width: @px4 / 2;
+            height: @px4 * 4;
+            border: @px4 / 2 solid @themeColor;
+            background-color: @themeColor;
+            margin-right: @px4 * 2;
+          }
+        }
+      }
+    }
+    .main {
+      display: flex;
+      justify-content: space-between;
+    }
+  }
+  .trend { // 趋势
+    .title {
+      display: flex;
+      align-items: center;
+      margin-right: @px4;
+      font-size: @px4 * 4;
+      font-weight: bold;
+      color: @color;
+      &::before {
+        content: '';
+        display: inline-block;
+        width: @px4 / 2;
+        height: @px4 * 4;
+        border: @px4 / 2 solid @themeColor;
+        background-color: @themeColor;
+        margin-right: @px4 * 2;
+      }
+    }
+    .extra {
+      .date-picker {
+        margin-left: @px4 * 3;
+      }
+    }
+    .content {
+      .header {
+        margin-bottom: @px4 * 6;
+      }
+      #trendChart {
+        height: 500px;
+      }
+    }
+  }
+}

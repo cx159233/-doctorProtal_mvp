@@ -1,0 +1,22 @@
+@px4: 4px;
+@themeColor: #1890ff;
+@color: rgba(0, 0, 0, 0.85);
+.history-mutual-recognize {
+  margin: 16px;
+  .title {
+    display: flex;
+    align-items: center;
+    &::before {
+      content: '';
+      display: inline-block;
+      width: @px4 / 2;
+      height: @px4 * 4;
+      border: @px4 / 2 solid @themeColor;
+      background-color: @themeColor;
+      margin-right: @px4 * 2;
+    }
+  }
+  .m-b-16 {
+    margin-bottom: @px4 * 4;
+  }
+}

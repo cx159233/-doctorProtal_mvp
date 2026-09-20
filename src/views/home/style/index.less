@@ -1,0 +1,585 @@
+@bgColor: #fff;
+.mr12 { margin-right: 12px; }
+.mr24 { margin-right: 24px; }
+.aDisable {
+  // pointer-events: none;
+  cursor: not-allowed;
+  color: rgba(0, 0, 0, 0.25);
+  // opacity: .5;
+}
+.flex1{
+  flex:1;
+}
+.relative{
+  position: relative;
+}
+.flex-button{
+  display: flex;
+  align-items: center;
+  position: absolute;
+  right: 4px;
+  top:4px;
+}
+.time-range{
+  /deep/ .ant-form-item-children{
+    display: flex;
+  }
+}
+/deep/ .ant-select-selection{
+  background: transparent;
+}
+.wrap /deep/.ant-alert-info .ant-alert-icon{
+  color: rgb(245, 34, 45)
+}
+.wrap /deep/ .ant-alert-info{
+  background: rgba(255, 0, 0, 0.1);
+  border: 1px solid rgba(255, 0, 0, 0.1);
+}
+.home-page {
+  // background-color: #fff;
+  .mt8{
+    margin-top:8px;
+  }
+  .mb8{
+    margin-bottom: 8px;
+  }
+  .home-input::before{
+    content:'*';
+    color:red;
+    width: 4px;
+    height:4px;
+    vertical-align: middle;
+    margin-right: 4px;
+  }
+  .search-block {
+    padding-top: 16px;
+    padding-bottom: 24px;
+    background-color: @bgColor;
+    &-wrap {
+      .tip-info {
+        padding-left: 16px;
+        height: 36px;
+        line-height: 36px;
+        background-color: #E6F7FF;
+        span:first-child {
+          display: inline-block;
+          margin-right: 2px;
+        }
+      }
+      .search {
+        margin-top: 26px;
+        display: flex;
+        justify-content: center;
+      }
+      .tips {
+        display: flex;
+        justify-content: center;
+        margin-top: 12px;
+        /deep/.ant-alert-warning {
+          background-color: #fff;
+          border: none;
+          padding-top: 2px !important;
+        }
+        /deep/.ant-alert-message {
+          font-size: 12px;
+          color: rgba(0, 0, 0, 0.45);
+        }
+        /deep/.ant-alert-warning .ant-alert-icon {
+          margin-top: -2px;
+          color: rgba(0, 0, 0, 0.35);
+          top: 5px;
+        }
+        .col {
+          display: flex;
+          justify-content: center;
+        }
+        .t-msg{
+          font-size: 12px;
+          padding-left: 16px;
+          color: rgba(0, 0, 0, 0.45);
+          span{
+            color: red;
+          }
+        }
+      }
+    }
+  }
+  .search-block{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .search-block-wrap{
+      width: 820px;
+    }
+    .search{
+      display: flex;
+      justify-content: flex-start;
+    }
+    .top-tips{
+      margin-top: 12px;
+      /deep/.ant-alert-warning {
+        background-color: #fff;
+        border: none;
+        padding: 0 !important;
+        // display: flex;
+        // padding-left: 15px !important;
+      }
+      /deep/.ant-alert-message {
+        font-size: 12px;
+        color: rgba(0, 0, 0, 0.45);
+        div{
+          padding-left: 20px;
+        }
+      }
+      /deep/.ant-alert-warning .ant-alert-icon {
+        top: 2px;
+        left: 0;
+      }
+    }
+  }
+  .wrap {
+    background-color: #fff;
+    margin-top: 12px;
+    padding-top: 12px;
+    // border-top: 1px solid transparent;
+    .tip {
+      padding-left: 16px;
+      line-height: 36px;
+      background-color: #FFFBE6;
+      margin-top: 16px;
+    }
+    .form-query {
+      // margin-top: 16px;
+      padding: 24px 32px 0 32px;
+      background-color: @bgColor;
+      .form {
+        display: flex;
+        justify-content: space-between;
+        /deep/.ant-row {
+          // display: flex;
+          // 标签宽度随文字，和记录列表页的 .filter-label 一致，右侧留 8px 间隙
+          .ant-form-item-label {
+            width: auto;
+            padding-right: 8px;
+            color: rgba(0, 0, 0, 0.85);
+            line-height: 32px;
+            text-align: left;
+            > label {
+              line-height: 32px;
+            }
+          }
+          // 控件按自身宽度排，不再撑满整列，条件之间才能保持等距
+          .ant-form-item-control-wrapper {
+            flex: 0 0 auto;
+          }
+        }
+        .row1 {
+          position: relative;
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          padding-right: 0;
+          padding-bottom: 16px;
+          // 标签和控件排在同一行，否则长标签会把控件挤到下一行、条件高度翻倍
+          /deep/.ant-form-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0;
+          }
+          // 控件给固定宽度，(labelCol/wrapperCol 的百分比宽度离开了固定列宽就撑不起来，
+          // 下拉框会缩成只占位符那么宽，和记录列表页的固定宽度输入框也不一致)
+          /deep/.ant-select {
+            width: 190px;
+          }
+          // 「查看时间范围」的 label 长，百分比宽的 wrapper 比 190px 的控件宽出 18px，
+          // 列右侧就空一格，后面的重置按钮会被推远。wrapper 收缩到控件本身，
+          // 重置按钮和上一列的间距才和记录列表页一样是 16px
+          .time-range /deep/.ant-form-item-control-wrapper {
+            flex: 0 0 auto;
+            width: auto;
+          }
+          // 每个条件按内容宽度排、彼此间隔 16px、每行留 8px 下边距，与记录列表页统一
+          > * {
+            flex: 0 0 auto;
+            // 覆盖全局的 .ant-col-xx 固定宽度，否则条件撑不出内容宽、间距也不均匀
+            width: auto;
+            max-width: none;
+            margin-right: 16px;
+            margin-bottom: 8px;
+          }
+          // margin-top: 24px;
+          // display: flex;
+          // width: 100%;
+          // justify-content: space-between;
+          .right {
+            display: flex;
+            justify-content: flex-end;
+            flex: 1;
+            text-align: right;
+            .icon-style {
+              width: 24px;
+              margin-right: 5px;
+              margin-top: -2px;
+            }
+            .icon-text {
+              color: rgba(0, 0, 0, 0.55);
+            }
+          }
+          .btn-submit {
+            margin-right: 12px;
+          }
+          .arrow {
+            display: inline-block;
+            margin-left: 8px;
+          }
+        }
+      }
+    }
+  }
+  // .tip-info {
+  //   margin-top: 16px;
+  //   padding: 0 32px;
+  //   display: flex;
+  //   justify-content: space-between;
+  //   // background-color: @bgColor;
+  //   .left {
+  //     .content {
+  //       padding: 0 16px;
+  //       line-height: 40px;
+  //       background: #E6F7FF;
+  //       border: 1px solid #91D5FF;
+  //       border-radius: 2px;
+  //       font-size: 14px;
+  //     }
+  //   }
+  //   .right {
+  //     .date {
+  //       line-height: 40px;
+  //     }
+  //     .date-select {
+  //       width: 128px;
+  //     }
+  //   }
+  // }
+  .query-table {
+    padding: 16px 32px 0 32px;
+    background-color: @bgColor;
+  }
+  .arguments-content {
+    text-align: center;
+    margin: 10px 0;
+    padding-bottom: 8px;
+    a:first-child {
+      margin-right: 32px;
+    }
+  }
+  // 遮罩层
+  .authorize-modal {
+    /deep/.ant-modal {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      margin-left: -430px;
+      margin-top: -221px;
+    }
+  }
+  .flex-center{
+    justify-content: center !important;
+  }
+  .confirm-modal {
+    /deep/ .ant-modal-wrap{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    /deep/ .ant-modal{
+      min-width: 620px !important;
+      width:auto !important;
+      margin:0 !important;
+      position: static;
+    }
+    .text {
+      font-size: 18px;
+    }
+    .tips {
+      font-size: 14px;
+      color: rgba(0, 0, 0, 0.35);
+    }
+    .content {
+      padding: 48px 0 48px 48px;
+      display: flex;
+      justify-content: space-between;
+      a {
+        width: 210px;
+        padding: 20px;
+        display: inline-block;
+        color: rgba(0, 0, 0, 0.85);
+        border-radius: 6px;
+        box-shadow: -8px -8px 20px rgba(255, 255, 255, 0.85),
+          -8px -8px 20px rgba(255, 255, 255, 0.85),
+          8px 8px 20px #D9DDEC,
+          8px 8px 20px #D9DDEC;
+        text-align: center;
+        margin-right: 48px;
+        img {
+          width: 100px;
+          height: 100px;
+          margin-bottom: 12px;
+        }
+        .tip1 {
+          font-size: 16px;
+          font-weight: bold;
+          margin-bottom: 4px;
+        }
+        .tip2 {
+          color: rgba(0, 0, 0, 0.65);
+        }
+      }
+      a:hover {
+        box-shadow: -8px -8px 20px rgba(255, 255, 255, 0.65) inset,
+          -8px -8px 20px rgba(255, 255, 255, 0.65) inset,
+          8px 8px 20px #D9DDEC inset,
+          8px 8px 20px #D9DDEC inset;
+      }
+    }
+  }
+  .authorize-modal {
+    .title {
+      display: flex;
+      justify-content: space-between;
+      .text {
+        font-size: 18px;
+      }
+      .tips {
+        font-size: 14px;
+        color: rgba(0, 0, 0, 0.35);
+      }
+      a {
+        font-size: 15px;
+        color: rgba(41, 19, 19, 0.35);
+      }
+      .other-authorize {
+        font-size: 14px;
+      }
+    }
+    .content {
+      .authorizeType1 {
+        display: flex;
+        justify-content: space-between;
+        padding: 21px 0;
+        .img {
+          width: 70%;
+          display: flex;
+          justify-content: space-between;
+          .img4-img5 {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+          }
+          .img5 {
+            margin-bottom: 24px;
+          }
+          img {
+            display: inline-block;
+            margin-right: 50px;
+          }
+          .text {
+            margin-left: 20px;
+            padding-right: 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-right: 1px solid rgba(0, 0, 0, 0.06);
+            p {
+              flex: 1;
+              display: flex;
+              flex-direction: column;
+              justify-content: center;
+            }
+          }
+        }
+        .qr {
+          flex: 1;
+          margin-left: 30px;
+          .pic {
+            text-align: center;
+          }
+          img {
+            width: 133px;
+            height: 133px;
+            margin-bottom: 18px;
+          }
+        }
+      }
+      .authorizeType2 {
+        .title {
+          line-height: 32px;
+        }
+        .row {
+          display: flex;
+          justify-content: center;
+          .input {
+            background-color: #F2F3FB;
+          }
+        }
+        .mr32 {
+          margin-right: 32px;
+        }
+        .mb16 {
+          margin-bottom: 16px;
+        }
+      }
+      .authorizeType5{
+        display: flex;
+        // align-items: center;
+        .qr{
+          width: 133px;
+          height: 133px;
+          margin: 50px 0;
+        }
+        .txt{
+          color: #333;
+          text-align: center;
+          // font-weight: bold;
+        }
+        .qr-wrapper{
+          // width: 60%;
+          flex: 0 0 49%;
+          padding-left: 20px;
+          margin-left: 20px;
+          border-left: 1px solid #ddd;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+        }
+      }
+    }
+    .footer {
+      padding: 16px 0;
+      text-align: center;
+      a {
+        padding: 8px 18px;
+        display: inline-block;
+        color: rgba(0, 0, 0, 0.85);
+        // background: #F2F3FB;
+        box-shadow: 8px -8px 20px rgba(255, 255, 255, 0.85),
+        -8px -8px 20px rgba(255, 255, 255, 0.85),
+        8px 8px 20px #D9DDEC,
+        8px 8px 20px #D9DDEC;
+        border-radius: 6px;
+      }
+      a:hover {
+        box-shadow: -8px -8px 20px rgba(255, 255, 255, 0.65) inset,
+          -8px -8px 20px rgba(255, 255, 255, 0.65) inset,
+          8px 8px 20px #D9DDEC inset,
+          8px 8px 20px #D9DDEC inset;
+      }
+    }
+  }
+   /deep/.ant-modal-content, /deep/.ant-modal-header {
+    background-color: #F2F3FB;
+  }
+  .bg-white /deep/.ant-modal-content {
+    background-color: white !important;
+  }
+}
+.mt5 {
+  margin-top: 5px;
+}
+/deep/.ant-select-dropdown-menu-item {
+  white-space: normal;
+}
+/deep/.ant-modal-body {
+  padding: 24px 24px;
+}
+.modal-content-wrap {
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+.bottom-btn {
+  margin-top: 12px;
+  text-align: center;
+}
+/deep/.ant-table-pagination.ant-pagination {
+  float: none;
+  text-align:center;
+}
+/deep/.ant-col-3 {
+  width: 80px;
+  // max-width: 90px;
+}
+/deep/.ant-col-7 {
+  width: 30%;
+  // max-width: 90px;
+}
+/deep/.ant-col-12 {
+  width: 240px;
+}
+/deep/.ant-col-md-8 {
+  width: 460px;
+}
+/deep/.ant-col-sm-8 {
+  width: 360px;
+}
+/deep/.ant-col-sm-12 {
+  width: 240px;
+}
+/deep/.ant-col-sm-6 {
+  width: 140px;
+}
+/deep/.ant-modal {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  // transform: translate(-50%, -50%);
+  margin-left: -265px;
+  margin-top: -147px;
+}
+.tip-msg {
+  // display: inline-block;
+  // margin-left: 20px;
+  margin-top: 10px;
+  color: red;
+}
+
+::global {
+  .ant-table-tbody > tr > td,
+  .ant-table-thead > tr > th {
+    height: 62px;
+    white-space:nowrap;//***
+    overflow: auto;//***
+  }
+  .ant-table-thead > tr > th {
+    background: #2db7f5;
+    white-space:nowrap;//***
+    overflow: auto;//***
+  }
+  // .tips {
+
+  // }
+}
+@import '~ant-design-vue/lib/style/themes/index.less';
+/deep/.ant-steps-item-wait > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-title{
+  color: rgba(0, 0, 0, 0.85) !important;
+  font-size: 14px;
+}
+/deep/.ant-steps-item-process > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-description{
+  height: 80px;
+}
+/deep/.ant-steps-item-process > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-title{
+  font-size: 14px;
+}
+/deep/.ant-steps-item-wait > .ant-steps-item-container > .ant-steps-item-content > .ant-steps-item-description{
+  color: rgba(0, 0, 0, 0.65);
+  height: 80px;
+  .color{
+    color: @primary-color;
+  }
+}
+/deep/.ant-steps-vertical .ant-steps-item-icon{
+  background: @primary-color;
+  border-color: @primary-color;
+}
+/deep/.ant-steps-icon{
+  color: #fff !important;
+}

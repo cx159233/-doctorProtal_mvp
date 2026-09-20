@@ -1,0 +1,56 @@
+
+  [32m[1mVITE[22m v5.4.21[39m  [2mready in [0m[1m1214[22m[2m[0m ms[22m
+
+  [32m➜[39m  [1mLocal[22m:   [36mhttp://localhost:[1m5173[22m/[39m
+[2m  [32m➜[39m  [1mNetwork[22m[2m: use [22m[1m--host[22m[2m to expose[22m
+[2m16:39:28[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:39:43[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:39:48[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:41:06[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:41:35[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:41:42[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:46:31[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/main.js[22m
+[2m16:46:46[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/main.js[22m
+[2m16:46:57[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2msrc/main.js[22m
+[2m16:47:14[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mutils/rem.ts[22m
+[2m16:47:22[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mutils/rem.ts[22m
+[2m16:47:30[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mutils/rem.ts[22m
+[2m16:48:02[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mutils/rem.ts[22m
+[2m16:48:11[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mutils/rem.ts[22m
+[2m16:48:17[22m [36m[1m[vite][22m[39m [32mpage reload [39m[2mutils/rem.ts[22m
+[2m16:51:29[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:51:35[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:51:40[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:51:51[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue[22m
+[2m16:52:23[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:53:19[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css, /src/Dashboard.vue[22m
+[2m16:53:50[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue[22m
+[2m16:54:02[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue[22m
+[2m16:56:58[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:57:11[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:57:21[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:57:30[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:57:43[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:57:55[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:58:00[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:58:17[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:58:34[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:58:37[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:58:41[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:58:43[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:58:49[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:59:16[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:59:21[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:59:26[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:59:30[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:59:34[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:59:38[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:59:40[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:59:55[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m16:59:59[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m17:00:02[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m17:00:06[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m17:00:57[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m17:01:22[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m17:01:31[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m
+[2m17:03:05[22m [36m[1m[vite][22m[39m [32mhmr update [39m[2m/src/Dashboard.vue?vue&type=style&index=0&scoped=4b0d9ef4&lang.css[22m

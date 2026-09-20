@@ -1,0 +1,906 @@
+// 从 doctorProtal_mvp 的「医保档案」视图搬过来的样式。
+//
+// 两条约束：
+// 1. 所有规则收在 .mva-page 下。jskydy 里 .card / .ch / .tag 的通用名各有用处，
+//    不隔离会互相污染。
+// 2. 这个文件是非 scoped 引入的 —— antd-vue 1.x 的 a-modal 会把内容 portal 到
+//    document.body，scoped 的 data 属性够不到弹窗内部。所以弹窗内容上也挂一层
+//    .mva-page 来兜住（见 index.vue 的 a-modal）。
+//
+// 配色对齐 antd：--blue 系列换成 #1890ff 家族；green/amber/red/cyan 保持语义色。
+
+.mva-page {
+  --blue: #1890ff;
+  --blue-l: #e6f7ff;
+  --blue-m: #91d5ff;
+  --blue-d: #096dd9;
+  --green: #059669;
+  --green-l: #ecfdf5;
+  --green-m: #a7f3d0;
+  --amber: #d97706;
+  --amber-l: #fffbeb;
+  --amber-m: #fde68a;
+  --red: #dc2626;
+  --red-l: #fef2f2;
+  --red-m: #fecaca;
+  --purple: #7c3aed;
+  --purple-l: #f5f3ff;
+  --cyan: #0891b2;
+  --cyan-l: #ecfeff;
+  --ink: #0f172a;
+  --ink2: #1e293b;
+  --ink3: #475569;
+  --ink4: #94a3b8;
+  --line: #e2e8f0;
+  --line2: #f1f5f9;
+  --bg: #f8fafc;
+  --white: #ffffff;
+  --card-bg: #ffffff;
+  --card-border: rgba(226, 232, 240, 0.7);
+  --card-inner-glow: inset 0 1px 0 0 rgba(255, 255, 255, 0.8);
+  --r: 12px;
+
+  // 顶部间距和医保健康档案页对齐：那边一级 tab 栏下沿到二级 tab 白块是 28px，
+  // 这页没有二级 tab，通栏就直接顶到 28px（父级 .content 已给 12px，这里补 16px）
+  padding: 16px 0 12px;
+
+  // 顶部：家庭共济成员 + 个人慢特病待遇 + 异地就医备案
+  .mva-header {
+    margin-bottom: 12px;
+  }
+
+  .mva-header-inner {
+    display: flex;
+    align-items: flex-start;
+    gap: 32px;
+    padding: 16px 22px;
+  }
+  .mva-vline {
+    width: 1px;
+    align-self: stretch;
+    background: var(--line2);
+  }
+
+  // 分区标题：个人慢特病待遇 / 家庭共济成员 / 异地就医备案 共用同一套样式
+  .mva-sec-hd {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  // 标题前的竖线，和左右两栏面板标题的竖线同一尺寸
+  .mva-sec-stripe {
+    width: 3px;
+    height: 14px;
+    border-radius: 2px;
+    flex-shrink: 0;
+    background: var(--blue);
+  }
+  // 跟左右两栏的面板标题（医保财务档案 / 医保信息档案）同一个灰，别比它们还重
+  .mva-sec-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink3);
+  }
+  // 慢特病待遇：标题 + label / value 两行，紧挨着右侧的异地就医备案
+  .mva-ins {
+    flex: 0 0 300px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 2px;
+    padding-left: 12px;
+  }
+  .mva-ins-bd {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .mva-ins-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  // 病种名跟卡片里的「参保状态」同一套读法：前置绿点、内容 14px/--ink2。
+  // 带点后 56px 装不下，加宽到 70px
+  .mva-ins .mva-kv-lbl {
+    width: 70px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--ink2);
+  }
+  .mva-kv-lbl {
+    width: 56px;
+    flex-shrink: 0;
+    font-size: 14px;
+    color: var(--ink4);
+    white-space: nowrap;
+  }
+  // 四字字段名（备案类型）在 14px 下正好占满 56px，撑开会顶到值
+  .mva-kv-lbl--wide {
+    width: 70px;
+  }
+  .mva-kv-val {
+    font-size: 14px;
+    color: var(--ink2);
+    white-space: nowrap;
+  }
+  // 家庭共济还没接后端，整个分区灰掉，状态标签也跟着弱化
+  .mva-sec-badge {
+    background: var(--line2);
+    color: var(--ink4);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  // 家庭共济成员：标题 + 头像堆叠。
+  // 吃掉全部剩余宽度，把慢特病待遇和异地就医备案一起推到通栏右侧并挨着
+  .mva-family {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 2px;
+
+    .mva-sec-stripe {
+      background: var(--ink4);
+    }
+
+    .mva-sec-title {
+      color: var(--ink4);
+    }
+  }
+  // 通栏右端的分隔线之后：异地就医备案。同样是「暂未开放」的占位，
+  // 所以跟家庭共济一样整块灰掉，只是内容是 label / value 行而非头像堆叠
+  .mva-demo-block {
+    flex: 0 0 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-top: 2px;
+    padding-left: 12px;
+
+    .mva-sec-stripe {
+      background: var(--ink4);
+    }
+
+    .mva-sec-title {
+      color: var(--ink4);
+    }
+
+    .mva-kv-lbl--wide,
+    .mva-kv-val {
+      color: var(--ink4);
+    }
+  }
+  .mva-family-bd {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+  }
+  // 头像统一中性色、后一个压在前一个上，像一组人的缩略
+  .mva-fam-stack {
+    display: flex;
+  }
+  // 用默认人像图标而不是「父 / 子 / 妻」这类关系字：字面本身有歧义，
+  // 而且这里整块是「暂未开放」的占位，灰底 + 默认图标才读得出是占位。
+  // 图标比 --ink4 再淡一档（slate-300），别抢过区块标题
+  .mva-fam-av {
+    background: var(--line2);
+    border: 2px solid var(--white);
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    &:not(:first-child) {
+      margin-left: -14px;
+    }
+  }
+
+  // 右栏只比信息档案原本的宽度宽一点；长期护理保险放不下的字段走省略号
+  .mva-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 480px;
+    gap: 12px;
+    align-items: start;
+  }
+
+  .mva-mb20 {
+    margin-bottom: 20px;
+  }
+
+  // 年度 / 地区 / 类型筛选条，控件与「医保健康档案」保持一致（antd 原生）
+  .mva-filter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 24px;
+    margin-bottom: 16px;
+    padding: 12px 14px;
+    background: var(--bg);
+    border-radius: 8px;
+    flex-wrap: wrap;
+  }
+  .mva-filter-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .mva-filter-lbl {
+    font-size: 14px;
+    color: rgba(0, 0, 0, 0.85);
+    white-space: nowrap;
+  }
+
+  // 参保信息：整组共用一个浅底，逐行不再各带背景
+  .mva-cond-list {
+    display: flex;
+    flex-direction: column;
+    padding: 9px 14px;
+    background: var(--bg);
+    border-radius: 8px;
+  }
+  .mva-cond-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+  }
+  // 字段名：14px、常规字重，比字段值浅一档
+  .mva-cond-name {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 400;
+    // 字段名跟个人医保画像的「参保状态」同一档灰，值才是深色
+    color: #666;
+  }
+  .mva-cond-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--blue);
+    flex-shrink: 0;
+  }
+  // 字段值：14px、常规字重、--ink2。
+  // 「正常参保(在缴)」的状态点在值前面（跟个人医保画像一致），所以这里要能横向排
+  .mva-cond-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--ink2);
+    white-space: nowrap;
+  }
+
+  // 信息档案里的分组：参保信息 / 长期护理保险 / 商业保险
+  .mva-group + .mva-group {
+    border-top: 1px solid var(--line2);
+    margin-top: 20px;
+    padding-top: 20px;
+  }
+  .mva-group-hd {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  // 医保信息档案里的字号只有两档：标题/内容 14px，字段名/小字 13px
+  // 分组标题的颜色跟面板标题（医保信息档案）统一走 --ink3
+  .mva-group-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink3);
+  }
+  // 暂未开放的分组整块置灰，标题也跟着弱化
+  .mva-group-demo .mva-group-title {
+    color: var(--ink4);
+  }
+  // 商业保险占位卡：整块置灰，数字全是 --
+  // 这几个覆盖类跟 .ins-v2-* 基础规则同优先级，而基础规则在本文件里排在后面，
+  // 所以用复合选择器把优先级顶上去。
+  .ins-card-v2.mva-ins-demo {
+    background: var(--bg);
+    border: 1px dashed var(--line);
+    box-shadow: none;
+  }
+  // 顶栏只剩机构名一行，上下间距一起收，卡片才真的变矮
+  .ins-v2-top.mva-ins-demo-top {
+    border-bottom: 1px dashed var(--line);
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+    justify-content: space-between;
+  }
+  // 保单号 / 评定结论贴卡片右上角，不再占机构名下面一行
+  .ins-v2-top > .ins-v2-id {
+    align-self: flex-start;
+    margin-top: 0;
+    white-space: nowrap;
+  }
+  // 置灰的整卡用同一个灰，层次靠字号字重区分
+  .mva-ins-demo {
+    .ins-v2-name,
+    .ins-v2-id,
+    .ins-v2-lbl,
+    .ins-v2-val {
+      color: var(--ink4);
+    }
+  }
+  .mva-badge-demo {
+    background: var(--line2);
+    color: var(--ink4);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 2px;
+  }
+
+  // 长期护理保险。底色和描边都比正常绿再淡一半（往白里调 50%），
+  // 卡片只是轻微带绿，不跟「享受中」那类绿字抢注意力
+  .ins-card-v2.mva-ltc-card {
+    background: #f7fefa;
+    border: 1px solid #ddfbe7;
+  }
+  .ins-v2-top.mva-ltc-top {
+    border-bottom: 1px solid #ddfbe7;
+  }
+  // 评定结论是这张卡的看点，右上角给绿色强调。
+  // 字号字重跟通栏「职工基本医疗保险」一致，颜色仍走 --green。
+  // 基础 .ins-v2-id 规则排在本文件后面，得用复合选择器把优先级顶上去
+  .ins-v2-id.mva-ltc-id {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--green);
+  }
+
+  .mva-mono {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+
+  // 表格单元格着色
+  .mva-strong {
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .mva-blue {
+    font-weight: 600;
+    color: var(--blue);
+  }
+  .mva-muted {
+    font-size: 11px;
+    color: var(--ink4);
+  }
+
+  // 日期 + 时间分两行，但字号和颜色保持一致，只靠换行区分
+  .mva-date {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.4;
+  }
+  .mva-date-day,
+  .mva-date-time {
+    color: var(--ink2);
+    white-space: nowrap;
+  }
+
+  .mva-ratio {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    white-space: nowrap;
+  }
+  .mva-ring {
+    position: relative;
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+
+    svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+  }
+  .mva-ring-label {
+    font-size: 11px;
+    color: var(--ink4);
+    font-weight: 600;
+  }
+
+  // a-table 保留卡片内边距，不要贴死容器左右
+  .table-list {
+    margin: 0;
+  }
+
+  /* ── Card ──
+     和「医保健康档案」一致：纯白块、无边框无投影无圆角，靠 12px 间隙分隔 */
+  .card {
+    background: #fff;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    overflow: hidden;
+  }
+
+  .ch {
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .ch-l {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .ch-stripe {
+    width: 3px;
+    height: 16px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+  // 面板标题和二级 tab 统一成一套：16px、加粗、--ink3（tab 那边写的是同值 #475569）
+  .ch-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink3);
+  }
+  .cb {
+    padding: 14px 18px 18px;
+  }
+
+  /* ── Metric Card ── */
+  .g4 {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+  }
+
+  .mc {
+    background: var(--card-bg);
+    border-radius: 8px;
+    border: 1px solid var(--card-border);
+    padding: 16px 18px;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 12px 30px -5px rgba(148, 163, 184, 0.18),
+      var(--card-inner-glow);
+  }
+  // 每张卡一个语义色，只用在数字上；卡片底色保持纯白，不铺色块。
+  // 头一张（总费用）走项目标准蓝，其余三张取 AntV G2 的默认分类色 ——
+  // 这套是为「并排显示」调过的，几个色明度/彩度在同一档，不像彩虹那样互相打架。
+  // 类名按卡片承担的口径命名而不是颜色：颜色已经改过几轮，
+  // 名字里带颜色的话每换一次就失效（#5D7092 既不是青、#F6BD16 也不是琥珀）
+  .mc-fee { --mc: var(--blue); } // 年度医疗总费用
+  .mc-fund { --mc: #5ad8a6; }    // 统筹基金支付
+  .mc-acct { --mc: #5d7092; }    // 个人账户支付
+  .mc-ratio { --mc: #f6bd16; }   // 统筹报销比例
+  // 卡片标签跟右栏的字段名（待遇状态 / 服务频次）同一档：13px、常规字重、--ink4
+  .mc-lbl {
+    font-size: 13px;
+    color: var(--ink4);
+    font-weight: 400;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  // 数值是本卡的主角：HelveticaNeue + 各自的语义色，字重保留粗一点的层
+  .mc-val {
+    font-family: HelveticaNeue, 'Helvetica Neue', 'PingFang SC', Arial, sans-serif;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 4px;
+    color: var(--mc);
+  }
+  // 底部说明：字号/字重/字色都不动，只在文字底下加一层浅灰底 + 圆角，
+  // 让它读起来像个标签。不要边框 —— 白卡上再加一圈线就太硬了。
+  // 宽度随内容，标签不该被文字撑满整张卡
+  .mc-trend {
+    display: inline-block;
+    max-width: 100%;
+    box-sizing: border-box;
+    padding: 2px 8px;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.4;
+    margin-top: 6px;
+    color: var(--ink4);
+    background: #f0f2f5;
+    border-radius: 4px;
+  }
+
+  /* ── Tag ── */
+  .tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 2px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .tag.t-blue {
+    background: #e6f7ff;
+    color: #096dd9;
+  }
+  .tag.t-red {
+    background: #fff1f0;
+    color: #cf1322;
+  }
+  .tag.t-green {
+    background: #f6ffed;
+    color: #389e0d;
+  }
+  .tag.t-amber {
+    background: #fffbe6;
+    color: #d48806;
+  }
+  .tag.t-cyan {
+    background: #e6fffb;
+    color: #08979c;
+  }
+  .tag.t-purple {
+    background: #f9f0ff;
+    color: #722ed1;
+  }
+
+  /* ── Commercial Insurance V2 ── */
+  .ins-card-v2 {
+    background: linear-gradient(135deg, #fef2f2 0%, #fff 100%);
+    border: 1px solid var(--red-m);
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 10px rgba(220, 38, 38, 0.05);
+  }
+  .ins-v2-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px dashed var(--red-m);
+  }
+  .ins-v2-logo {
+    width: 44px;
+    height: 44px;
+    background: var(--white);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.05);
+  }
+  .ins-v2-info {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+  }
+  // 卡片名（常州市长期护理保险 / 商业健康保险）和通栏「职工基本医疗保险」同一档：
+  // 14px、常规字重、--ink2
+  .ins-v2-name {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--ink2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ins-v2-id {
+    font-size: 13px;
+    color: var(--ink4);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .ins-v2-body {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    // 值放大到 14px 后 12px 的列间距会把「居家上门护理」挤成省略号，收到 8px
+    gap: 8px;
+  }
+  .ins-v2-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+  .ins-v2-lbl {
+    font-size: 13px;
+    // 字段名（待遇状态 / 保障状态…）跟「参保信息」的字段名同一档灰
+    color: #666;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  // 卡片里的值（居家上门护理 / 3次/周 / 常州安心养老服务中心…）和通栏的
+  // 「职工基本医疗保险」同一档：14px、常规字重、--ink2
+  .ins-v2-val {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--ink2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* ── Toggle ── */
+  .toggle {
+    width: 36px;
+    height: 20px;
+    background: var(--line);
+    border-radius: 10px;
+    position: relative;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: var(--white);
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: 0.2s;
+  }
+  .toggle.on {
+    background: var(--green);
+  }
+  .toggle.on::after {
+    left: 18px;
+  }
+
+  /* ── Family Management Modal ── */
+  .modal-body {
+    padding: 24px;
+    overflow-y: auto;
+  }
+  .fam-mgmt-v2 {
+    margin: -24px;
+    background: #f8fafc;
+  }
+  .fam-v2-header {
+    background: linear-gradient(135deg, var(--blue), #40a9ff);
+    padding: 24px;
+    color: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .fam-v2-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .fam-v2-av {
+    width: 48px;
+    height: 48px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    border: 2px solid rgba(255, 255, 255, 0.4);
+  }
+  .fam-v2-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .fam-v2-name {
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .fam-v2-tag {
+    font-size: 11px;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-weight: 400;
+  }
+  .fam-v2-id {
+    font-size: 12px;
+    opacity: 0.8;
+  }
+  .fam-v2-balance {
+    text-align: right;
+  }
+  .fam-v2-bal-lbl {
+    font-size: 12px;
+    opacity: 0.8;
+    margin-bottom: 4px;
+  }
+  .fam-v2-bal-val {
+    font-size: 20px;
+    font-weight: 800;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  .fam-v2-tabs {
+    display: flex;
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+    padding: 0 16px;
+  }
+  .fam-v2-tab {
+    padding: 14px 20px;
+    font-size: 14px;
+    color: var(--ink3);
+    cursor: pointer;
+    position: relative;
+    font-weight: 500;
+  }
+  .fam-v2-tab.active {
+    color: var(--blue);
+    font-weight: 700;
+  }
+  .fam-v2-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 20px;
+    right: 20px;
+    height: 2px;
+    background: var(--blue);
+  }
+  .fam-v2-list {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-height: 480px;
+    overflow-y: auto;
+  }
+  .fam-v2-card {
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
+    width: 100%;
+  }
+  .fam-v2-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+  }
+  .fam-v2-card-user {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .fam-v2-card-av {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    color: #fff;
+  }
+  .fam-v2-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .fam-v2-card-name {
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .fam-v2-card-id {
+    font-size: 12px;
+    color: var(--ink4);
+  }
+  .fam-v2-permissions {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 16px;
+  }
+  .fam-v2-perm-hd {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--ink2);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .fam-v2-perm-hd::before {
+    content: '';
+    width: 4px;
+    height: 12px;
+    background: var(--blue);
+    border-radius: 2px;
+  }
+  .fam-v2-perm-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .fam-v2-perm-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: var(--ink2);
+  }
+  .fam-v2-card-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .fam-v2-btn {
+    flex: 1;
+    padding: 8px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    background: #fff;
+    font-size: 13px;
+    color: var(--ink2);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .fam-v2-btn:hover {
+    background: #f1f5f9;
+    border-color: var(--ink4);
+  }
+  .fam-v2-btn.p-color {
+    color: var(--blue);
+    border-color: var(--blue-m);
+    background: var(--blue-l);
+  }
+  .fam-v2-btn.p-color:hover {
+    background: #bae7ff;
+  }
+  .fam-v2-footer {
+    padding: 16px;
+    background: #fff;
+    border-top: 1px solid var(--line);
+    display: flex;
+    gap: 12px;
+  }
+  .fam-v2-foot-btn {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .fam-v2-foot-btn:hover {
+    background: #f8fafc;
+  }
+  .fam-v2-foot-btn.p-bg {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+  }
+  .fam-v2-foot-btn.p-bg:hover {
+    background: #096dd9;
+  }
+}

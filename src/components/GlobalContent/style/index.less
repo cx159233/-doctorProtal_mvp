@@ -1,0 +1,39 @@
+#layout-content {
+  // height: calc(100% - 64px);
+  .close-icon{
+    position: absolute;
+    right: 20px;
+    top:10px;
+    cursor: pointer;
+    font-size: 18px;
+  }
+  .message{
+    position: relative;
+    background: #cbe4f2;
+    padding:10px 20px;
+    margin-top:10px;
+  }
+  .layout-content {
+    // height: 100%;
+    padding: 0 32px;
+    .breadcrumb {
+      padding: 20px 0;
+    }
+    .content {
+      // margin-top: 16px;
+      height: calc(100% - 93px);
+      // background: #fff;
+      border-radius: 2px;
+    }
+
+    // 整屏页面：去掉左右内边距、去掉内容区固定的 93px 高度，
+    // 高度按视口减顶部导航给，页面内部自己撑满
+    &.layout-content--bleed {
+      padding: 0;
+
+      .content {
+        height: calc(100vh - 64px);
+      }
+    }
+  }
+}

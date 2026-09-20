@@ -1,0 +1,145 @@
+// 顶部导航下面那条查询类页签栏。整条是「框定语 + 分段控件」装在一个白块里：
+// 左边标题说明这一组是什么，右边一排胶囊用来切查询维度。
+// 白块承担了原来胶囊轨道的角色 —— 页面底色 #f0f2f5 上，灰轨道等于隐形。
+.query-tabs {
+  // 一级 tab 栏下沿到白块 28px（16px 外边距 + 12px 内边距），
+  // 和医保信息档案页通栏到顶部的 28px 对齐
+  margin-top: 16px;
+  // 下内边距比上小 4px：上方希望是 28px，下方白块到内容只要 20px
+  //（8px 内边距 + .content 的 12px 上外边距），上下不必对称
+  padding: 12px 0 8px;
+  background: transparent;
+
+  // 标题和页签共用的白容器：白底、圆角，周边留 6px。
+  // 里面左侧是 36px 高的小标题，右侧是 40px 高的页签轨道（32 的胶囊 + 上下各 4px 内距）
+  &-bar {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px;
+    background: #fff;
+    border-radius: 8px;
+  }
+
+  // 和左右两栏的面板标题（医保财务档案 / 医保信息档案）同一套：
+  // 16px、加粗、#475569（= 页面里的 --ink3），前面同样带一根蓝竖线
+  &-title {
+    position: relative;
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 16px 0 12px;
+    line-height: 36px;
+    font-size: 16px;
+    font-weight: 700;
+    color: #475569;
+    white-space: nowrap;
+    // 和面板标题的 .ch-stripe 同尺寸：3px 宽、16px 高、2px 圆角
+    &::before {
+      content: '';
+      width: 3px;
+      height: 16px;
+      border-radius: 2px;
+      background: #1890ff;
+      flex-shrink: 0;
+    }
+    // 和页签之间的竖分隔线。border-right 会拉满 36px 高、比胶囊还显眼，
+    // 改成绝对定位的短线：12px 上下居中，约等于蓝胶囊 36px 的 1/3
+    &::after {
+      content: '';
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 1px;
+      height: 12px;
+      background: #e8eef5;
+    }
+  }
+
+  // flex 子项默认可缩，但 antd 给 .ant-tabs 挂了 overflow:hidden，
+  // 不放开的话窄屏下轨道会被裁掉而不是让出宽度
+  /deep/.ant-tabs {
+    min-width: 0;
+  }
+
+  /deep/.ant-tabs-bar {
+    margin: 0;
+    border-bottom: none;
+  }
+  /deep/.ant-tabs-nav-container {
+    height: auto;
+  }
+  // antd 为那条下划线给下面两层打了 margin-bottom:-1px，再叠上 .ant-tabs 的
+  // overflow:hidden，胶囊底部会被裁掉 2px —— 蓝块看着就是偏下。
+  // 下划线已经不要了，把负 margin 归零，让整条链都回到 36px。
+  /deep/.ant-tabs-nav-container,
+  /deep/.ant-tabs-nav-wrap {
+    margin-bottom: 0;
+  }
+  /deep/.ant-tabs-nav-scroll {
+    display: flex;
+  }
+  // 页签轨道：照搬「个人医保画像 · 时间轴视图」那条分类页签的样式
+  // —— 浅灰底圆角容器，选中项白底蓝字，不再是实心蓝块
+  /deep/.ant-tabs-nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    margin: 0;
+    padding: 4px;
+    border-radius: 10px;
+    background: #f4f6f9;
+  }
+  // 下划线不要了。antd 运行时会给 ink-bar 打上 inline 的 display:block，
+  // 普通规则盖不住（inline 优先级高于样式表），只能 !important。
+  /deep/.ant-tabs-ink-bar {
+    display: none !important;
+  }
+  // 单个页签：32 高、7px 圆角，未选中透明底 + 灰字，和画像那条分类页签同一档
+  /deep/.ant-tabs-tab {
+    padding: 0;
+    margin: 0;
+    height: 32px;
+    border-radius: 7px;
+    font-size: 16px;
+    font-weight: 400;
+    color: #666;
+    transition: background-color 0.2s, color 0.2s;
+
+    // 间距交给轨道的 gap，antd 自带的左边距去掉
+    & + .ant-tabs-tab {
+      margin-left: 0;
+    }
+    // 悬浮只换底色，字色保持同一档
+    &:hover {
+      color: #666;
+      background: #fff;
+    }
+  }
+  // 选中态：白底 + 主蓝字 + 轻投影（原来是实心蓝底白字）
+  /deep/.ant-tabs-tab-active {
+    background: #fff;
+    box-shadow: 0 1px 4px rgba(24, 144, 255, 0.18);
+
+    &:hover {
+      background: #fff;
+    }
+    .tab-label {
+      color: #1890ff;
+      font-weight: 500;
+    }
+  }
+
+  // 整块都可点，不然点中 padding 区域不跳转
+  .tab-label {
+    display: block;
+    padding: 0 18px;
+    line-height: 32px;
+    cursor: pointer;
+    // 未接入的模块置灰，但仍可点击（点了弹提示）
+    &.is-disabled {
+      color: rgba(0, 0, 0, 0.25);
+    }
+  }
+}

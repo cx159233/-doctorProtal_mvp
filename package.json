@@ -1,0 +1,75 @@
+{
+  "name": "jskydy-org-view",
+  "version": "2.1.1",
+  "private": true,
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build",
+    "lint": "vue-cli-service lint",
+    "build:preview": "vue-cli-service build --mode preview",
+    "release": "release-it",
+    "tag": "node ./git.js"
+  },
+  "dependencies": {
+    "ant-design-vue": "1.7.5",
+    "axios": "^0.21.1",
+    "clipboard": "^2.0.8",
+    "core-js": "^3.6.5",
+    "crypto-js": "^4.1.1",
+    "echarts": "^5.3.2",
+    "enquire.js": "^2.1.6",
+    "gm-crypto": "^0.1.12",
+    "js-base64": "^3.7.2",
+    "less": "3.0.4",
+    "less-loader": "5.0.0",
+    "mobile-detect": "^1.4.5",
+    "moment": "^2.29.1",
+    "nprogress": "^0.2.0",
+    "qs": "^6.13.0",
+    "regenerator-runtime": "^0.13.11",
+    "simple-git": "^2.31.0",
+    "skywalking-client-js": "^0.9.0",
+    "upgrade": "^1.1.0",
+    "vue": "^2.6.11",
+    "vue-cookies": "^1.7.4",
+    "vue-ls": "^3.2.2",
+    "vue-router": "^3.5.1",
+    "vuex": "^3.6.2",
+    "vuex-persistedstate": "^4.0.0-beta.3"
+  },
+  "devDependencies": {
+    "@ant-design/colors": "3.2.1",
+    "@babel/preset-env": "^7.19.1",
+    "@vue/cli-plugin-babel": "~4.5.0",
+    "@vue/cli-plugin-eslint": "~4.5.0",
+    "@vue/cli-service": "~4.5.0",
+    "babel-eslint": "^10.1.0",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-es2015": "^6.24.1",
+    "eslint": "^6.7.2",
+    "eslint-plugin-vue": "^6.2.2",
+    "file-loader": "4.0.0",
+    "release-it": "^15.5.0",
+    "vue-template-compiler": "^2.6.11",
+    "webpack-theme-color-replacer": "1.2.17"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/essential",
+      "eslint:recommended"
+    ],
+    "parserOptions": {
+      "parser": "babel-eslint"
+    },
+    "rules": {}
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions",
+    "not dead"
+  ]
+}
