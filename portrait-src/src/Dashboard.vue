@@ -57,18 +57,17 @@
             </div>
           </div>
 
-          <div class="family-row">
-            <div class="family-left">
-              <div class="account-label">家庭共济账户</div>
-              <div class="family-avatars">
-                <span class="family-avatar"><img :src="icon('组 2256@2x')" alt="本人" /></span>
-                <span class="family-avatar"><img :src="icon('组 2257@2x')" alt="配偶" /></span>
-                <span class="family-avatar"><img :src="icon('组 2259@2x')" alt="子女" /></span>
-              </div>
+          <div class="account-item family-item">
+            <div class="family-head">
+              <span class="family-label">家庭图谱</span>
+              <span class="family-amount">家庭共济账户 ¥{{ familyTotal.toLocaleString('en-US', { minimumFractionDigits: 2 }) }}</span>
             </div>
-            <div class="family-right">
-              <div class="account-label">可用金额（元）</div>
-              <div class="account-value muted">暂未开放</div>
+            <div class="family-rows">
+              <div v-for="m in familyMembers" :key="m.rel" class="family-row-item">
+                <span class="family-rel">{{ m.rel }}</span>
+                <span class="family-name">{{ m.name }}</span>
+                <span class="family-health">{{ [...m.conditions, ...m.heredity].join(' · ') || '无病史' }}</span>
+              </div>
             </div>
           </div>
           </template>
@@ -880,6 +879,14 @@ const riskGroups = [
   { label: '风险分层', tags: ['待接入'] },
 ]
 
+const familyMembers = [
+  { name: '张 ** 华', rel: '父', conditions: ['冠心病', '高血脂'], heredity: [], amount: 2600 },
+  { name: '李 **', rel: '妻', conditions: ['甲状腺结节'], heredity: ['糖尿病家族史'], amount: 3200 },
+  { name: '张 **', rel: '女', conditions: [], heredity: [], amount: 1800 },
+]
+
+const familyTotal = computed(() => familyMembers.reduce((s, m) => s + m.amount, 0))
+
 const services = [
   { name: '四肢骨折', desc: '肢体损伤识别', icon: 'l_2231' },
   { name: '冠脉钙化', desc: '血管硬化评估', icon: 'l_2232' },
@@ -1358,50 +1365,70 @@ const services = [
   color: var(--green);
 }
 
-.family-row {
+/* 家庭图谱 */
+.family-item {
   margin-top: 12px;
-  background: rgba(214, 214, 214, 0.48);
-  border-radius: 12px;
-  padding: 14px 16px;
+}
+
+.family-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  
 }
 
-.family-avatars {
+.family-label {
+  font-size: var(--fs-13);
+  font-weight: 400;
+  color: var(--ink4);
+}
+
+.family-amount {
+  font-size: var(--fs-12);
+  color: var(--ink4);
+}
+
+.family-rows {
   display: flex;
-  gap: 6px;
+  flex-direction: column;
+  gap: 2px;
   margin-top: 8px;
 }
 
-/* 圆框固定 26px，保证三个头像尺寸一致 */
-.family-avatar {
-  width: 26px;
-  height: 26px;
+.family-row-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-13);
+  line-height: 22px;
+}
+
+.family-rel {
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  background: #e8eaed;
   flex-shrink: 0;
-  background: rgba(207, 208, 209, 0.38);
 }
 
-.family-avatar img {
-  width: 100%;
-  height: 100%;
-  display: block;
-  object-fit: cover;
+.family-name {
+  color: var(--ink2);
+  flex-shrink: 0;
 }
 
-/* 切图内人物剪影高矮不一（男 72 / 女 75 / 小孩 64，@2x px），
-   在圆框内各自放大，使三个人物视觉大小一致（框大小不变） */
-.family-avatars .family-avatar:nth-child(1) img {
-  transform: scale(1.04);
-}
-
-.family-avatars .family-avatar:nth-child(3) img {
-  transform: scale(1.17);
+.family-health {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ink4);
+  font-size: 12px;
 }
 
 /* ========== 左侧：医保信息总览 ========== */

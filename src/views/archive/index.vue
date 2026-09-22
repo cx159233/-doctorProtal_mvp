@@ -7,20 +7,21 @@
         <div class="mva-family">
           <div class="mva-sec-hd">
             <span class="mva-sec-stripe"></span>
-            <span class="mva-sec-title">家庭共济成员</span>
-            <span class="mva-sec-badge">暂未开放</span>
+            <span class="mva-sec-title">家庭图谱</span>
+            <span class="mva-sec-badge mva-sec-badge--active">已授权 {{ familyMembers.length }} 人</span>
           </div>
           <div class="mva-family-bd" @click="showFamilyManagementModal = true">
             <div class="mva-fam-stack">
-              <a-avatar
+              <div
                 v-for="(m, i) in familyMembers"
                 :key="i"
-                class="mva-fam-av"
-                icon="user"
-                :size="40"
-                :title="m.name"
-              />
+                class="mva-fam-badge"
+                :title="m.name + ' · ' + m.rel"
+              >
+                {{ m.rel }}
+              </div>
             </div>
+            <div class="mva-fam-total">共济总额 ¥{{ familyTotal }}</div>
           </div>
         </div>
 
@@ -256,7 +257,7 @@
     <!-- 家庭共济成员管理。内容 portal 到 body，所以再挂一层 mva-page 让样式命中 -->
     <a-modal
       :visible="showFamilyManagementModal"
-      title="家庭共济成员管理"
+      title="家庭图谱管理"
       :footer="null"
       width="600px"
       @cancel="showFamilyManagementModal = false"
@@ -272,8 +273,8 @@
               </div>
             </div>
             <div class="fam-v2-balance">
-              <div class="fam-v2-bal-lbl">个账余额</div>
-              <div class="fam-v2-bal-val">¥ 12,450.00</div>
+              <div class="fam-v2-bal-lbl">家庭共济</div>
+              <div class="fam-v2-bal-val">¥ {{ familyTotal }}</div>
             </div>
           </div>
 
@@ -286,13 +287,27 @@
             <div v-for="(member, i) in familyMembers" :key="i" class="fam-v2-card">
               <div class="fam-v2-card-top">
                 <div class="fam-v2-card-user">
-                  <div class="fam-v2-card-av" :style="{ background: member.color }">{{ member.av }}</div>
+                  <div class="fam-v2-card-rel">{{ member.rel }}</div>
                   <div class="fam-v2-card-info">
                     <div class="fam-v2-card-name">{{ member.name }} <span class="tag t-blue">{{ member.rel }}</span></div>
                     <div class="fam-v2-card-id">{{ member.id }}</div>
                   </div>
                 </div>
                 <div :class="['tag', member.status === '已激活' ? 't-green' : 't-amber']">{{ member.status }}</div>
+              </div>
+
+              <div class="fam-v2-health">
+                <template v-if="member.conditions.length || member.heredity.length">
+                  <div v-if="member.conditions.length" class="fam-v2-health-row">
+                    <span class="fam-v2-health-label">既往症</span>
+                    <span v-for="c in member.conditions" :key="c" class="fam-v2-health-tag cond">{{ c }}</span>
+                  </div>
+                  <div v-if="member.heredity.length" class="fam-v2-health-row">
+                    <span class="fam-v2-health-label">遗传史</span>
+                    <span v-for="h in member.heredity" :key="h" class="fam-v2-health-tag heredity">{{ h }}</span>
+                  </div>
+                </template>
+                <div v-else class="fam-v2-health-empty">无病史</div>
               </div>
 
               <div class="fam-v2-permissions">
@@ -321,13 +336,27 @@
             <div v-for="(member, i) in authorizedMeMembers" :key="i" class="fam-v2-card">
               <div class="fam-v2-card-top">
                 <div class="fam-v2-card-user">
-                  <div class="fam-v2-card-av" :style="{ background: member.color }">{{ member.av }}</div>
+                  <div class="fam-v2-card-rel">{{ member.rel }}</div>
                   <div class="fam-v2-card-info">
                     <div class="fam-v2-card-name">{{ member.name }} <span class="tag t-blue">{{ member.rel }}</span></div>
                     <div class="fam-v2-card-id">{{ member.id }}</div>
                   </div>
                 </div>
                 <div :class="['tag', member.status === '已激活' ? 't-green' : 't-amber']">{{ member.status }}</div>
+              </div>
+
+              <div class="fam-v2-health">
+                <template v-if="member.conditions.length || member.heredity.length">
+                  <div v-if="member.conditions.length" class="fam-v2-health-row">
+                    <span class="fam-v2-health-label">既往症</span>
+                    <span v-for="c in member.conditions" :key="c" class="fam-v2-health-tag cond">{{ c }}</span>
+                  </div>
+                  <div v-if="member.heredity.length" class="fam-v2-health-row">
+                    <span class="fam-v2-health-label">遗传史</span>
+                    <span v-for="h in member.heredity" :key="h" class="fam-v2-health-tag heredity">{{ h }}</span>
+                  </div>
+                </template>
+                <div v-else class="fam-v2-health-empty">无病史</div>
               </div>
 
               <div class="fam-v2-card-actions">
@@ -361,13 +390,13 @@ const REIMBURSEMENT_DATA = [
 ]
 
 const FAMILY_MEMBERS = [
-  { name: '李 **', rel: '配偶', id: '3204**********1234', status: '已激活', balance: true, av: '👩', color: '#FEE2E2' },
-  { name: '陈 **', rel: '子女', id: '3204**********5678', status: '已激活', balance: true, av: '👦', color: '#e6f7ff' },
-  { name: '陈 ** 华', rel: '父亲', id: '3204**********9012', status: '待确认', balance: false, av: '👴', color: '#f5f3ff' },
+  { name: '张 ** 华', rel: '父', id: '3204**********9012', status: '已激活', balance: true, conditions: ['冠心病', '高血脂'], heredity: [], amount: 2600 },
+  { name: '李 **', rel: '妻', id: '3204**********1234', status: '已激活', balance: true, conditions: ['甲状腺结节'], heredity: ['糖尿病家族史'], amount: 3200 },
+  { name: '张 **', rel: '女', id: '3204**********5678', status: '待确认', balance: false, conditions: [], heredity: [], amount: 1800 },
 ]
 
 const AUTHORIZED_ME_MEMBERS = [
-  { name: '陈 ** 强', rel: '兄弟', id: '3204**********4321', status: '已激活', av: '👨', color: '#ecfeff' },
+  { name: '张 ** 强', rel: '兄', id: '3204**********4321', status: '已激活', conditions: ['痛风'], heredity: [], amount: 1500 },
 ]
 
 // 筛选条件重置后的取值，data 初始值和重置按钮共用，避免两处不一致
@@ -479,6 +508,11 @@ export default {
     }
   },
   computed: {
+    familyTotal() {
+      const self = 12450
+      const others = this.familyMembers.reduce((s, m) => s + (m.amount || 0), 0)
+      return (self + others).toLocaleString('en-US', { minimumFractionDigits: 2 })
+    },
     patient() {
       const info = this.$store.state.user.hospital_data || {}
       const idCard = String(info.patient_id_card || DEFAULT_PATIENT.idCard)

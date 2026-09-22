@@ -134,8 +134,12 @@
     padding: 2px 8px;
     border-radius: 4px;
   }
+  .mva-sec-badge--active {
+    background: #f6ffed;
+    color: #389e0d;
+  }
 
-  // 家庭共济成员：标题 + 头像堆叠。
+  // 家庭共济成员：标题 + 关系徽章堆叠。
   // 吃掉全部剩余宽度，把慢特病待遇和异地就医备案一起推到通栏右侧并挨着
   .mva-family {
     flex: 1;
@@ -143,14 +147,6 @@
     flex-direction: column;
     gap: 12px;
     padding-top: 2px;
-
-    .mva-sec-stripe {
-      background: var(--ink4);
-    }
-
-    .mva-sec-title {
-      color: var(--ink4);
-    }
   }
   // 通栏右端的分隔线之后：异地就医备案。同样是「暂未开放」的占位，
   // 所以跟家庭共济一样整块灰掉，只是内容是 label / value 行而非头像堆叠
@@ -178,27 +174,34 @@
   .mva-family-bd {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
     cursor: pointer;
   }
-  // 头像统一中性色、后一个压在前一个上，像一组人的缩略
+  // 关系徽章堆叠：后一个压在前一个上
   .mva-fam-stack {
     display: flex;
   }
-  // 用默认人像图标而不是「父 / 子 / 妻」这类关系字：字面本身有歧义，
-  // 而且这里整块是「暂未开放」的占位，灰底 + 默认图标才读得出是占位。
-  // 图标比 --ink4 再淡一档（slate-300），别抢过区块标题
-  .mva-fam-av {
-    background: var(--line2);
-    border: 2px solid var(--white);
-    color: #cbd5e1;
+  .mva-fam-badge {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    color: #666;
+    background: #e8eaed;
+    border: 2px solid var(--white);
     flex-shrink: 0;
     &:not(:first-child) {
-      margin-left: -14px;
+      margin-left: -10px;
     }
+  }
+  .mva-fam-total {
+    font-size: 13px;
+    color: var(--ink4);
+    white-space: nowrap;
   }
 
   // 右栏只比信息档案原本的宽度宽一点；长期护理保险放不下的字段走省略号
@@ -791,6 +794,70 @@
     justify-content: center;
     font-size: 20px;
     color: #fff;
+  }
+  .fam-v2-card-rel {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    color: #666;
+    background: #e8eaed;
+    flex-shrink: 0;
+  }
+  .fam-v2-card-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+  .fam-v2-card-amount {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--blue);
+  }
+  .fam-v2-health {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .fam-v2-health-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .fam-v2-health-label {
+    font-size: 12px;
+    color: var(--ink4);
+    flex-shrink: 0;
+    min-width: 36px;
+  }
+  .fam-v2-health-empty {
+    font-size: 12px;
+    color: var(--ink4);
+  }
+  .fam-v2-health-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    &.cond {
+      background: #fff3e0;
+      color: #e65100;
+    }
+    &.heredity {
+      background: #fce4ec;
+      color: #c62828;
+    }
   }
   .fam-v2-card-info {
     display: flex;
