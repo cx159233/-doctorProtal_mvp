@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>患者档案“一屏看”-业务架构图</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; color: #1e293b; }
+  .arch-shadow { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.02); }
+</style>
+</head>
+<body class="p-4 md:p-8 flex flex-col items-center">
+
+  <div class="w-full max-w-6xl bg-white/90 backdrop-blur border border-slate-200/80 rounded-2xl p-5 md:p-8 arch-shadow flex flex-col gap-5 relative">
+
+    <!-- 顶部标题与数据流向指示 -->
+    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
+      <div class="text-slate-900 font-bold text-base">
+        患者档案“一屏看”业务架构图
+      </div>
+      <div class="text-[11px] text-slate-400 font-normal">
+        数据来源 ➔ 底座数据层 ➔ 统一服务层 ➔ 嵌入医生应用 ➔ 用户端接入
+      </div>
+    </div>
+
+    <!-- 第 1 层：用户层 -->
+    <div class="flex flex-col gap-2">
+      <div class="flex items-center justify-between">
+        <h3 class="text-xs font-bold text-slate-700 tracking-wider uppercase">用户层</h3>
+      </div>
+
+      <!-- 工作站触发展示卡片 -->
+      <div class="bg-white border border-slate-200 rounded-xl p-3 flex items-center justify-center text-center shadow-2xs">
+        <span class="text-slate-800 font-semibold text-xs">HIS医生工作站、PACS医技工作站...</span>
+      </div>
+    </div>
+
+    <!-- 架构层级流转指示线 1 -->
+    <div class="flex justify-center text-slate-400 font-normal text-xs my-[-4px]">
+      ▼ 医生身份凭证校验 · 患者及就诊上下文自动带入
+    </div>
+
+    <!-- 第 2 层：应用层 · 患者档案“一屏看”医生端应用 -->
+    <div class="flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <h3 class="text-xs font-bold text-slate-700 tracking-wider uppercase">应用层：患者档案“一屏看”医生端应用</h3>
+      </div>
+
+      <!-- 核心应用功能区 (采用淡蓝渐变底色与蓝色边框) -->
+      <div class="bg-gradient-to-br from-[#f8fafc] via-[#f1f7ff] to-[#edf5ff] border border-blue-200/90 rounded-2xl p-3.5 flex flex-col gap-3 shadow-sm">
+
+        <!-- 顶部 3 列业务辅助功能卡片 -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+          <!-- 患者医保档案调阅授权 -->
+          <div class="bg-[#f5f9ff] border border-blue-100/90 rounded-lg p-2.5 flex flex-col items-center justify-center text-center shadow-2xs">
+            <span class="font-bold text-[11px] mb-1" style="color: rgb(19, 114, 209);">患者医保档案调阅授权</span>
+            <span class="text-[10px] text-slate-500">短信授权 / 医生辅助授权</span>
+          </div>
+
+          <!-- 患者重点标签呈现 -->
+          <div class="bg-[#f5f9ff] border border-blue-100/90 rounded-lg p-2.5 flex flex-col items-center justify-center text-center shadow-2xs">
+            <div class="flex items-center gap-1.5 mb-1">
+              <span class="font-bold text-[11px]" style="color: rgb(19, 114, 209);">患者重点标签呈现</span>
+              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200/80">数据集成</span>
+            </div>
+            <span class="text-[10px] text-slate-500">慢病标识 / 风险预警分级</span>
+          </div>
+
+          <!-- 智能服务统一入口 -->
+          <div class="bg-[#f5f9ff] border border-blue-100/90 rounded-lg p-2.5 flex flex-col items-center justify-center text-center shadow-2xs">
+            <div class="flex items-center gap-1.5 mb-1">
+              <span class="font-bold text-[11px]" style="color: rgb(19, 114, 209);">智能服务统一入口</span>
+              <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200/80">数据集成+服务集成</span>
+            </div>
+            <span class="text-[10px] text-slate-500">服务入口接入 / 分析结果集中展示</span>
+          </div>
+        </div>
+
+        <!-- 核心大卡片：跨机构医保健康信息调阅 -->
+        <div class="bg-white border border-blue-200/90 rounded-xl p-3 flex flex-col gap-3 shadow-2xs">
+          <div class="flex items-center justify-between pb-1.5 border-b border-slate-100">
+            <span class="font-bold text-xs" style="color: rgb(19, 114, 209);">跨机构医保健康信息调阅</span>
+            <span class="text-[9px] font-bold px-2 py-0.5 rounded" style="background-color: rgba(19, 114, 209, 0.1); color: rgb(19, 114, 209);">全景画像 · 诊程时间轴调阅</span>
+          </div>
+
+          <!-- 档案子模块 1: 个人医保画像、医保信息档案、医保财务档案 -->
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+            <!-- 个人医保画像 -->
+            <div class="bg-[#f5f9ff] border border-blue-100/90 rounded-lg p-2.5 flex flex-col items-center justify-center text-center">
+              <span class="font-bold text-[11px] mb-1" style="color: rgb(19, 114, 209);">个人医保画像</span>
+              <span class="text-[10px] text-slate-500">档案摘要 / 人体态势图</span>
+            </div>
+
+            <!-- 医保信息档案 -->
+            <div class="bg-[#f5f9ff] border border-blue-100/90 rounded-lg p-2.5 flex flex-col items-center justify-center text-center">
+              <span class="font-bold text-[11px] mb-1" style="color: rgb(19, 114, 209);">医保信息档案</span>
+              <span class="text-[10px] text-slate-500">参保待遇 / 门慢门特 / 家庭共济 / 信用就医</span>
+            </div>
+
+            <!-- 医保财务档案 -->
+            <div class="bg-[#f5f9ff] border border-blue-100/90 rounded-lg p-2.5 flex flex-col items-center justify-center text-center">
+              <span class="font-bold text-[11px] mb-1" style="color: rgb(19, 114, 209);">医保财务档案</span>
+              <span class="text-[10px] text-slate-500">年度费用汇总 / 医保报销比例 / 商保保障</span>
+            </div>
+          </div>
+
+          <!-- 档案子模块 2: 医保健康档案 (标题与卡片同一行) -->
+          <div class="bg-[#f5f9ff]/60 border border-blue-100/80 rounded-lg p-2.5 flex flex-col md:flex-row md:items-center gap-2.5">
+            <div class="text-[11px] font-bold shrink-0 md:w-24 border-b md:border-b-0 md:border-r border-slate-200/80 pb-1 md:pb-0 md:pr-2 text-center md:text-left flex items-center justify-center md:justify-start" style="color: rgb(19, 114, 209);">
+              医保健康档案
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-1.5 text-[10px] flex-1">
+              <div class="bg-[#eef5ff] rounded py-1.5 px-1 text-center font-medium flex flex-col justify-center items-center shadow-2xs">
+                <span style="color: rgb(19, 114, 209);">门诊记录</span>
+                <span class="text-[8px] text-slate-400 font-normal">数据集成</span>
+              </div>
+              <div class="bg-[#eef5ff] rounded py-1.5 px-1 text-center font-medium flex flex-col justify-center items-center shadow-2xs">
+                <span style="color: rgb(19, 114, 209);">住院记录</span>
+                <span class="text-[8px] text-slate-400 font-normal">数据集成</span>
+              </div>
+              <div class="bg-[#eef5ff] rounded py-1.5 px-1 text-center font-medium flex flex-col justify-center items-center shadow-2xs">
+                <span style="color: rgb(19, 114, 209);">全国影像检查</span>
+                <span class="text-[8px] font-normal" style="color: rgb(19, 114, 209);">服务集成</span>
+              </div>
+              <div class="bg-[#eef5ff] rounded py-1.5 px-1 text-center font-medium flex flex-col justify-center items-center shadow-2xs">
+                <span style="color: rgb(19, 114, 209);">检验记录</span>
+                <span class="text-[8px] font-normal" style="color: rgb(19, 114, 209);">服务集成</span>
+              </div>
+              <div class="bg-[#eef5ff] rounded py-1.5 px-1 text-center font-medium flex flex-col justify-center items-center shadow-2xs">
+                <span style="color: rgb(19, 114, 209);">病理记录</span>
+                <span class="text-[8px] font-normal" style="color: rgb(19, 114, 209);">服务集成</span>
+              </div>
+              <div class="bg-[#eef5ff] rounded py-1.5 px-1 text-center font-medium flex flex-col justify-center items-center shadow-2xs">
+                <span style="color: rgb(19, 114, 209);">穿戴数据</span>
+                <span class="text-[8px] font-normal" style="color: rgb(19, 114, 209);">服务集成</span>
+              </div>
+              <div class="bg-slate-100 rounded py-1.5 px-1 text-center font-normal flex flex-col justify-center items-center shadow-2xs">
+                <span class="text-slate-400">体检报告</span>
+                <span class="text-[8px] text-slate-300">未接入</span>
+              </div>
+              <div class="bg-slate-100 rounded py-1.5 px-1 text-center font-normal flex flex-col justify-center items-center shadow-2xs">
+                <span class="text-slate-400">用药记录</span>
+                <span class="text-[8px] text-slate-300">未接入</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 底部卡片：安全与合规保障 (标题与卡片在同一行) -->
+        <div class="bg-white border border-blue-100 rounded-xl p-3 flex flex-col md:flex-row md:items-center gap-2.5 shadow-2xs">
+          <div class="text-[11px] font-bold shrink-0 md:w-24 border-b md:border-b-0 md:border-r border-slate-100 pb-1 md:pb-0 md:pr-2 text-center md:text-left flex items-center justify-center md:justify-start" style="color: rgb(19, 114, 209);">
+            <span>安全与合规保障</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs flex-1">
+            <!-- 卡片 1: 敏感数据动态脱敏 -->
+            <div class="bg-[#f5f9ff] border border-blue-100/80 rounded-lg p-2.5 flex flex-col items-center justify-center text-center shadow-2xs">
+              <span class="font-bold text-[11px]" style="color: rgb(19, 114, 209);">敏感数据动态脱敏</span>
+            </div>
+            <!-- 卡片 2: 审计追溯留痕 -->
+            <div class="bg-[#f5f9ff] border border-blue-100/80 rounded-lg p-2.5 flex flex-col items-center justify-center text-center shadow-2xs">
+              <span class="font-bold text-[11px]" style="color: rgb(19, 114, 209);">审计追溯留痕</span>
+            </div>
+            <!-- 卡片 3: 档案防批量导出 -->
+            <div class="bg-[#f5f9ff] border border-blue-100/80 rounded-lg p-2.5 flex flex-col items-center justify-center text-center shadow-2xs">
+              <span class="font-bold text-[11px]" style="color: rgb(19, 114, 209);">档案防批量导出</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 架构层级流转指示线 2 -->
+    <div class="flex justify-center text-slate-400 font-normal text-xs my-[-4px]">
+      ▲ 开放平台 API 网关验签 ➔ 用户中心 SSO 身份校验 ➔ 服务层对应集成输出
+    </div>
+
+    <!-- 第 3 层：服务层 · 统一服务与集成支撑 -->
+    <div class="flex flex-col gap-2">
+      <div class="flex items-center justify-between">
+        <h3 class="text-xs font-bold text-slate-700 tracking-wider uppercase">服务层：统一服务与集成支撑</h3>
+      </div>
+
+      <!-- 统一服务层包裹容器 (深蓝高亮背景风格) -->
+      <div class="rounded-xl p-3.5 shadow-md" style="background-color: rgb(19, 114, 209);">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2.5 text-xs">
+          
+          <!-- 省医保统一用户中心 -->
+          <div class="bg-white/15 backdrop-blur rounded-lg p-3 flex flex-col justify-between items-center text-center text-white shadow-2xs">
+            <div class="font-bold text-white text-[11px] mb-1">
+              省医保统一用户中心
+            </div>
+            <div class="text-[9px] text-blue-100 font-normal">
+              身份鉴权 · 角色权限 · SSO凭证
+            </div>
+          </div>
+
+          <!-- 省医保开放平台 -->
+          <div class="bg-white/15 backdrop-blur rounded-lg p-3 flex flex-col justify-between items-center text-center text-white shadow-2xs">
+            <div class="font-bold text-white text-[11px] mb-1">
+              省医保开放平台
+            </div>
+            <div class="text-[9px] text-blue-100 font-normal">
+              API网关 · Token验签 · 防篡改
+            </div>
+          </div>
+
+          <!-- 常州跨院调阅服务 -->
+          <div class="bg-white/15 backdrop-blur rounded-lg p-3 flex flex-col justify-between items-center text-center text-white shadow-2xs">
+            <div class="font-bold text-white text-[11px] mb-1">
+              常州跨院调阅服务
+            </div>
+            <div class="text-[9px] text-blue-100 font-normal">
+              检查检验 · DICOM原始影像
+            </div>
+          </div>
+
+          <!-- 省医保病理云共享平台 -->
+          <div class="bg-white/15 backdrop-blur rounded-lg p-3 flex flex-col justify-between items-center text-center text-white shadow-2xs">
+            <div class="font-bold text-white text-[11px] mb-1">
+              省医保病理云共享平台
+            </div>
+            <div class="text-[9px] text-blue-100 font-normal">
+              数字切片 · 病理诊断文书
+            </div>
+          </div>
+
+          <!-- 可穿戴设备数据平台 -->
+          <div class="bg-white/15 backdrop-blur rounded-lg p-3 flex flex-col justify-between items-center text-center text-white shadow-2xs">
+            <div class="font-bold text-white text-[11px] mb-1">
+              可穿戴设备数据平台
+            </div>
+            <div class="text-[9px] text-blue-100 font-normal">
+              体征监测 · 趋势分析预警
+            </div>
+          </div>
+
+          <!-- 人工智能服务平台 -->
+          <div class="bg-white/15 backdrop-blur rounded-lg p-3 flex flex-col justify-between items-center text-center text-white shadow-2xs">
+            <div class="font-bold text-white text-[11px] mb-1">
+              人工智能服务平台
+            </div>
+            <div class="text-[9px] text-blue-100 font-normal">
+              影像AI · 病历快读 · 合理用药
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- 架构层级流转指示线 3 -->
+    <div class="flex justify-center text-slate-400 font-normal text-xs my-[-4px]">
+      ▲ 数据归集与治理 · 接口对接服务
+    </div>
+
+    <!-- 第 4 层：数据层 · 数据底座与来源 (省医保云侧) -->
+    <div class="flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <h3 class="text-xs font-bold text-slate-700 tracking-wider uppercase">数据层：数据底座与来源 (省医保云侧)</h3>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+        
+        <!-- 1. 医保个人档案数据中台 (一人一档) -->
+        <div class="bg-white border border-slate-200 rounded-xl p-3.5 flex flex-col justify-between shadow-2xs">
+          <div class="font-bold text-slate-800 text-[11px] mb-2 border-b border-slate-100 pb-1.5 flex items-center justify-between">
+            <span>1. 医保个人档案数据中台 - 一人一档 (东软 / 久远)</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-[10px]">
+            <div class="bg-slate-50 border border-slate-200 rounded-md py-2 px-2 text-center text-slate-700 font-medium flex items-center justify-center">
+              医保财务信息
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-md py-2 px-2 text-center text-slate-700 font-medium flex items-center justify-center">
+              医保信息档案
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. 医保影像数据共享中心 -->
+        <div class="bg-white border border-slate-200 rounded-xl p-3.5 flex flex-col justify-between shadow-2xs">
+          <div class="font-bold text-slate-800 text-[11px] mb-2 border-b border-slate-100 pb-1.5 flex items-center justify-between">
+            <span>2. 医保影像数据共享中心</span>
+          </div>
+          <div class="grid grid-cols-4 gap-1.5 text-[10px]">
+            <div class="bg-slate-50 border border-slate-200 rounded-md py-2 px-1 text-center text-slate-700 font-medium flex items-center justify-center">
+              穿戴数据
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-md py-2 px-1 text-center text-slate-700 font-medium flex items-center justify-center">
+              影像数据
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-md py-2 px-1 text-center text-slate-700 font-medium flex items-center justify-center">
+              检验数据
+            </div>
+            <div class="bg-slate-50 border border-slate-200 rounded-md py-2 px-1 text-center text-slate-700 font-medium flex items-center justify-center">
+              病理数据
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 架构层级流转指示线 4 -->
+    <div class="flex justify-center text-slate-400 font-normal text-xs my-[-4px]">
+      ▲ 医院数据清洗抽取 ➔ 前置机上传 ➔ 省医保云统一数据归集与治理
+    </div>
+
+    <!-- 第 5 层：数据来源层 · 院内及外部数据源系统 -->
+    <div class="flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <h3 class="text-xs font-bold text-slate-700 tracking-wider uppercase">数据来源层：院内及外部数据源系统</h3>
+        <span class="text-[11px] text-slate-400 font-normal bg-slate-100 px-2 py-0.5 rounded">原始数据产生源</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+        
+        <!-- 医疗机构 HIS/EMR/LIS/PACS -->
+        <div class="bg-white border border-slate-200 rounded-xl p-3 text-center font-semibold text-slate-700 shadow-2xs">
+          医疗机构诊疗系统 (HIS / EMR / LIS / PACS)
+        </div>
+
+        <!-- 医保业务系统 -->
+        <div class="bg-white border border-slate-200 rounded-xl p-3 text-center font-semibold text-slate-700 shadow-2xs">
+          医保业务核心系统 (医保保障信息平台)
+        </div>
+
+        <!-- 可穿戴与智能设备 -->
+        <div class="bg-white border border-slate-200 rounded-xl p-3 text-center font-semibold text-slate-700 shadow-2xs">
+          可穿戴与智能监测设备
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</body>
+</html>
