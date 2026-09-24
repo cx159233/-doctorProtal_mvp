@@ -579,7 +579,7 @@ ader { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
       <p><strong>输入/前置条件:</strong>省医保患者一屏看已向省医保开放平台获取app_key 及 secret。（省医保开放平台->常州医保开放平台->跨院调阅系统）</p>
       <p><strong>详细设计:</strong></p>
       <p>在医保健康档案页签中点击【全省影像调阅-按钮】时,系统按照<a href="#prd-appendix-2" onclick="setTimeout(()=>{scrollToAnchor('prd-appendix-2')},10)" style="color:#035BFE;text-decoration:underline;cursor:pointer;">附件2：《检查检验结果共享互认接口标准V3.0》3.2.1检查检验结果共享互认接口（点击查看接口详情）</a>获取跳转URL,实现跨机构影像检查记录的调阅。一屏看系统此时相当于HIS医生工作站角色。</p>
-      <p><strong>跨院调阅系统需要进行改造：</strong></p>
+      <p><strong><span style="color:#dc2626;font-weight:600">跨院调阅系统需要进行改造：</span></strong></p>
       <p>1、需要区分患者一屏看请求的是全国影像检查（national_pacs），检验记录（lis），具体实施由开发人员自行沟通</p>
       <p>2、若URL携带的医生在常州用户中心不存在,需进行默认创建用户;若URL携带参数不正确,则msg提示即可"账号异常，请联系管理人员处理"</p>
       <p>3、返回URL要求:返回的URL需不带顶部导航,仅展示影像查询页面(省内、省外);若该医疗机构未在「数据共享管理后台」勾选「检查省内调阅」「检查省外调阅」,需默认勾选或默认信任患者一屏看来源。</p>
@@ -593,7 +593,7 @@ ader { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
       <p><strong>输入/前置条件:</strong>省医保患者一屏看已向省医保开放平台获取app_key 及 secret。（省医保开放平台->常州医保开放平台->跨院调阅系统）</p>
       <p><strong>详细设计:</strong></p>
       <p>在医保健康档案页签中点击【检验调阅-按钮】时,系统按照<a href="#prd-appendix-2" onclick="setTimeout(()=>{scrollToAnchor('prd-appendix-2')},10)" style="color:#035BFE;text-decoration:underline;cursor:pointer;">附件2：《检查检验结果共享互认接口标准V3.0》3.2.1检查检验结果共享互认接口（点击查看接口详情）</a>获取跳转URL,实现跨机构检验记录的调阅。一屏看系统此时相当于HIS医生工作站角色。</p>
-      <p><strong>跨院调阅系统需要进行改造：</strong></p>
+      <p><strong><span style="color:#dc2626;font-weight:600">跨院调阅系统需要进行改造：</span></strong></p>
       <p>1、需要区分患者一屏看请求的是全国影像检查（national_pacs），检验记录（lis），具体实施由开发人员自行沟通</p>
       <p>2、若URL携带的医生在常州用户中心不存在,需进行默认创建用户;若URL携带参数不正确,则msg提示即可"账号异常，请联系管理人员处理"</p>
       <p>3、返回URL要求:返回的URL需不带顶部导航,仅展示检验查询页面;若该医疗机构未在「数据共享管理后台」勾选「检验省内调阅」,需默认勾选或默认信任患者一屏看来源。</p>
