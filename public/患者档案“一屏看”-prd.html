@@ -52,16 +52,21 @@
               border-bottom: 1px dashed #035BFE; }
   .ref-note:hover { background: #d4e5ff; }
 
-/* ── Word 批注样式(超长实线引线 + 右侧留白区卡片) ── */
+/* ── Word 批注样式:卡片固定在距内容区左边 1400px,引线自适应 ── */
 .ref-note-wrap {
-  display: inline-block;
+  display: flex;
+  align-items: center;
   position: relative;
-  vertical-align: middle;
+  width: 1660px;
+  max-width: 1660px;
+  margin: 4px 0;
   line-height: 1.5;
 }
 .ref-note {
   cursor: pointer;
   display: inline-block;
+  flex: 0 1 auto;
+  max-width: 1300px;
   padding: 2px 6px;
   background: #fde4e4;
   border: 1.5px solid #e88a8a;
@@ -69,29 +74,21 @@
   color: #b91c1c;
   font-size: 13px;
   line-height: 1.5;
-  vertical-align: middle;
   position: relative;
   z-index: 2;
 }
 .ref-note:hover { background: #fbd0d0; }
 .ref-leader {
-  position: absolute;
-  left: 100%;
-  top: 50%;
-  width: 1000px;
+  flex: 1 1 auto;
+  min-width: 30px;
   height: 0;
-  margin-top: -1px;
   border-top: 1.5px solid #e88a8a;
+  margin: 0 12px;
+  align-self: center;
   pointer-events: none;
-  z-index: 1;
 }
 .ref-balloon {
-  position: absolute;
-  left: 100%;
-  top: 50%;
-  width: 260px;
-  margin-left: 1000px;
-  margin-top: -28px;
+  flex: 0 0 260px;
   padding: 6px 10px;
   background: #fff;
   border: 1.5px solid #e88a8a;
@@ -103,7 +100,7 @@
   z-index: 3;
 }
 .ref-balloon:hover { background: #fef5f5; }
-.rb-header { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+ader { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
 .rb-avatar { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; flex: 0 0 20px; }
 .rb-name { font-weight: 600; color: #b91c1c; font-size: 12px; }
 .rb-time { color: #999; margin-left: auto; font-size: 11px; }
