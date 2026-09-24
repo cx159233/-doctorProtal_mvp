@@ -592,15 +592,12 @@ ader { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
       <p><strong>输入/前置条件:</strong>省医保患者一屏看已向省医保开放平台获取app_key 及 secret。（省医保开放平台->常州医保开放平台->跨院调阅系统）</p>
       <p><strong>详细设计:</strong></p>
       <p>在医保健康档案页签中点击【检验调阅-按钮】时,系统按照<a href="#prd-appendix-2" onclick="setTimeout(()=>{scrollToAnchor('prd-appendix-2')},10)" style="color:#035BFE;text-decoration:underline;cursor:pointer;">附件2：《检查检验结果共享互认接口标准V3.0》3.2.1检查检验结果共享互认接口（点击查看接口详情）</a>获取跳转URL,实现跨机构检验记录的调阅。一屏看系统此时相当于HIS医生工作站角色。</p>
-      <p>1、《检查检验结果共享互认接口标准V3.0》3.2.1检查检验结果共享互认接口</p>
-      <p>http://{IP:port}/openapi/api/v2/study/create/url接口增加调用服务字段:</p>
-      <table>
-        <tr><th style="white-space:nowrap;width:100px">参数名称</th><th style="white-space:nowrap;width:120px">参数字段</th><th style="width:70px">上级节点</th><th style="width:70px">参数类型</th><th style="width:60px">是否必传</th><th style="width:120px">参数示例值</th><th>参数描述</th></tr>
-        <tr><td style="color:#dc2626;font-weight:600">检验报告ID</td><td style="color:#dc2626;font-weight:600">rpt_id</td><td style="color:#dc2626">root</td><td style="color:#dc2626">string</td><td style="color:#dc2626">否</td><td style="color:#dc2626"></td><td style="color:#dc2626">检验报告的唯一标识。有值时跳转至报告详情页面，无值时跳转至列表查询页面。</td></tr>
-      </table>
-      <p>2、若URL携带的医生在常州用户中心不存在,需进行默认创建用户;若URL携带参数不正确,仍保留异常账号提醒界面。</p>
-      <p>3、返回URL要求:返回的URL需不带顶部导航,仅展示检验查询页面;若该医疗机构未在「数据共享管理后台」勾选「检验省内调阅」,需默认勾选或默认信任患者一屏看来源。</p>
-      <p>4、跨院调阅埋点:跨院调阅埋点需更新,支持通过appid区分患者一屏看渠道。</p>
+      <p><strong>跨院调阅系统需要进行改造：</strong></p>
+      <p>1、若URL携带的医生在常州用户中心不存在,需进行默认创建用户;若URL携带参数不正确,则msg提示即可"账号异常，请联系管理人员处理"</p>
+      <p>2、返回URL要求:返回的URL需不带顶部导航,仅展示检验查询页面;若该医疗机构未在「数据共享管理后台」勾选「检验省内调阅」,需默认勾选或默认信任患者一屏看来源。</p>
+      <p>3、跨院调阅需要信任患者一屏看授权，无需二次授权</p>
+      <p>4、跨院调阅需要可区分渠道，后续用于分渠道统计埋点数据</p>
+      <p>5、跨院调阅需要将江苏hr提交互认和hr标记的字样删除</p>
 
       <h3 id="prd-4.5">4.5 系统埋点</h3>
       <p><strong>模块描述:</strong>系统埋点</p>
