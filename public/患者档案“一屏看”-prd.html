@@ -78,7 +78,7 @@
   position: absolute;
   left: 100%;
   top: 50%;
-  width: 1300px;
+  width: 1000px;
   height: 0;
   margin-top: -1px;
   border-top: 1.5px solid #e88a8a;
@@ -1335,6 +1335,7 @@ curl -H "Content-Type: application/json" -X POST -H "X-Token: eyJhbGciOiJIUzI1Ni
         <tr><td>数据列表</td><td>data</td><td>root</td><td>array</td><td>影像检查记录列表，按检查时间倒序排列</td></tr>
         <tr><td>&nbsp;&nbsp;检查单号</td><td>study_primary_id</td><td>data</td><td>string</td><td>影像检查的唯一标识</td></tr>
         <tr><td>&nbsp;&nbsp;检查日期</td><td>chk_dt</td><td>data</td><td>string</td><td>检查日期，格式:yyyy-MM-dd HH:mm:ss</td></tr>
+        <tr><td>&nbsp;&nbsp;医院名称</td><td>hospital_name</td><td>data</td><td>string</td><td>检查所在医院名称</td></tr>
         <tr><td>&nbsp;&nbsp;检查项目名称</td><td>proj_name</td><td>data</td><td>string</td><td>检查项目名称</td></tr>
         <tr><td>&nbsp;&nbsp;诊断意见</td><td>diag_opinion</td><td>data</td><td>string</td><td>诊断意见</td></tr>
       </table>
@@ -1353,6 +1354,7 @@ curl -H "Content-Type: application/json" -X POST -H "X-Token: eyJhbGciOiJIUzI1Ni
     {
       "study_primary_id": "b3def20089aab5b12bbbbbb012345678",
       "chk_dt": "2026-08-15 10:00:00",
+      "hospital_name": "XX市第一人民医院",
       "proj_name": "腹部B超",
       "diag_opinion": "肝胆胰脾未见明显异常"
     }
@@ -1380,6 +1382,7 @@ curl -H "Content-Type: application/json" -X POST -H "X-Token: eyJhbGciOiJIUzI1Ni
         <tr><td>数据列表</td><td>data</td><td>root</td><td>array</td><td>检验记录列表，按检验时间倒序排列</td></tr>
         <tr><td>&nbsp;&nbsp;检验报告ID</td><td>rpt_id</td><td>data</td><td>string</td><td>检验报告的唯一标识</td></tr>
         <tr><td>&nbsp;&nbsp;检验日期</td><td>test_dt</td><td>data</td><td>string</td><td>检验日期，格式:yyyy-MM-dd HH:mm:ss</td></tr>
+        <tr><td>&nbsp;&nbsp;医院名称</td><td>hospital_name</td><td>data</td><td>string</td><td>检验所在医院名称</td></tr>
         <tr><td>&nbsp;&nbsp;检验项目名称</td><td>ex_proj_name</td><td>data</td><td>string</td><td>检验项目名称</td></tr>
         <tr><td>&nbsp;&nbsp;临床诊断</td><td>clinical_diag</td><td>data</td><td>string</td><td>临床诊断</td></tr>
       </table>
@@ -1398,6 +1401,7 @@ curl -H "Content-Type: application/json" -X POST -H "X-Token: eyJhbGciOiJIUzI1Ni
     {
       "rpt_id": "2018592533097791489",
       "test_dt": "2026-07-10 11:20:00",
+      "hospital_name": "XX市第一人民医院",
       "ex_proj_name": "尿常规",
       "clinical_diag": "泌尿系统感染"
     }
