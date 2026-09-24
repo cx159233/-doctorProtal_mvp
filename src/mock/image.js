@@ -438,6 +438,7 @@ const toStudyRow = (study, index) => {
   const hospital = hospitalOf(study, index)
   const checkDate = checkDateOf(index)
   return {
+    data_scope: study.hospital ? 'province_out' : 'province_in',
     id: study.id,
     pat_name: currentPatient.name,
     patient_id_card: currentPatient.idCard,

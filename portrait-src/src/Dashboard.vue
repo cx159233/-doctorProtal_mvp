@@ -280,7 +280,7 @@
               <div class="timeline-main">
                 <div class="timeline-head">
                   <span class="timeline-date">{{ item.date }}</span>
-                  <span class="timeline-org">{{ item.org }}</span>
+                  <span v-if="item.dataScope" class="scope-tag" :class="item.dataScope">{{ item.dataScope === 'province_in' ? '省内查询' : '省外调阅' }}</span><span class="timeline-org">{{ item.org }}</span>
                 </div>
                 <article class="timeline-card">
                   <svg class="timeline-card-icon" viewBox="0 0 24 24" aria-hidden="true">
@@ -586,6 +586,7 @@ const dayOf = (value: string) => String(value).slice(0, 10)
 const archives: Record<string, ArchiveItem[]> = {
   全国影像检查: buildStudyList(listParams).data.map((row: any) => ({
     date: dayOf(row.check_date),
+    dataScope: row.data_scope,
     org: row.hospital_name,
     title: row.item_name,
     detail: row.rpt_seeing,
@@ -1905,6 +1906,24 @@ const services = [
   color: var(--ink-sub);
 }
 
+.scope-tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  margin-right: 6px;
+  white-space: nowrap;
+}
+.scope-tag.province_in {
+  background: #e6f7ff;
+  color: #1890ff;
+  border: 1px solid #91d5ff;
+}
+.scope-tag.province_out {
+  background: #fff7e6;
+  color: #fa8c16;
+  border: 1px solid #ffd591;
+}
 .timeline-org {
   font-size: var(--fs-14);
   color: var(--ink4);
