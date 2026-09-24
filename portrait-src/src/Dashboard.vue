@@ -589,14 +589,14 @@ const archives: Record<string, ArchiveItem[]> = {
     org: row.hospital_name,
     title: row.item_name,
     detail: row.rpt_seeing,
-    detailLabel: '结论',
+    detailLabel: '诊断意见',
   })),
   检验记录: buildTestList(listParams).data.map((row: any) => ({
     date: dayOf(row.testDt),
     org: row.organName,
     title: row.projName,
     detail: row.clinicDiagnose,
-    detailLabel: '诊断',
+    detailLabel: '临床诊断',
   })),
   门诊记录: buildVisitList(listParams).data.map((row: any) => ({
     date: dayOf(row.visitDt),
@@ -815,8 +815,8 @@ const records: RecordItem[] = [
   { title: '病理记录', value: String(countOf('病理记录')), unit: '份', date: latestOf('病理记录'), icon: 'l_2211', tone: 'green', x: 6.85, y: 53, side: 'left', line: '组 2252@2x', lineY: 8, lineW: 245 },
   { title: '穿戴数据', value: String(countOf('穿戴数据')), unit: '份', date: latestOf('穿戴数据'), icon: 'l_2215', tone: 'blue', x: 6.85, y: 62, side: 'right', line: '组 2253@2x', lineY: -20, lineW: 204 },
   /* 体检报告 / 用药记录：功能未接入，与档案页的置灰页签对应 */
-  { title: '体检报告', date: '暂未接入', icon: 'l_2212', tone: 'gray', x: 6.85, y: 78, side: 'left', variant: 'empty', line: '组 2254@2x', lineY: -28, lineW: 211, lineRot: -1.3 },
-  { title: '用药记录', date: '暂未接入', icon: 'l_2216', tone: 'gray', x: 6.85, y: 86, side: 'right', variant: 'empty', line: '组 2255@2x', lineY: -40, lineW: 225, lineRot: 1, lineDy: 15 },
+  { title: '体检报告', value: '0', unit: '次', date: '暂未接入', icon: 'l_2212', tone: 'gray', x: 6.85, y: 78, side: 'left', variant: 'empty', line: '组 2254@2x', lineY: -28, lineW: 211, lineRot: -1.3 },
+  { title: '用药记录', value: '0', unit: '次', date: '暂未接入', icon: 'l_2216', tone: 'gray', x: 6.85, y: 86, side: 'right', variant: 'empty', line: '组 2255@2x', lineY: -40, lineW: 225, lineRot: 1, lineDy: 15 },
 ]
 
 /* 大屏在 iframe 里跨进程，拿不到父页面的 router：跳转意图统一 postMessage 给外层 */
