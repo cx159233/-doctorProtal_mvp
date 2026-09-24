@@ -1907,22 +1907,9 @@ const services = [
 }
 
 .scope-tag {
-  display: inline-block;
-  padding: 1px 6px;
-  border-radius: 3px;
-  font-size: 12px;
-  margin-right: 6px;
-  white-space: nowrap;
-}
-.scope-tag.province_in {
-  background: #e6f7ff;
-  color: #1890ff;
-  border: 1px solid #91d5ff;
-}
-.scope-tag.province_out {
-  background: #fff7e6;
-  color: #fa8c16;
-  border: 1px solid #ffd591;
+  font-size: var(--fs-14);
+  color: var(--ink4);
+  margin-right: 4px;
 }
 .timeline-org {
   font-size: var(--fs-14);
