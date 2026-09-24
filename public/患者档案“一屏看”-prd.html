@@ -605,7 +605,7 @@ ader { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
       <p><strong>模块描述:</strong>系统埋点</p>
       <p><strong>功能描述:</strong>对页面访问、模块曝光、关键操作与数据调阅行为进行埋点采集,用于使用分析、异常监控与合规审计。</p>
       <p><strong>详细设计:</strong></p>
-      <p>覆盖患者一屏看系统页面访问与操作行为，以及跨院调阅系统在患者一屏看渠道下的调阅行为。患者一屏看系统共12个埋点事件，跨院调阅系统改造29个事件（新增app_id字段）。</p>
+      <p>覆盖患者一屏看系统页面访问与操作行为，以及跨院调阅系统在患者一屏看渠道下的调阅行为。患者一屏看系统共12个埋点事件，跨院调阅系统改造29个事件增加渠道区分。</p>
       <p>各事件的Extension字段详细说明、公共字段、枚举值及完整埋点链路请参见<a href="#prd-appendix-3" onclick="setTimeout(()=>{scrollToAnchor('prd-appendix-3')},10)" style="color:#035BFE;text-decoration:underline;cursor:pointer;">附件3：《患者档案"一屏看"埋点字段详细设计》（点击查看详细设计）</a>。</p>
 
 <h2 id="prd-5">5. 非功能性要求</h2>
