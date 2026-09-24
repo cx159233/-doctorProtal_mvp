@@ -1293,6 +1293,7 @@ curl -H "Content-Type: application/json" -X POST -H "X-Token: eyJhbGciOiJIUzI1Ni
         <tr><td>状态码</td><td>code</td><td>root</td><td>int</td><td>200-成功，其他-失败</td></tr>
         <tr><td>消息</td><td>message</td><td>root</td><td>string</td><td>返回消息</td></tr>
         <tr><td>数据列表</td><td>data</td><td>root</td><td>array</td><td>影像检查记录列表，按检查时间倒序排列</td></tr>
+        <tr><td>调阅来源</td><td>data_scope</td><td>data</td><td>string</td><td>调阅来源类型：province_in=省内查询，province_out=省外调阅</td></tr>
         <tr><td>检查单号</td><td>study_primary_id</td><td>data</td><td>string</td><td>影像检查的唯一标识</td></tr>
         <tr><td>检查日期</td><td>chk_dt</td><td>data</td><td>string</td><td>检查日期，格式:yyyy-MM-dd HH:mm:ss</td></tr>
         <tr><td>医院名称</td><td>hospital_name</td><td>data</td><td>string</td><td>检查所在医院名称</td></tr>
